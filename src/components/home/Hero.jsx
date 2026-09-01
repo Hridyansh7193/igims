@@ -18,6 +18,15 @@ export default function Hero({ setPage, revealTitle = true }) {
           background: '#0D0709',
         }}
       >
+        {/* CSS for Ken Burns Effect */}
+        <style>
+          {`
+            @keyframes kenburns {
+              0% { transform: scale(1.05); }
+              100% { transform: scale(1.2); }
+            }
+          `}
+        </style>
         {/* Full-screen video background */}
         <video
           autoPlay
@@ -32,11 +41,11 @@ export default function Hero({ setPage, revealTitle = true }) {
             objectFit: 'cover',
             opacity: 0.5,
             filter: 'contrast(1.2) saturate(1.2) sepia(0.1)',
-            transform: 'scale(1.05)',
+            animation: 'kenburns 25s ease-in-out infinite alternate',
             zIndex: 0,
           }}
         >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-crowd-in-front-of-a-stage-at-a-concert-14571-large.mp4" type="video/mp4" />
+          <source src="/events-bg.mp4" type="video/mp4" />
         </video>
 
         {/* Cinematic Vignette Overlay */}
