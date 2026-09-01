@@ -265,6 +265,19 @@ export default function GlobalStyle() {
         50% { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.6)); }
         100% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); }
       }
+
+      /* Glitch title reveal — tiny jitter while resolving */
+      @keyframes crx-glitch-jitter {
+        0%   { transform: translate(0, 0); }
+        25%  { transform: translate(-1.5px, 1px); }
+        50%  { transform: translate(1.5px, -1px); }
+        75%  { transform: translate(-1px, -1px); }
+        100% { transform: translate(0, 0); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        [style*="crx-glitch-jitter"] { animation: none !important; }
+      }
     `}</style>
   );
 }

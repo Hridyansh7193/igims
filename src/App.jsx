@@ -13,6 +13,7 @@ import DashboardPage from './pages/DashboardPage';
 export default function App() {
   const [page, setPage] = useState('home');
   const [introComplete, setIntroComplete] = useState(false);
+  const [revealHeroTitle, setRevealHeroTitle] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -22,13 +23,17 @@ export default function App() {
     setIntroComplete(true);
   }, []);
 
+  const handleWipeStart = useCallback(() => {
+    setRevealHeroTitle(true);
+  }, []);
+
   return (
     <div className="crx-root">
       <GlobalStyle />
 
       {/* Cinematic Intro Animation Overlay */}
       {!introComplete && (
-        <IntroAnimation onComplete={handleIntroComplete} />
+        <IntroAnimation onComplete={handleIntroComplete} onWipeStart={handleWipeStart} />
       )}
 
       {/* Main site content (renders underneath the intro overlay) */}
@@ -37,7 +42,7 @@ export default function App() {
       <div className="crx-vignette" />
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar page={page} setPage={setPage} />
-        {page === 'home' && <HomePage setPage={setPage} />}
+        {page === 'home' && <HomePage setPage={setPage} revealHeroTitle={revealHeroTitle} />}
         {page === 'events' && <EventsPage />}
         {page === 'team' && <TeamPage />}
         {page === 'contact' && <ContactPage />}

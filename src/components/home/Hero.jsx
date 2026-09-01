@@ -1,6 +1,7 @@
 import React from 'react';
+import GlitchText from '../common/GlitchText';
 
-export default function Hero({ setPage }) {
+export default function Hero({ setPage, revealTitle = true }) {
   return (
     <>
       <section
@@ -119,21 +120,23 @@ export default function Hero({ setPage }) {
                 alignItems: 'center',
               }}
             >
-              <h1
-                style={{
-                  margin: 0,
-                  color: '#FFFFFF',
-                  fontFamily: "'Anton', 'Impact', sans-serif",
-                  fontSize: 'clamp(52px, 11vw, 135px)',
-                  fontWeight: 900,
-                  lineHeight: 1,
-                  letterSpacing: '2px',
-                  textTransform: 'uppercase',
-                  whiteSpace: 'nowrap',
-                  textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
-                }}
-              >
-                CEREBREXIA'26
+              <h1 style={{ margin: 0, lineHeight: 1 }}>
+                <GlitchText
+                  text="CEREBREXIA'26"
+                  start={revealTitle}
+                  duration={950}
+                  style={{
+                    color: '#FFFFFF',
+                    fontFamily: "'Anton', 'Impact', sans-serif",
+                    fontSize: 'clamp(52px, 11vw, 135px)',
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    letterSpacing: '2px',
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
+                  }}
+                />
               </h1>
             </div>
           </div>

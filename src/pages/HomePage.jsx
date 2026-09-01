@@ -7,10 +7,10 @@ import StatsSection from '../components/home/StatsSection';
 import SplitPanelSection from '../components/home/SplitPanelSection';
 import ClosingHero from '../components/home/ClosingHero';
 
-export default function HomePage({ setPage }) {
+export default function HomePage({ setPage, revealHeroTitle }) {
   return (
     <>
-      <Hero setPage={setPage} />
+      <Hero setPage={setPage} revealTitle={revealHeroTitle} />
       <LoreSection />
       <MascotSection />
       <InfoRow />
