@@ -45,7 +45,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             zIndex: 0,
           }}
         >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-crowd-in-front-of-a-stage-at-a-concert-14571-large.mp4" type="video/mp4" />
+          <source src="/events-bg.mp4" type="video/mp4" />
         </video>
 
         {/* Cinematic Vignette Overlay */}
