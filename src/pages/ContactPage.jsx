@@ -47,7 +47,7 @@ export default function ContactPage() {
                       width: 36,
                       height: 36,
                       borderRadius: 10,
-                      background: 'linear-gradient(135deg,var(--gold),var(--gold-2))',
+                      background: 'linear-gradient(135deg, var(--gold-glow), var(--gold-dark))',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

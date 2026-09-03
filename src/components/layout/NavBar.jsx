@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { LOGO_SRC } from '../../constants/logo';
 import { NAV } from '../../constants/navigation';
+import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function NavBar({ page, setPage }) {
   const [open, setOpen] = useState(false);
+  const narrow = useIsNarrow(768);
   const go = (p) => {
     setPage(p.toLowerCase());
     setOpen(false);
@@ -81,7 +83,7 @@ export default function NavBar({ page, setPage }) {
         {/* Center: Capsule Pill Navigation [ ○ [HOME] EVENTS TEAM ○ ] */}
         <nav
           style={{
-            display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'none' : 'flex',
+            display: narrow ? 'none' : 'flex',
             alignItems: 'center',
             gap: 6,
             background: 'rgba(16, 9, 14, 0.88)',
@@ -111,7 +113,7 @@ export default function NavBar({ page, setPage }) {
                 key={p}
                 onClick={() => go(p)}
                 style={{
-                  background: active ? '#FF4B26' : 'transparent',
+                  background: active ? 'linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #1D4ED8 100%)' : 'transparent',
                   color: active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
                   border: 'none',
                   borderRadius: 24,
@@ -164,7 +166,7 @@ export default function NavBar({ page, setPage }) {
               letterSpacing: 0.5,
               textTransform: 'uppercase',
               cursor: 'pointer',
-              display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'none' : 'inline-flex',
+              display: narrow ? 'none' : 'inline-flex',
               alignItems: 'center',
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
@@ -192,7 +194,7 @@ export default function NavBar({ page, setPage }) {
               width: 44,
               height: 44,
               cursor: 'pointer',
-              display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'flex' : 'none',
+              display: narrow ? 'flex' : 'none',
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -231,7 +233,7 @@ export default function NavBar({ page, setPage }) {
               key={p}
               onClick={() => go(p)}
               style={{
-                background: page === p.toLowerCase() ? '#FF4B26' : 'transparent',
+                background: page === p.toLowerCase() ? 'linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #1D4ED8 100%)' : 'transparent',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 12,

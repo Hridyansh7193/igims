@@ -87,10 +87,9 @@ export default function TeamPage() {
                 <p className="crx-black" style={{ fontSize: 14, color: '#fff', margin: '0 0 8px' }}>
                   {m.name}
                 </p>
-                <Sticker tone="gold" rotate={-1} style={{ fontSize: 9, padding: '4px 10px', marginBottom: 10 }}>
+                <Sticker tone="gold" rotate={-1} style={{ fontSize: 9, padding: '4px 10px', marginBottom: 12 }}>
                   {m.role}
                 </Sticker>
-                <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 12px' }}>{m.phone}</p>
                 <div
                   style={{
                     borderTop: '1px dashed rgba(255,243,214,.2)',

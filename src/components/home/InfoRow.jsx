@@ -14,7 +14,7 @@ export default function InfoRow() {
   return (
     <Marquee
       items={items.map((i) => `${i.name} \u2014 ${i.label}`)}
-      tone="orange"
+      tone="gold"
       rotate={1.4}
     />
   );

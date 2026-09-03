@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import GlitchText from '../common/GlitchText';
+import Sticker from '../common/Sticker';
+
+// Persists across Hero remounts (e.g. switching tabs and back to Home) so the
+// glitch reveal only ever plays once, instead of re-triggering (and sometimes
+// failing to resolve) every time the Home page mounts again.
+let heroTitleRevealedOnce = false;
 
 export default function Hero({ setPage, revealTitle = true }) {
+  const [titleSettled, setTitleSettled] = useState(heroTitleRevealedOnce);
   return (
     <>
       <section
@@ -15,7 +22,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           padding: '120px 20px 60px',
           position: 'relative',
           overflow: 'hidden',
-          background: '#0D0709',
+          background: 'var(--navy-void)',
         }}
       >
         {/* CSS for Ken Burns Effect */}
@@ -39,8 +46,8 @@ export default function Hero({ setPage, revealTitle = true }) {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            opacity: 0.5,
-            filter: 'contrast(1.2) saturate(1.2) sepia(0.1)',
+            opacity: 0.75,
+            filter: 'contrast(1.1) saturate(1.2)',
             animation: 'kenburns 25s ease-in-out infinite alternate',
             zIndex: 0,
           }}
@@ -48,14 +55,16 @@ export default function Hero({ setPage, revealTitle = true }) {
           <source src="/events-bg.mp4" type="video/mp4" />
         </video>
 
-        {/* Cinematic Vignette Overlay */}
+        {/* Cosmic Vignette Overlay — matches the navy/cyan/gold theme used site-wide */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             background: `
-              radial-gradient(ellipse at 50% 50%, rgba(13, 7, 9, 0.4) 0%, rgba(13, 7, 9, 0.85) 65%, rgba(13, 7, 9, 0.98) 100%),
-              linear-gradient(180deg, rgba(13, 7, 9, 0.75) 0%, rgba(13, 7, 9, 0.3) 25%, rgba(13, 7, 9, 0.3) 75%, rgba(13, 7, 9, 0.97) 100%)
+              radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.10), transparent 55%),
+              radial-gradient(ellipse at 100% 100%, rgba(251, 191, 36, 0.08), transparent 55%),
+              radial-gradient(ellipse at 50% 50%, rgba(5, 8, 20, 0.25) 0%, rgba(5, 8, 20, 0.6) 65%, rgba(5, 8, 20, 0.92) 100%),
+              linear-gradient(180deg, rgba(5, 8, 20, 0.55) 0%, rgba(5, 8, 20, 0.15) 25%, rgba(5, 8, 20, 0.15) 75%, rgba(5, 8, 20, 0.9) 100%)
             `,
             zIndex: 1,
             pointerEvents: 'none',
@@ -68,7 +77,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             position: 'absolute',
             inset: 0,
             background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
-            opacity: 0.4,
+            opacity: 0.35,
             zIndex: 2,
             pointerEvents: 'none',
           }}
@@ -86,24 +95,10 @@ export default function Hero({ setPage, revealTitle = true }) {
             alignItems: 'center',
           }}
         >
-          {/* Diamond Tagline */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 16,
-              color: 'rgba(255, 255, 255, 0.85)',
-              fontSize: 'clamp(11px, 1.5vw, 13px)',
-              fontWeight: 800,
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              fontFamily: "'Space Grotesk', sans-serif",
-            }}
-          >
-            <span style={{ color: '#FDC23E', fontSize: 14 }}>◆</span>
-            <span>INDIA'S BIGGEST MEDICAL COLLEGE CULTURAL FESTIVAL</span>
-          </div>
+          {/* Tagline Sticker Badge — same component used across the rest of the site */}
+          <Sticker tone="gold" rotate={-2} style={{ marginBottom: 22, fontSize: 11.5 }}>
+            India's Biggest Medical College Cultural Festival
+          </Sticker>
 
           {/* Giant Centerpiece Title */}
           <div
@@ -119,38 +114,57 @@ export default function Hero({ setPage, revealTitle = true }) {
           >
             <div
               style={{
-                background: 'rgba(0, 0, 0, 0.7)',
-                backdropFilter: 'blur(4px)',
                 padding: '10px 24px',
                 width: '100%',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.9)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
               <h1 style={{ margin: 0, lineHeight: 1 }}>
-                <GlitchText
-                  text="CEREBREXIA'26"
-                  start={revealTitle}
-                  duration={950}
-                  style={{
-                    color: '#FFFFFF',
-                    fontFamily: "'Anton', 'Impact', sans-serif",
-                    fontSize: 'clamp(52px, 11vw, 135px)',
-                    fontWeight: 900,
-                    lineHeight: 1,
-                    letterSpacing: '2px',
-                    textTransform: 'uppercase',
-                    whiteSpace: 'nowrap',
-                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
-                  }}
-                />
+                {titleSettled ? (
+                  <span
+                    style={{
+                      color: '#FFFFFF',
+                      fontFamily: "'Anton', 'Impact', sans-serif",
+                      fontSize: 'clamp(52px, 11vw, 135px)',
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      letterSpacing: '2px',
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                      textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                    }}
+                  >
+                    CEREBREXIA'26
+                  </span>
+                ) : (
+                  <GlitchText
+                    text="CEREBREXIA'26"
+                    start={revealTitle}
+                    duration={950}
+                    onDone={() => {
+                      heroTitleRevealedOnce = true;
+                      setTitleSettled(true);
+                    }}
+                    style={{
+                      color: '#FFFFFF',
+                      fontFamily: "'Anton', 'Impact', sans-serif",
+                      fontSize: 'clamp(52px, 11vw, 135px)',
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      letterSpacing: '2px',
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                      textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                    }}
+                  />
+                )}
               </h1>
             </div>
           </div>
 
-          {/* Subtitle with Target Reticle */}
+          {/* Subtitle */}
           <div
             style={{
               display: 'flex',
@@ -168,7 +182,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                 margin: 0,
                 fontSize: 'clamp(13px, 1.8vw, 15.5px)',
                 lineHeight: 1.65,
-                color: 'rgba(255, 255, 255, 0.82)',
+                color: 'var(--paper)',
                 fontWeight: 500,
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
@@ -177,7 +191,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             </p>
           </div>
 
-          {/* Sticker-Style Action Buttons */}
+          {/* Action Buttons — primary (gold) + secondary (cyan), same classes used everywhere else */}
           <div
             style={{
               display: 'flex',
@@ -186,62 +200,12 @@ export default function Hero({ setPage, revealTitle = true }) {
               flexWrap: 'wrap',
             }}
           >
-            {/* EXPLORE EVENTS — Yellow */}
-            <button
-              onClick={() => setPage('events')}
-              style={{
-                background: '#FDC23E',
-                color: '#181014',
-                border: '2px solid #181014',
-                borderRadius: 14,
-                boxShadow: '4px 4px 0 #181014',
-                padding: '14px 32px',
-                fontSize: 13.5,
-                fontWeight: 800,
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translate(2px, 2px)';
-                e.currentTarget.style.boxShadow = '2px 2px 0 #181014';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translate(0, 0)';
-                e.currentTarget.style.boxShadow = '4px 4px 0 #181014';
-              }}
-            >
-              EXPLORE EVENTS
+            <button className="crx-btn gold" onClick={() => setPage('events')}>
+              Explore Events
             </button>
 
-            {/* RIDE THE ROADTRIPS — Coral Red */}
-            <button
-              onClick={() => setPage('team')}
-              style={{
-                background: '#FF4B3A',
-                color: '#FFFFFF',
-                border: '2px solid #181014',
-                borderRadius: 14,
-                boxShadow: '4px 4px 0 #181014',
-                padding: '14px 32px',
-                fontSize: 13.5,
-                fontWeight: 800,
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translate(2px, 2px)';
-                e.currentTarget.style.boxShadow = '2px 2px 0 #181014';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translate(0, 0)';
-                e.currentTarget.style.boxShadow = '4px 4px 0 #181014';
-              }}
-            >
-              RIDE THE ROADTRIPS
+            <button className="crx-btn cyan" onClick={() => setPage('team')}>
+              Ride The Roadtrips
             </button>
           </div>
         </div>
@@ -265,7 +229,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             style={{
               fontSize: 10,
               letterSpacing: '5px',
-              color: 'rgba(255, 255, 255, 0.65)',
+              color: 'var(--muted)',
               textTransform: 'uppercase',
               fontFamily: 'monospace',
               fontWeight: 600,
@@ -278,7 +242,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             style={{
               width: 1,
               height: 22,
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%)',
+              background: 'linear-gradient(180deg, rgba(148, 163, 184, 0.6) 0%, transparent 100%)',
             }}
           />
         </div>

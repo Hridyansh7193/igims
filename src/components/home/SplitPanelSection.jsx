@@ -49,7 +49,32 @@ export default function SplitPanelSection({ setPage }) {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
-              <Sticker tone="gold" rotate={-3} style={{ position: 'absolute', top: 18, left: 18 }}>
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0.4,
+                  zIndex: 0,
+                }}
+              >
+                <source src="/events-bg.mp4" type="video/mp4" />
+              </video>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(160deg, rgba(13,32,77,0.55) 0%, rgba(7,12,32,0.75) 100%)',
+                  zIndex: 0,
+                }}
+              />
+              <Sticker tone="gold" rotate={-3} style={{ position: 'absolute', top: 18, left: 18, zIndex: 1 }}>
                 70+ Events
               </Sticker>
               <div
@@ -60,6 +85,7 @@ export default function SplitPanelSection({ setPage }) {
                   right: 0,
                   padding: '24px',
                   background: 'linear-gradient(0deg, rgba(5,8,20,0.92) 0%, transparent 100%)',
+                  zIndex: 1,
                 }}
               >
                 <h3 className="crx-display" style={{ fontSize: 'clamp(30px,4vw,44px)', color: '#fff', margin: '0 0 8px' }}>
@@ -101,7 +127,32 @@ export default function SplitPanelSection({ setPage }) {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
-              <Sticker tone="cyan" rotate={3} style={{ position: 'absolute', top: 18, right: 18 }}>
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0.4,
+                  zIndex: 0,
+                }}
+              >
+                <source src="/team-bg.mp4" type="video/mp4" />
+              </video>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(160deg, rgba(28,26,74,0.55) 0%, rgba(7,12,32,0.75) 100%)',
+                  zIndex: 0,
+                }}
+              />
+              <Sticker tone="cyan" rotate={3} style={{ position: 'absolute', top: 18, right: 18, zIndex: 1 }}>
                 The Crew
               </Sticker>
               <div
@@ -112,6 +163,7 @@ export default function SplitPanelSection({ setPage }) {
                   right: 0,
                   padding: '24px',
                   background: 'linear-gradient(0deg, rgba(5,8,20,0.92) 0%, transparent 100%)',
+                  zIndex: 1,
                 }}
               >
                 <h3 className="crx-display" style={{ fontSize: 'clamp(30px,4vw,44px)', color: '#fff', margin: '0 0 8px' }}>

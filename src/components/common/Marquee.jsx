@@ -4,8 +4,8 @@ import { Star } from 'lucide-react';
 export default function Marquee({ items, tone = 'gold', rotate = -1.5 }) {
   const bg =
     tone === 'gold'
-      ? 'linear-gradient(90deg,var(--gold),var(--gold-2))'
-      : 'linear-gradient(90deg,var(--cyan),var(--cyan-2))';
+      ? 'linear-gradient(90deg, var(--gold-glow), var(--gold), var(--gold-dark))'
+      : 'linear-gradient(90deg, var(--cyan), var(--cyan-dark))';
   const color = tone === 'gold' ? 'var(--ink)' : '#fff';
   const doubled = [...items, ...items];
 
