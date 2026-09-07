@@ -1,149 +1,187 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { LOGO_SRC } from '../../constants/logo';
+import React, { useEffect, useState, useMemo } from 'react';
 
-/**
- * Preloader — counts 0 → 100%, drawing a glowing ring around the logo
- * as it goes, then calls onDone (the parent handles the exit transition).
- */
-export default function Preloader({ onDone, duration = 1800 }) {
-  const [percent, setPercent] = useState(0);
-  const rafRef = useRef(null);
-  const startRef = useRef(null);
-  const firedRef = useRef(false);
+const BATS_COUNT = 150;
+
+export default function Preloader({ onDone }) {
+  const [stage, setStage] = useState(0);
 
   useEffect(() => {
-    const reduced =
-      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setPercent(100);
-      onDone && onDone();
-      return;
-    }
+    // Stage 0: Blue logo visible (0 - 500ms)
+    // Stage 1: Bats slowly swarm from all sides (500ms - 2500ms)
+    // Stage 2: Logo swaps to red while engulfed (2500ms - 3000ms)
+    // Stage 3: Bats disperse quickly (3000ms - 4000ms)
+    // Stage 4: Trigger onDone (4200ms)
 
-    startRef.current = performance.now();
-    const tick = (now) => {
-      const elapsed = now - startRef.current;
-      const t = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - t, 2);
-      setPercent(Math.round(eased * 100));
+    const t1 = setTimeout(() => setStage(1), 500);
+    const t2 = setTimeout(() => setStage(2), 2500);
+    const t3 = setTimeout(() => setStage(3), 3000);
+    const t4 = setTimeout(() => {
+      if (onDone) onDone();
+    }, 5500);
 
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else if (!firedRef.current) {
-        firedRef.current = true;
-        setTimeout(() => onDone && onDone(), 200);
-      }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => rafRef.current && cancelAnimationFrame(rafRef.current);
-  }, [duration, onDone]);
+  }, [onDone]);
 
-  const radius = 56;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference * (1 - percent / 100);
+  const bats = useMemo(() => {
+    return Array.from({ length: BATS_COUNT }).map((_, i) => {
+      const angle = (i / BATS_COUNT) * 2 * Math.PI + Math.random();
+      // Start far outside the screen
+      const startRadius = 600 + Math.random() * 400;
+      const startX = Math.cos(angle) * startRadius;
+      const startY = Math.sin(angle) * startRadius;
+
+      // End up covering the center logo
+      const endRadius = Math.random() * 90;
+      const endAngle = Math.random() * 2 * Math.PI;
+      const endX = Math.cos(endAngle) * endRadius;
+      const endY = Math.sin(endAngle) * endRadius;
+
+      // Disperse out of bounds
+      const outX = Math.cos(angle) * (800 + Math.random() * 200);
+      const outY = Math.sin(angle) * (800 + Math.random() * 200);
+
+      // Random delay to make them come in organically
+      const delay = Math.random() * 0.8;
+      // Random sizes
+      const size = 20 + Math.random() * 60;
+      
+      // Cycle through bat1, bat2, bat3
+      const batImg = `/bat${(i % 3) + 1}.png`; 
+
+      const flutterDur = 0.15 + Math.random() * 0.2;
+
+      return { id: i, startX, startY, endX, endY, outX, outY, delay, size, batImg, flutterDur };
+    });
+  }, []);
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background:
-          'radial-gradient(ellipse at 50% 40%, #3D0F0F 0%, #150707 55%, #020101 100%)',
-      }}
-    >
-      {/* faint scanlines for texture */}
+    <>
+      <style>
+        {`
+          @keyframes crx-bat-flutter {
+            0% { transform: translate(-3px, -3px) rotate(-15deg); }
+            33% { transform: translate(3px, -2px) rotate(10deg); }
+            66% { transform: translate(-2px, 3px) rotate(-5deg); }
+            100% { transform: translate(2px, 2px) rotate(15deg); }
+          }
+        `}
+      </style>
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background:
-            'repeating-linear-gradient(0deg, rgba(179, 18, 58, 0.05) 0px, rgba(179, 18, 58, 0.05) 1px, transparent 1px, transparent 3px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <div
-        style={{
-          position: 'relative',
-          width: 148,
-          height: 148,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          background: '#0a0a0a',
+          overflow: 'hidden',
+          zIndex: 99999,
         }}
       >
-        <svg
-          width="148"
-          height="148"
-          style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}
-        >
-          <circle cx="74" cy="74" r={radius} stroke="rgba(179, 18, 58, 0.15)" strokeWidth="2" fill="none" />
-          <circle
-            cx="74"
-            cy="74"
-            r={radius}
-            stroke="url(#crx-preloader-grad)"
-            strokeWidth="2.5"
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
+        <div style={{ position: 'relative', width: 240, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          
+          {/* Background Glow */}
+          <div 
             style={{
-              filter: 'drop-shadow(0 0 6px rgba(230, 57, 80, 0.7))',
-              transition: 'stroke-dashoffset .08s linear',
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              background: stage >= 2 ? 'rgba(220, 38, 38, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+              filter: 'blur(50px)',
+              transition: 'background 0.5s ease',
+              borderRadius: '50%',
             }}
           />
-          <defs>
-            <linearGradient id="crx-preloader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#E63950" />
-              <stop offset="100%" stopColor="#D4AF6A" />
-            </linearGradient>
-          </defs>
-        </svg>
 
-        <img
-          src={LOGO_SRC}
-          alt=""
+          {/* Logo */}
+          <img
+            src={stage >= 2 ? '/new-logo-red.png' : '/new-logo-blue.png'}
+            alt="Cerebrexia Logo"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: 180,
+              height: 180,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              boxShadow: stage >= 2 ? '0 0 40px rgba(220,38,38,0.6)' : '0 0 40px rgba(59,130,246,0.6)',
+              transition: 'box-shadow 0.5s ease, transform 1s ease',
+              transform: stage >= 3 ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%) scale(1)',
+            }}
+          />
+
+          {/* Bat Swarm */}
+          {bats.map((bat) => {
+            let x = bat.startX;
+            let y = bat.startY;
+            let scale = 0.5;
+            let opacity = 0;
+
+            if (stage === 1 || stage === 2) {
+              x = bat.endX;
+              y = bat.endY;
+              scale = 1;
+              opacity = 1;
+            } else if (stage === 3) {
+              x = bat.outX;
+              y = bat.outY;
+              scale = 1.5;
+              opacity = 0;
+            }
+
+            return (
+              <div
+                key={bat.id}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`,
+                  opacity: stage === 0 ? 0 : opacity,
+                  // The overall movement of the bat from off-screen -> logo -> off-screen
+                  transition: `transform ${1.5 + Math.random() * 0.5}s cubic-bezier(0.25, 0.1, 0.25, 1) ${bat.delay}s, opacity ${1.5}s ease ${bat.delay}s`,
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                }}
+              >
+                {/* The individual flutter jitter of the bat */}
+                <img 
+                  src={bat.batImg} 
+                  alt="" 
+                  style={{
+                    width: bat.size,
+                    height: 'auto',
+                    animation: `crx-bat-flutter ${bat.flutterDur}s infinite alternate ease-in-out`,
+                  }} 
+                />
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Tagline */}
+        <div
           style={{
-            width: 98,
-            height: 98,
-            borderRadius: '50%',
-            objectFit: 'cover',
-            boxShadow: '0 0 26px rgba(179, 18, 58, 0.4)',
-            animation: 'crx-pulse-glow 2.4s ease-in-out infinite',
+            position: 'absolute',
+            bottom: 60,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 12,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            color: stage >= 2 ? 'var(--crx-red)' : 'rgba(255,255,255,0.3)',
+            transition: 'color 1s ease',
+            opacity: stage >= 3 ? 0 : 1,
           }}
-        />
+        >
+          Initializing
+        </div>
       </div>
-
-      <div
-        className="crx-display"
-        style={{
-          marginTop: 22,
-          fontSize: 36,
-          letterSpacing: 2,
-          color: '#F0F8FF',
-          textShadow: '0 0 18px rgba(230, 57, 80, 0.5)',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {percent}%
-      </div>
-      <div
-        style={{
-          marginTop: 6,
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 11,
-          letterSpacing: 4,
-          textTransform: 'uppercase',
-          color: 'rgba(240,248,255,0.5)',
-        }}
-      >
-        Loading Cerebrexia
-      </div>
-    </div>
+    </>
   );
 }
