@@ -4,14 +4,13 @@ import LoreSection from '../components/home/LoreSection';
 import MascotSection from '../components/home/MascotSection';
 import StatsSection from '../components/home/StatsSection';
 import SplitPanelSection from '../components/home/SplitPanelSection';
+import SponsorsSection from '../components/home/SponsorsSection';
+import GallerySection from '../components/home/GallerySection';
+import HostCampusSection from '../components/home/HostCampusSection';
 import ClosingHero from '../components/home/ClosingHero';
 
 // Missing components from the competitor site
-import WorldsSection from '../components/home/WorldsSection';
-import FeaturedEvents from '../components/home/FeaturedEvents';
 import DirectorMessage from '../components/home/DirectorMessage';
-import PronitesSection from '../components/home/PronitesSection';
-import GalleryMasonry from '../components/home/GalleryMasonry';
 import FAQ from '../components/home/FAQ';
 
 export default function HomePage({ setPage, revealHeroTitle }) {
@@ -23,17 +22,16 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       <MascotSection />
       <StatsSection />
       
-      {/* Competitor additions integrated */}
-      <WorldsSection />
-      <FeaturedEvents setPage={setPage} />
-      <DirectorMessage />
-      
       {/* Continuing original sections */}
       <SplitPanelSection setPage={setPage} />
+      <SponsorsSection />
+      <GallerySection />
+      <HostCampusSection />
+
+      {/* Competitor additions integrated */}
+      <DirectorMessage />
       
       {/* Final competitor additions */}
-      <PronitesSection />
-      <GalleryMasonry />
       <FAQ />
 
       {/* Original Closing */}

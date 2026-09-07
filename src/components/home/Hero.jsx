@@ -22,7 +22,6 @@ export default function Hero({ setPage, revealTitle = true }) {
           padding: '120px 20px 60px',
           position: 'relative',
           overflow: 'hidden',
-          background: 'var(--navy-void)',
         }}
       >
         {/* CSS for Ken Burns Effect */}
@@ -46,8 +45,8 @@ export default function Hero({ setPage, revealTitle = true }) {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            opacity: 0.75,
-            filter: 'contrast(1.1) saturate(1.35) grayscale(0.25)',
+            opacity: 0.95,
+            filter: 'contrast(1.05) saturate(1.15)',
             animation: 'kenburns 25s ease-in-out infinite alternate',
             zIndex: 0,
           }}
@@ -60,7 +59,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'rgba(190, 20, 35, 0.2)',
+            background: 'rgba(190, 20, 35, 0.12)',
             mixBlendMode: 'color',
             zIndex: 0,
             pointerEvents: 'none',
@@ -72,7 +71,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'rgba(20, 4, 6, 0.12)',
+            background: 'rgba(20, 4, 6, 0.1)',
             mixBlendMode: 'multiply',
             zIndex: 0,
             pointerEvents: 'none',
@@ -85,9 +84,9 @@ export default function Hero({ setPage, revealTitle = true }) {
             position: 'absolute',
             inset: 0,
             background: `
-              radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.10), transparent 55%),
-              radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.25) 0%, rgba(10, 5, 5, 0.6) 65%, rgba(10, 5, 5, 0.92) 100%),
-              linear-gradient(180deg, rgba(10, 5, 5, 0.55) 0%, rgba(10, 5, 5, 0.15) 25%, rgba(10, 5, 5, 0.15) 75%, rgba(10, 5, 5, 0.9) 100%)
+              radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.1), transparent 55%),
+              radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.2) 0%, rgba(10, 5, 5, 0.42) 65%, rgba(10, 5, 5, 0.72) 100%),
+              linear-gradient(180deg, rgba(10, 5, 5, 0.45) 0%, rgba(10, 5, 5, 0.1) 25%, rgba(10, 5, 5, 0.1) 75%, rgba(10, 5, 5, 0.78) 100%)
             `,
             zIndex: 1,
             pointerEvents: 'none',
@@ -119,7 +118,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           }}
         >
           {/* Tagline Sticker Badge — same component used across the rest of the site */}
-          <Sticker tone="gold" rotate={-2} style={{ marginBottom: 22, fontSize: 11.5 }}>
+          <Sticker tone="gold" rotate={0} style={{ marginBottom: 22, fontSize: 11.5 }}>
             India's Biggest Medical College Cultural Festival
           </Sticker>
 
@@ -225,10 +224,6 @@ export default function Hero({ setPage, revealTitle = true }) {
           >
             <button className="crx-btn gold" onClick={() => setPage('events')}>
               Explore Events
-            </button>
-
-            <button className="crx-btn cyan" onClick={() => setPage('team')}>
-              Ride The Roadtrips
             </button>
           </div>
         </div>

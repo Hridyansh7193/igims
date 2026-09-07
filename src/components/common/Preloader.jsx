@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import DynamicBackground from './DynamicBackground';
 
 const BATS_COUNT = 300;
 
@@ -78,12 +79,14 @@ export default function Preloader({ onDone }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0a0a0a',
+          background: 'radial-gradient(ellipse at 50% 40%, #1a0a0a 0%, #0a0505 55%, #050303 100%)',
           overflow: 'hidden',
           zIndex: 99999,
         }}
       >
-        <div style={{ position: 'relative', width: 320, height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Same ambient red particle/glow background used across the main site */}
+        <DynamicBackground />
+        <div style={{ position: 'relative', zIndex: 1, width: 320, height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
           {/* Background Glow */}
           <div 
@@ -170,6 +173,7 @@ export default function Preloader({ onDone }) {
           style={{
             position: 'absolute',
             bottom: 60,
+            zIndex: 1,
             fontFamily: 'var(--font-sans)',
             fontSize: 12,
             letterSpacing: '0.3em',

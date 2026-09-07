@@ -60,7 +60,7 @@ export default function SplitPanelSection({ setPage }) {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  opacity: 0.4,
+                  opacity: 0.85,
                   zIndex: 0,
                 }}
               >
@@ -70,7 +70,7 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(190,20,40,0.2)',
+                  background: 'rgba(190,20,40,0.08)',
                   mixBlendMode: 'color',
                   zIndex: 0,
                 }}
@@ -79,7 +79,7 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(160deg, rgba(10,5,5,0.35) 0%, rgba(6,3,3,0.88) 100%)',
+                  background: 'linear-gradient(160deg, rgba(10,5,5,0.05) 0%, rgba(6,3,3,0.65) 100%)',
                   zIndex: 0,
                 }}
               />
@@ -147,7 +147,7 @@ export default function SplitPanelSection({ setPage }) {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  opacity: 0.4,
+                  opacity: 0.85,
                   zIndex: 0,
                 }}
               >
@@ -157,7 +157,7 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(190,20,40,0.2)',
+                  background: 'rgba(190,20,40,0.08)',
                   mixBlendMode: 'color',
                   zIndex: 0,
                 }}
@@ -166,7 +166,7 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(160deg, rgba(10,5,5,0.35) 0%, rgba(6,3,3,0.88) 100%)',
+                  background: 'linear-gradient(160deg, rgba(10,5,5,0.05) 0%, rgba(6,3,3,0.65) 100%)',
                   zIndex: 0,
                 }}
               />
