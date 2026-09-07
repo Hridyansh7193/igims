@@ -3,12 +3,14 @@ import { X, ChevronDown } from 'lucide-react';
 import { LOGO_SRC } from '../../constants/logo';
 import { NAV, NAV_MORE } from '../../constants/navigation';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
+import { useAuth } from '../../context/AuthContext';
 
 export default function NavBar({ page, setPage }) {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef(null);
   const narrow = useIsNarrow(768);
+  const { user } = useAuth();
   const go = (p) => {
     setPage(p.toLowerCase());
     setOpen(false);
@@ -261,7 +263,7 @@ export default function NavBar({ page, setPage }) {
               e.currentTarget.style.boxShadow = '3px 3px 0 #170707';
             }}
           >
-            SIGN IN
+            {user ? 'DASHBOARD' : 'SIGN IN'}
           </button>
 
           {/* Mobile Hamburger Toggle */}
@@ -347,7 +349,7 @@ export default function NavBar({ page, setPage }) {
               marginTop: 6,
             }}
           >
-            SIGN IN
+            {user ? 'DASHBOARD' : 'SIGN IN'}
           </button>
         </div>
       )}

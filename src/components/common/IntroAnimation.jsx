@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Preloader from './Preloader';
+import AuthForm from '../auth/AuthForm';
+import SponsorPopup from './SponsorPopup';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * IntroAnimation — two-stage cinematic open:
@@ -11,15 +14,25 @@ import Preloader from './Preloader';
  * onComplete fires once the wipe has fully finished.
  */
 export default function IntroAnimation({ onComplete, onWipeStart }) {
-  const [stage, setStage] = useState('loading'); // 'loading' -> 'wiping'
+  const [stage, setStage] = useState('loading'); // 'loading' -> 'auth' -> 'sponsor' -> 'wiping'
   const [frameScale, setFrameScale] = useState(0);
   const rafRef = useRef(null);
   const startTimeRef = useRef(null);
+  const { user } = useAuth();
 
   const handleLoaderDone = useCallback(() => {
-    setStage('wiping');
-    onWipeStart && onWipeStart();
-  }, [onWipeStart]);
+    if (user) {
+      setStage('sponsor');
+    } else {
+      setStage('auth');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (stage === 'auth' && user) {
+      setStage('sponsor');
+    }
+  }, [user, stage]);
 
   useEffect(() => {
     if (stage !== 'wiping') return;
@@ -56,18 +69,28 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        pointerEvents: 'none',
+        pointerEvents: (stage === 'auth' || stage === 'sponsor') ? 'auto' : 'none',
       }}
     >
-      {stage === 'loading' ? (
-        <Preloader onDone={handleLoaderDone} />
-      ) : (
+      {stage === 'loading' && <Preloader onDone={handleLoaderDone} />}
+      
+      {stage === 'auth' && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020101' }}>
+          <AuthForm onSuccess={() => setStage('sponsor')} />
+        </div>
+      )}
+
+      {stage === 'sponsor' && (
+        <SponsorPopup onClose={() => {
+          setStage('wiping');
+          onWipeStart && onWipeStart();
+        }} />
+      )}
+
+      {stage === 'wiping' && (
         <>
           {/* Four-panel curtain that shrinks outward, opening a hole in the
-              middle. (A single self-intersecting clip-path polygon was tried
-              here first but doesn't reliably cancel out its inner hole across
-              browsers, so plain rectangles are used instead — simpler and
-              guaranteed correct.) */}
+              middle. */}
           <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${insetY}%`, background: '#020101' }} />
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${insetY}%`, background: '#020101' }} />
           <div style={{ position: 'absolute', left: 0, top: `${insetY}%`, bottom: `${insetY}%`, width: `${insetX}%`, background: '#020101' }} />

@@ -1,34 +1,44 @@
-import React, { useState } from 'react';
-import { ShieldCheck, QrCode, Download } from 'lucide-react';
+import React from 'react';
+import { ShieldCheck, QrCode, Download, LogOut } from 'lucide-react';
 import Sticker from '../components/common/Sticker';
 import { useIsNarrow } from '../hooks/useIsNarrow';
+import AuthForm from '../components/auth/AuthForm';
+import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { user, loading, signOut } = useAuth();
   const narrow = useIsNarrow(760);
 
-  if (!loggedIn) {
+  if (loading) {
     return (
       <section style={{ padding: '180px 24px 100px', maxWidth: 420, margin: '0 auto', textAlign: 'center' }}>
-        <ShieldCheck size={30} color="var(--gold)" style={{ marginBottom: 14 }} />
-        <h1 className="crx-display" style={{ fontSize: 28, color: 'var(--cream)', marginBottom: 10 }}>
-          PARTICIPANT DASHBOARD
-        </h1>
-        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 26 }}>
-          Sign in to view your registrations, entry QR, and receipts.
-        </p>
-        <button onClick={() => setLoggedIn(true)} className="crx-btn gold" style={{ width: '100%', justifyContent: 'center' }}>
-          Continue as Demo Participant
-        </button>
+        <p style={{ color: 'var(--muted)', fontSize: 13 }}>Initializing uplink...</p>
+      </section>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section style={{ padding: '150px 24px 100px', maxWidth: 600, margin: '0 auto' }}>
+        <AuthForm />
       </section>
     );
   }
 
   return (
     <section style={{ padding: '150px 24px 100px', maxWidth: 900, margin: '0 auto' }}>
-      <h1 className="crx-display" style={{ fontSize: 28, color: 'var(--cream)', marginBottom: 30 }}>
-        YOUR REGISTRATIONS
-      </h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30 }}>
+        <div>
+          <h1 className="crx-display" style={{ fontSize: 28, color: 'var(--cream)', marginBottom: 8 }}>
+            YOUR REGISTRATIONS
+          </h1>
+          <p style={{ color: 'var(--muted)', fontSize: 13 }}>Logged in as: {user.email}</p>
+        </div>
+        <button onClick={signOut} className="crx-btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <LogOut size={14} /> SIGN OUT
+        </button>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 260px', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {['Cricket', 'Got Talent', 'Case Presentation'].map((ev) => (

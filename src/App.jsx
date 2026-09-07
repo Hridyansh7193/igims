@@ -11,6 +11,7 @@ import AccommodationPage from './pages/AccommodationPage';
 import TeamPage from './pages/TeamPage';
 import ContactPage from './pages/ContactPage';
 import DashboardPage from './pages/DashboardPage';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -30,8 +31,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="crx-root">
-      <GlobalStyle />
+    <AuthProvider>
+      <div className="crx-root">
+        <GlobalStyle />
 
       {/* Cinematic Intro Animation Overlay */}
       {!introComplete && (
@@ -53,6 +55,7 @@ export default function App() {
         {page === 'dashboard' && <DashboardPage />}
         <Footer setPage={setPage} />
       </div>
-    </div>
+      </div>
+    </AuthProvider>
   );
 }
