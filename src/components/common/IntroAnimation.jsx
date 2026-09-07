@@ -68,10 +68,10 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
               here first but doesn't reliably cancel out its inner hole across
               browsers, so plain rectangles are used instead — simpler and
               guaranteed correct.) */}
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${insetY}%`, background: '#050814' }} />
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${insetY}%`, background: '#050814' }} />
-          <div style={{ position: 'absolute', left: 0, top: `${insetY}%`, bottom: `${insetY}%`, width: `${insetX}%`, background: '#050814' }} />
-          <div style={{ position: 'absolute', right: 0, top: `${insetY}%`, bottom: `${insetY}%`, width: `${insetX}%`, background: '#050814' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${insetY}%`, background: '#020101' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${insetY}%`, background: '#020101' }} />
+          <div style={{ position: 'absolute', left: 0, top: `${insetY}%`, bottom: `${insetY}%`, width: `${insetX}%`, background: '#020101' }} />
+          <div style={{ position: 'absolute', right: 0, top: `${insetY}%`, bottom: `${insetY}%`, width: `${insetX}%`, background: '#020101' }} />
 
           {/* Animated glowing border around the transparent hole */}
           <div
@@ -81,8 +81,8 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
               top: `${insetY}%`,
               right: `${insetX}%`,
               bottom: `${insetY}%`,
-              border: `2px solid rgba(56, 189, 248, ${0.8 - frameScale * 0.6})`,
-              boxShadow: `0 0 ${20 + frameScale * 30}px rgba(56, 189, 248, ${0.4 - frameScale * 0.3}), inset 0 0 ${10 + frameScale * 20}px rgba(251, 191, 36, ${0.15 - frameScale * 0.1})`,
+              border: `2px solid rgba(179, 18, 58, ${0.8 - frameScale * 0.6})`,
+              boxShadow: `0 0 ${20 + frameScale * 30}px rgba(179, 18, 58, ${0.4 - frameScale * 0.3}), inset 0 0 ${10 + frameScale * 20}px rgba(176, 141, 87, ${0.15 - frameScale * 0.1})`,
             }}
           />
         </>

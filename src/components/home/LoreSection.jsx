@@ -14,12 +14,12 @@ export default function LoreSection() {
             className="crx-display"
             style={{
               fontSize: 'clamp(32px, 5.5vw, 56px)',
-              background: 'linear-gradient(180deg, #FFFFFF 0%, #E0F2FE 60%, #FBBF24 100%)',
+              background: 'linear-gradient(180deg, #FFFFFF 0%, #E8D6D0 60%, #B08D57 100%)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               color: 'transparent',
               margin: '0 0 22px',
-              filter: 'drop-shadow(0 0 20px rgba(56, 189, 248, 0.25))',
+              filter: 'drop-shadow(0 0 20px rgba(179, 18, 58, 0.25))',
             }}
           >
             THE CROWNED DIAGNOSIS

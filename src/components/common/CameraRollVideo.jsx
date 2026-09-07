@@ -40,8 +40,8 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
           left: 0,
           right: 0,
           height: 28,
-          background: 'rgba(5, 8, 20, 0.95)',
-          borderBottom: '1px solid rgba(56, 189, 248, 0.28)',
+          background: 'rgba(10, 5, 5, 0.95)',
+          borderBottom: '1px solid rgba(179, 18, 58, 0.28)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
@@ -57,8 +57,8 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
               width: 14,
               height: 10,
               borderRadius: 2,
-              background: 'rgba(56, 189, 248, 0.22)',
-              border: '1px solid rgba(251, 191, 36, 0.35)',
+              background: 'rgba(179, 18, 58, 0.22)',
+              border: '1px solid rgba(176, 141, 87, 0.35)',
               display: 'inline-block',
               margin: '0 4px',
             }}
@@ -93,7 +93,7 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
           fontSize: 'clamp(80px, 20vw, 220px)',
           letterSpacing: '0.04em',
           color: 'transparent',
-          WebkitTextStroke: '1.5px rgba(56, 189, 248, 0.16)',
+          WebkitTextStroke: '1.5px rgba(179, 18, 58, 0.16)',
           textTransform: 'uppercase',
           userSelect: 'none',
         }}
@@ -122,15 +122,14 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
         />
       ))}
 
-      {/* Cosmic Gradient Film Overlay (Cosmic cyan and gold starlight blend) */}
+      {/* Wine-red vignette film overlay */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background: `
-            radial-gradient(ellipse at 50% 30%, rgba(56, 189, 248, 0.18), transparent 65%),
-            radial-gradient(ellipse at 80% 80%, rgba(245, 158, 11, 0.14), transparent 55%),
-            linear-gradient(180deg, rgba(5,8,20,0.65) 0%, rgba(7,12,32,0.85) 60%, rgba(5,8,20,0.98) 100%)
+            radial-gradient(ellipse at 50% 30%, rgba(179, 18, 58, 0.18), transparent 65%),
+            linear-gradient(180deg, rgba(10, 5, 5, 0.65) 0%, rgba(10,10,10,0.85) 60%, rgba(10, 5, 5, 0.98) 100%)
           `,
           zIndex: 2,
         }}
@@ -155,8 +154,8 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
           bottom: 38,
           right: 24,
           zIndex: 4,
-          background: 'rgba(5, 8, 20, 0.8)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          background: 'rgba(10, 5, 5, 0.8)',
+          border: '1px solid rgba(179, 18, 58, 0.3)',
           padding: '4px 10px',
           borderRadius: 6,
           fontSize: 9.5,
@@ -179,8 +178,8 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
           left: 0,
           right: 0,
           height: 28,
-          background: 'rgba(5, 8, 20, 0.95)',
-          borderTop: '1px solid rgba(56, 189, 248, 0.28)',
+          background: 'rgba(10, 5, 5, 0.95)',
+          borderTop: '1px solid rgba(179, 18, 58, 0.28)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
@@ -196,8 +195,8 @@ export default function CameraRollVideo({ variant = 'background', style = {} }) 
               width: 14,
               height: 10,
               borderRadius: 2,
-              background: 'rgba(56, 189, 248, 0.22)',
-              border: '1px solid rgba(251, 191, 36, 0.35)',
+              background: 'rgba(179, 18, 58, 0.22)',
+              border: '1px solid rgba(176, 141, 87, 0.35)',
               display: 'inline-block',
               margin: '0 4px',
             }}

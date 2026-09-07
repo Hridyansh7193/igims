@@ -22,11 +22,11 @@ export default function DynamicBackground() {
     // Particle colors extracted directly from the logo:
     // Cyan/Azure (hair & cosmic halo), Gold/Amber (crown & glowing eyes), and Pale Starlight
     const colors = [
-      'rgba(56, 189, 248, ',   // cyan / azure
-      'rgba(0, 163, 255, ',    // electric blue
-      'rgba(251, 191, 36, ',   // warm gold
-      'rgba(245, 158, 11, ',   // amber
-      'rgba(224, 242, 254, ',  // starlight frost
+      'rgba(179, 18, 58, ',    // ruby
+      'rgba(230, 57, 80, ',    // ruby glow
+      'rgba(176, 141, 87, ',   // antique gold
+      'rgba(212, 175, 106, ',  // champagne gold
+      'rgba(232, 214, 208, ',  // bone / ash white
     ];
 
     const count = Math.min(width > 768 ? 65 : 35, 80);
@@ -65,7 +65,7 @@ export default function DynamicBackground() {
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 115) {
             const alpha = (1 - dist / 115) * 0.18;
-            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+            ctx.strokeStyle = `rgba(179, 18, 58, ${alpha})`;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -132,7 +132,7 @@ export default function DynamicBackground() {
         overflow: 'hidden',
       }}
     >
-      {/* Ambient Celestial Orbs in background */}
+      {/* Ambient wine-red glow only — no gold mixed in to avoid a muddy haze */}
       <div
         style={{
           position: 'absolute',
@@ -143,24 +143,9 @@ export default function DynamicBackground() {
           maxWidth: 900,
           maxHeight: 900,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(56,189,248,0.14) 0%, rgba(2,132,199,0.06) 45%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(185, 28, 28, 0.12) 0%, transparent 70%)',
           filter: 'blur(60px)',
           animation: 'crx-float 16s ease-in-out infinite alternate',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '5%',
-          right: '-10%',
-          width: '50vw',
-          height: '50vw',
-          maxWidth: 750,
-          maxHeight: 750,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, rgba(217,119,6,0.04) 50%, transparent 70%)',
-          filter: 'blur(70px)',
-          animation: 'crx-float 20s ease-in-out infinite alternate-reverse',
         }}
       />
       <canvas

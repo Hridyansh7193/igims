@@ -6,6 +6,8 @@ import NavBar from './components/layout/NavBar';
 import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
+import PronitesPage from './pages/PronitesPage';
+import AccommodationPage from './pages/AccommodationPage';
 import TeamPage from './pages/TeamPage';
 import ContactPage from './pages/ContactPage';
 import DashboardPage from './pages/DashboardPage';
@@ -44,6 +46,8 @@ export default function App() {
         <NavBar page={page} setPage={setPage} />
         {page === 'home' && <HomePage setPage={setPage} revealHeroTitle={revealHeroTitle} />}
         {page === 'events' && <EventsPage />}
+        {page === 'pronites' && <PronitesPage />}
+        {page === 'accommodation' && <AccommodationPage />}
         {page === 'team' && <TeamPage />}
         {page === 'contact' && <ContactPage />}
         {page === 'dashboard' && <DashboardPage />}

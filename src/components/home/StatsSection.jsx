@@ -49,9 +49,7 @@ export default function StatsSection() {
                 >
                   <CountUp to={s.value} suffix={s.suffix} />
                 </p>
-                <Sticker tone={i % 2 === 0 ? 'orange' : 'gold'} rotate={i % 2 === 0 ? -2 : 2}>
-                  {s.label}
-                </Sticker>
+                <span className="crx-stat-badge">{s.label}</span>
               </div>
             </Reveal>
           ))}

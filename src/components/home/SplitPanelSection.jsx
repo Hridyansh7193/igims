@@ -44,8 +44,8 @@ export default function SplitPanelSection({ setPage }) {
                 borderRadius: 20,
                 position: 'relative',
                 overflow: 'hidden',
-                background: 'linear-gradient(160deg, #0D204D 0%, #070C20 100%)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
+                background: 'linear-gradient(160deg, #2B0A0A 0%, #150707 100%)',
+                border: '1px solid rgba(179, 18, 58, 0.3)',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
@@ -70,7 +70,16 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(160deg, rgba(13,32,77,0.55) 0%, rgba(7,12,32,0.75) 100%)',
+                  background: 'rgba(190,20,40,0.2)',
+                  mixBlendMode: 'color',
+                  zIndex: 0,
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(160deg, rgba(10,5,5,0.35) 0%, rgba(6,3,3,0.88) 100%)',
                   zIndex: 0,
                 }}
               />
@@ -84,14 +93,14 @@ export default function SplitPanelSection({ setPage }) {
                   left: 0,
                   right: 0,
                   padding: '24px',
-                  background: 'linear-gradient(0deg, rgba(5,8,20,0.92) 0%, transparent 100%)',
+                  background: 'linear-gradient(0deg, rgba(10, 5, 5, 0.92) 0%, transparent 100%)',
                   zIndex: 1,
                 }}
               >
                 <h3 className="crx-display" style={{ fontSize: 'clamp(30px,4vw,44px)', color: '#fff', margin: '0 0 8px' }}>
                   EVENTS
                 </h3>
-                <p style={{ fontSize: 13.5, color: '#E0F2FE', margin: '0 0 10px', maxWidth: 320 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--paper)', margin: '0 0 10px', maxWidth: 320 }}>
                   Academic, literary, cultural, art, sports and informal — the main arena awaits.
                 </p>
                 <span
@@ -122,8 +131,8 @@ export default function SplitPanelSection({ setPage }) {
                 borderRadius: 20,
                 position: 'relative',
                 overflow: 'hidden',
-                background: 'linear-gradient(160deg, #1C1A4A 0%, #070C20 100%)',
-                border: '1px solid rgba(251, 191, 36, 0.3)',
+                background: 'linear-gradient(160deg, #3A0C0C 0%, #150707 100%)',
+                border: '1px solid rgba(176, 141, 87, 0.3)',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
@@ -148,7 +157,16 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'linear-gradient(160deg, rgba(28,26,74,0.55) 0%, rgba(7,12,32,0.75) 100%)',
+                  background: 'rgba(190,20,40,0.2)',
+                  mixBlendMode: 'color',
+                  zIndex: 0,
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(160deg, rgba(10,5,5,0.35) 0%, rgba(6,3,3,0.88) 100%)',
                   zIndex: 0,
                 }}
               />
@@ -162,14 +180,14 @@ export default function SplitPanelSection({ setPage }) {
                   left: 0,
                   right: 0,
                   padding: '24px',
-                  background: 'linear-gradient(0deg, rgba(5,8,20,0.92) 0%, transparent 100%)',
+                  background: 'linear-gradient(0deg, rgba(10, 5, 5, 0.92) 0%, transparent 100%)',
                   zIndex: 1,
                 }}
               >
                 <h3 className="crx-display" style={{ fontSize: 'clamp(30px,4vw,44px)', color: '#fff', margin: '0 0 8px' }}>
                   TEAM
                 </h3>
-                <p style={{ fontSize: 13.5, color: '#E0F2FE', margin: '0 0 10px', maxWidth: 320 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--paper)', margin: '0 0 10px', maxWidth: 320 }}>
                   The organisers behind the crown — the crew running Cerebrexia this year.
                 </p>
                 <span

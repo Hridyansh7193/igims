@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, ChevronDown } from 'lucide-react';
 import { LOGO_SRC } from '../../constants/logo';
-import { NAV } from '../../constants/navigation';
+import { NAV, NAV_MORE } from '../../constants/navigation';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function NavBar({ page, setPage }) {
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
   const narrow = useIsNarrow(768);
   const go = (p) => {
     setPage(p.toLowerCase());
     setOpen(false);
+    setMoreOpen(false);
   };
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onClick = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [moreOpen]);
 
   return (
     <header
@@ -47,24 +59,24 @@ export default function NavBar({ page, setPage }) {
             style={{
               width: 50,
               height: 50,
-              background: '#FDC23E',
-              border: '2px solid #181014',
+              background: '#020101',
+              border: '2px solid #DC2626',
               borderRadius: 14,
-              boxShadow: '3px 3px 0 #181014',
+              boxShadow: '3px 3px 0 #170707, 0 0 14px rgba(179, 18, 58, 0.35)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              padding: 4,
+              padding: 3,
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translate(1px, 1px)';
-              e.currentTarget.style.boxShadow = '2px 2px 0 #181014';
+              e.currentTarget.style.boxShadow = '2px 2px 0 #170707, 0 0 18px rgba(179, 18, 58, 0.5)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translate(0, 0)';
-              e.currentTarget.style.boxShadow = '3px 3px 0 #181014';
+              e.currentTarget.style.boxShadow = '3px 3px 0 #170707, 0 0 14px rgba(179, 18, 58, 0.35)';
             }}
           >
             <img
@@ -113,9 +125,10 @@ export default function NavBar({ page, setPage }) {
                 key={p}
                 onClick={() => go(p)}
                 style={{
-                  background: active ? 'linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #1D4ED8 100%)' : 'transparent',
+                  background: 'transparent',
                   color: active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
                   border: 'none',
+                  borderBottom: active ? '2px solid #DC2626' : '2px solid transparent',
                   borderRadius: 24,
                   padding: '7px 18px',
                   fontSize: 12.5,
@@ -124,6 +137,7 @@ export default function NavBar({ page, setPage }) {
                   textTransform: 'uppercase',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
+                  boxShadow: active ? '0 4px 10px -2px rgba(220, 38, 38, 0.45)' : 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) e.currentTarget.style.color = '#FFFFFF';
@@ -136,6 +150,74 @@ export default function NavBar({ page, setPage }) {
               </button>
             );
           })}
+
+          {/* "More" dropdown pill for secondary pages */}
+          <div ref={moreRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setMoreOpen(!moreOpen)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background: 'transparent',
+                color: NAV_MORE.some((p) => page === p.toLowerCase()) ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+                border: 'none',
+                borderBottom: NAV_MORE.some((p) => page === p.toLowerCase()) ? '2px solid #DC2626' : '2px solid transparent',
+                borderRadius: 24,
+                padding: '7px 14px',
+                fontSize: 12.5,
+                fontWeight: 700,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              More <ChevronDown size={13} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {moreOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 12px)',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(16, 9, 14, 0.96)',
+                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                  borderRadius: 16,
+                  padding: 8,
+                  minWidth: 150,
+                  backdropFilter: 'blur(16px)',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
+                {NAV_MORE.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => go(p)}
+                    style={{
+                      background: 'transparent',
+                      color: page === p.toLowerCase() ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+                      border: 'none',
+                      borderRadius: 10,
+                      padding: '9px 14px',
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      textTransform: 'uppercase',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Right Hollow Ring Indicator */}
           <span
@@ -155,11 +237,11 @@ export default function NavBar({ page, setPage }) {
           <button
             onClick={() => go('Dashboard')}
             style={{
-              background: '#FDC23E',
-              color: '#181014',
-              border: '2px solid #181014',
+              background: '#DC2626',
+              color: '#170707',
+              border: '2px solid #170707',
               borderRadius: 14,
-              boxShadow: '3px 3px 0 #181014',
+              boxShadow: '0 4px 20px rgba(220, 38, 38, 0.35), 3px 3px 0 #170707',
               padding: '10px 22px',
               fontWeight: 800,
               fontSize: 13,
@@ -172,11 +254,11 @@ export default function NavBar({ page, setPage }) {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translate(1px, 1px)';
-              e.currentTarget.style.boxShadow = '2px 2px 0 #181014';
+              e.currentTarget.style.boxShadow = '2px 2px 0 #170707';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translate(0, 0)';
-              e.currentTarget.style.boxShadow = '3px 3px 0 #181014';
+              e.currentTarget.style.boxShadow = '3px 3px 0 #170707';
             }}
           >
             SIGN IN
@@ -187,9 +269,9 @@ export default function NavBar({ page, setPage }) {
             onClick={() => setOpen(!open)}
             aria-label="Menu"
             style={{
-              background: '#FDC23E',
-              border: '2px solid #181014',
-              boxShadow: '2px 2px 0 #181014',
+              background: '#DC2626',
+              border: '2px solid #170707',
+              boxShadow: '2px 2px 0 #170707',
               borderRadius: 12,
               width: 44,
               height: 44,
@@ -200,12 +282,12 @@ export default function NavBar({ page, setPage }) {
             }}
           >
             {open ? (
-              <X size={20} color="#181014" />
+              <X size={20} color="#170707" />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ width: 18, height: 2, background: '#181014' }} />
-                <span style={{ width: 18, height: 2, background: '#181014' }} />
-                <span style={{ width: 18, height: 2, background: '#181014' }} />
+                <span style={{ width: 18, height: 2, background: '#170707' }} />
+                <span style={{ width: 18, height: 2, background: '#170707' }} />
+                <span style={{ width: 18, height: 2, background: '#170707' }} />
               </div>
             )}
           </button>
@@ -218,7 +300,7 @@ export default function NavBar({ page, setPage }) {
           style={{
             marginTop: 14,
             background: 'rgba(16, 9, 14, 0.96)',
-            border: '2px solid #181014',
+            border: '2px solid #170707',
             borderRadius: 18,
             padding: 16,
             display: 'flex',
@@ -228,14 +310,15 @@ export default function NavBar({ page, setPage }) {
             boxShadow: '0 12px 40px rgba(0,0,0,0.8)',
           }}
         >
-          {NAV.map((p) => (
+          {[...NAV, ...NAV_MORE].map((p) => (
             <button
               key={p}
               onClick={() => go(p)}
               style={{
-                background: page === p.toLowerCase() ? 'linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #1D4ED8 100%)' : 'transparent',
-                color: '#fff',
+                background: 'transparent',
+                color: page === p.toLowerCase() ? '#fff' : 'rgba(255,255,255,0.7)',
                 border: 'none',
+                borderLeft: page === p.toLowerCase() ? '2px solid #DC2626' : '2px solid transparent',
                 borderRadius: 12,
                 padding: '12px 16px',
                 textAlign: 'left',
@@ -252,9 +335,9 @@ export default function NavBar({ page, setPage }) {
           <button
             onClick={() => go('Dashboard')}
             style={{
-              background: '#FDC23E',
-              color: '#181014',
-              border: '2px solid #181014',
+              background: '#DC2626',
+              color: '#170707',
+              border: '2px solid #170707',
               borderRadius: 12,
               padding: '12px',
               fontWeight: 800,

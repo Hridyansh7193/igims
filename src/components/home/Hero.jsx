@@ -47,7 +47,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             height: '100%',
             objectFit: 'cover',
             opacity: 0.75,
-            filter: 'contrast(1.1) saturate(1.2)',
+            filter: 'contrast(1.1) saturate(1.35) grayscale(0.25)',
             animation: 'kenburns 25s ease-in-out infinite alternate',
             zIndex: 0,
           }}
@@ -55,16 +55,39 @@ export default function Hero({ setPage, revealTitle = true }) {
           <source src="/events-bg.mp4" type="video/mp4" />
         </video>
 
+        {/* Red Color-Tint Layer — shifts the raw footage's blue stage lighting toward the crimson theme */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(190, 20, 35, 0.2)',
+            mixBlendMode: 'color',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Light multiply pass — just enough to settle any leftover blue/purple, without crushing the footage */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(20, 4, 6, 0.12)',
+            mixBlendMode: 'multiply',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
+
         {/* Cosmic Vignette Overlay — matches the navy/cyan/gold theme used site-wide */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             background: `
-              radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.10), transparent 55%),
-              radial-gradient(ellipse at 100% 100%, rgba(251, 191, 36, 0.08), transparent 55%),
-              radial-gradient(ellipse at 50% 50%, rgba(5, 8, 20, 0.25) 0%, rgba(5, 8, 20, 0.6) 65%, rgba(5, 8, 20, 0.92) 100%),
-              linear-gradient(180deg, rgba(5, 8, 20, 0.55) 0%, rgba(5, 8, 20, 0.15) 25%, rgba(5, 8, 20, 0.15) 75%, rgba(5, 8, 20, 0.9) 100%)
+              radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.10), transparent 55%),
+              radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.25) 0%, rgba(10, 5, 5, 0.6) 65%, rgba(10, 5, 5, 0.92) 100%),
+              linear-gradient(180deg, rgba(10, 5, 5, 0.55) 0%, rgba(10, 5, 5, 0.15) 25%, rgba(10, 5, 5, 0.15) 75%, rgba(10, 5, 5, 0.9) 100%)
             `,
             zIndex: 1,
             pointerEvents: 'none',
@@ -125,7 +148,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                 {titleSettled ? (
                   <span
                     style={{
-                      color: '#FFFFFF',
+                      color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
                       fontSize: 'clamp(52px, 11vw, 135px)',
                       fontWeight: 900,
@@ -148,7 +171,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                       setTitleSettled(true);
                     }}
                     style={{
-                      color: '#FFFFFF',
+                      color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
                       fontSize: 'clamp(52px, 11vw, 135px)',
                       fontWeight: 900,

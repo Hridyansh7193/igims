@@ -8,7 +8,7 @@ export default function ClosingHero({ setPage }) {
         position: 'relative',
         padding: '110px 24px',
         overflow: 'hidden',
-        background: 'radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 70%), linear-gradient(160deg, #0B173B 0%, #050814 100%)',
+        background: 'radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.15) 0%, transparent 70%), linear-gradient(160deg, #240C0C 0%, #020101 100%)',
         borderTop: '1px solid var(--hair)',
         borderBottom: '1px solid var(--hair)',
       }}
@@ -31,7 +31,7 @@ export default function ClosingHero({ setPage }) {
         <p
           style={{
             fontSize: 15.5,
-            color: '#EADFD4',
+            color: 'var(--paper)',
             lineHeight: 1.8,
             maxWidth: 560,
             margin: '0 auto 30px',

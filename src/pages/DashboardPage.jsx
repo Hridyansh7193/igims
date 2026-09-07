@@ -55,8 +55,8 @@ export default function DashboardPage() {
           style={{
             padding: 20,
             borderRadius: 16,
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            background: 'linear-gradient(160deg, #0E1A3D 0%, #060B1E 100%)',
+            border: '1px solid rgba(179, 18, 58, 0.3)',
+            background: 'linear-gradient(160deg, #181212 0%, #0A0505 100%)',
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             textAlign: 'center',
           }}

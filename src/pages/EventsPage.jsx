@@ -17,14 +17,14 @@ export default function EventsPage() {
           key: activeCat,
         }));
 
-  // Cosmic color themes matching the gems in the crown of the logo
+  // Dark wine/crimson variations — cohesive with the crown's blood-red palette
   const cardGradients = [
-    'linear-gradient(160deg, #0C235A 0%, #050B1E 100%)', // Sapphire Azure
-    'linear-gradient(160deg, #2E2207 0%, #080D22 100%)', // Crown Topaz Amber
-    'linear-gradient(160deg, #072C42 0%, #050E1E 100%)', // Celestial Cyan
-    'linear-gradient(160deg, #1B1446 0%, #07091C 100%)', // Mystic Violet
-    'linear-gradient(160deg, #092636 0%, #040918 100%)', // Deep Teal
-    'linear-gradient(160deg, #141E47 0%, #060B1E 100%)', // Royal Midnight
+    'linear-gradient(160deg, #3D0B14 0%, #0A0505 100%)', // Deep Ruby
+    'linear-gradient(160deg, #2E0A12 0%, #0A0505 100%)', // Dried Garnet
+    'linear-gradient(160deg, #3B0F1D 0%, #0A0505 100%)', // Wine Maroon
+    'linear-gradient(160deg, #350A0F 0%, #0A0505 100%)', // Blackened Crimson
+    'linear-gradient(160deg, #33101A 0%, #0A0505 100%)', // Dark Rose Ember
+    'linear-gradient(160deg, #241010 0%, #0A0505 100%)', // Charcoal Red
   ];
 
   return (
@@ -49,12 +49,12 @@ export default function EventsPage() {
             onClick={() => setActiveCat('all')}
             className="crx-btn"
             style={{
-              background: activeCat === 'all' ? 'linear-gradient(135deg, var(--cyan), var(--cyan-dark))' : 'rgba(56, 189, 248, 0.08)',
-              border: activeCat === 'all' ? '1px solid var(--cyan)' : '1px solid rgba(56, 189, 248, 0.2)',
+              background: activeCat === 'all' ? 'linear-gradient(135deg, var(--cyan), var(--cyan-dark))' : 'rgba(179, 18, 58, 0.08)',
+              border: activeCat === 'all' ? '1px solid var(--cyan)' : '1px solid rgba(179, 18, 58, 0.2)',
               color: activeCat === 'all' ? '#fff' : 'var(--paper)',
               padding: '9px 18px',
               fontSize: 11.5,
-              boxShadow: activeCat === 'all' ? '0 0 15px rgba(56, 189, 248, 0.4)' : 'none',
+              boxShadow: activeCat === 'all' ? '0 0 15px rgba(179, 18, 58, 0.4)' : 'none',
             }}
           >
             All Cases
@@ -65,12 +65,12 @@ export default function EventsPage() {
               onClick={() => setActiveCat(c.key)}
               className="crx-btn"
               style={{
-                background: activeCat === c.key ? 'linear-gradient(135deg, var(--gold), var(--gold-dark))' : 'rgba(56, 189, 248, 0.08)',
-                border: activeCat === c.key ? '1px solid var(--gold)' : '1px solid rgba(56, 189, 248, 0.2)',
-                color: activeCat === c.key ? '#050814' : 'var(--paper)',
+                background: activeCat === c.key ? 'linear-gradient(135deg, var(--gold), var(--gold-dark))' : 'rgba(179, 18, 58, 0.08)',
+                border: activeCat === c.key ? '1px solid var(--gold)' : '1px solid rgba(179, 18, 58, 0.2)',
+                color: activeCat === c.key ? '#020101' : 'var(--paper)',
                 padding: '9px 18px',
                 fontSize: 11.5,
-                boxShadow: activeCat === c.key ? '0 0 15px rgba(245, 158, 11, 0.4)' : 'none',
+                boxShadow: activeCat === c.key ? '0 0 15px rgba(140, 107, 61, 0.4)' : 'none',
                 whiteSpace: 'nowrap',
               }}
             >
@@ -95,7 +95,7 @@ export default function EventsPage() {
                   borderRadius: 14,
                   overflow: 'hidden',
                   background: cardGradients[i % cardGradients.length],
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                 }}
               >
@@ -114,8 +114,8 @@ export default function EventsPage() {
                 </span>
                 <Sticker
                   tone={i % 2 === 0 ? 'gold' : 'cyan'}
-                  rotate={i % 2 === 0 ? -3 : 3}
-                  style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, padding: '4px 8px' }}
+                  rotate={0}
+                  style={{ position: 'absolute', top: 12, right: 12, fontSize: 9, padding: '4px 9px' }}
                 >
                   {ev.cat}
                 </Sticker>
@@ -126,7 +126,7 @@ export default function EventsPage() {
                     left: 0,
                     right: 0,
                     padding: '14px',
-                    background: 'linear-gradient(0deg, rgba(5,8,20,0.95) 0%, rgba(5,8,20,0.6) 60%, transparent 100%)',
+                    background: 'linear-gradient(0deg, rgba(10, 5, 5, 0.95) 0%, rgba(10, 5, 5, 0.6) 60%, transparent 100%)',
                   }}
                 >
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>

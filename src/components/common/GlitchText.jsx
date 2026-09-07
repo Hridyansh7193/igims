@@ -86,7 +86,7 @@ export default function GlitchText({
           inset: 0,
           ...(glitching
             ? {
-                textShadow: '2px 0 #38BDF8, -2px 0 #FBBF24, 0 2px 12px rgba(56,189,248,0.35)',
+                textShadow: '2px 0 #E63950, -2px 0 #D4AF6A, 0 2px 12px rgba(179, 18, 58, 0.35)',
                 animation: 'crx-glitch-jitter .12s steps(2) infinite',
               }
             : done

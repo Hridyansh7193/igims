@@ -10,8 +10,8 @@ export default function Footer({ setPage }) {
   return (
     <footer
       style={{
-        borderTop: '1px solid rgba(56, 189, 248, 0.25)',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(5, 8, 20, 0.9) 100%)',
+        borderTop: '1px solid rgba(179, 18, 58, 0.25)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(10, 5, 5, 0.9) 100%)',
         padding: '60px 24px 40px',
         position: 'relative',
         zIndex: 2,
@@ -39,7 +39,7 @@ export default function Footer({ setPage }) {
             Explore
           </Sticker>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {['Events', 'Team', 'Home'].map((p) => (
+            {['Events', 'Pronites', 'Accommodation', 'Team', 'Contact', 'Home'].map((p) => (
               <button
                 key={p}
                 onClick={() => setPage(p.toLowerCase())}

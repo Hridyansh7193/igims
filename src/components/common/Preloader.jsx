@@ -52,7 +52,7 @@ export default function Preloader({ onDone, duration = 1800 }) {
         alignItems: 'center',
         justifyContent: 'center',
         background:
-          'radial-gradient(ellipse at 50% 40%, #172554 0%, #070C20 55%, #050814 100%)',
+          'radial-gradient(ellipse at 50% 40%, #3D0F0F 0%, #150707 55%, #020101 100%)',
       }}
     >
       {/* faint scanlines for texture */}
@@ -61,7 +61,7 @@ export default function Preloader({ onDone, duration = 1800 }) {
           position: 'absolute',
           inset: 0,
           background:
-            'repeating-linear-gradient(0deg, rgba(56,189,248,0.05) 0px, rgba(56,189,248,0.05) 1px, transparent 1px, transparent 3px)',
+            'repeating-linear-gradient(0deg, rgba(179, 18, 58, 0.05) 0px, rgba(179, 18, 58, 0.05) 1px, transparent 1px, transparent 3px)',
           pointerEvents: 'none',
         }}
       />
@@ -81,7 +81,7 @@ export default function Preloader({ onDone, duration = 1800 }) {
           height="148"
           style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}
         >
-          <circle cx="74" cy="74" r={radius} stroke="rgba(56,189,248,0.15)" strokeWidth="2" fill="none" />
+          <circle cx="74" cy="74" r={radius} stroke="rgba(179, 18, 58, 0.15)" strokeWidth="2" fill="none" />
           <circle
             cx="74"
             cy="74"
@@ -93,14 +93,14 @@ export default function Preloader({ onDone, duration = 1800 }) {
             strokeDashoffset={dashOffset}
             strokeLinecap="round"
             style={{
-              filter: 'drop-shadow(0 0 6px rgba(56,189,248,0.7))',
+              filter: 'drop-shadow(0 0 6px rgba(230, 57, 80, 0.7))',
               transition: 'stroke-dashoffset .08s linear',
             }}
           />
           <defs>
             <linearGradient id="crx-preloader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#38BDF8" />
-              <stop offset="100%" stopColor="#FBBF24" />
+              <stop offset="0%" stopColor="#E63950" />
+              <stop offset="100%" stopColor="#D4AF6A" />
             </linearGradient>
           </defs>
         </svg>
@@ -113,7 +113,7 @@ export default function Preloader({ onDone, duration = 1800 }) {
             height: 98,
             borderRadius: '50%',
             objectFit: 'cover',
-            boxShadow: '0 0 26px rgba(56,189,248,0.4)',
+            boxShadow: '0 0 26px rgba(179, 18, 58, 0.4)',
             animation: 'crx-pulse-glow 2.4s ease-in-out infinite',
           }}
         />
@@ -126,7 +126,7 @@ export default function Preloader({ onDone, duration = 1800 }) {
           fontSize: 36,
           letterSpacing: 2,
           color: '#F0F8FF',
-          textShadow: '0 0 18px rgba(56,189,248,0.5)',
+          textShadow: '0 0 18px rgba(230, 57, 80, 0.5)',
           fontVariantNumeric: 'tabular-nums',
         }}
       >

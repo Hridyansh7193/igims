@@ -9,37 +9,37 @@ export default function GlobalStyle() {
          CEREBREXIA '26 - CELESTIAL CROWN COLOR PALETTE (Extracted from Brand Logo)
          ========================================================================== */
       :root {
-        /* Deep Cosmic Void & Abyss */
-        --navy-void: #050814;
-        --navy-deep: #070C20;
-        --navy-surface: #0B132E;
-        --navy-card: #0F1A3E;
-        --indigo-nebula: #172554;
+        /* Deep Matte Charcoal Void & Abyss */
+        --navy-void: #0A0A0A;
+        --navy-deep: #0D0D0D;
+        --navy-surface: #141212;
+        --navy-card: #181515;
+        --indigo-nebula: #241616;
         
-        /* Electric Azure & Celestial Cyan (Goddess Hair & Starlight Halo) */
-        --cyan: #38BDF8;
-        --cyan-glow: #00A3FF;
-        --cyan-dark: #0284C7;
-        --azure-deep: #1D4ED8;
+        /* Blood Crimson & Ruby Glow (Eyes & Ritual Circle) */
+        --cyan: #B3123A;
+        --cyan-glow: #E63950;
+        --cyan-dark: #6E0A22;
+        --azure-deep: #4A0515;
         
         /* Royal Topaz & Starlight Gold (Crowned Diadem & Luminous Eyes) */
-        --gold: #FBBF24;
-        --gold-glow: #FDE047;
-        --gold-amber: #F59E0B;
-        --gold-dark: #D97706;
+        --gold: #B08D57;
+        --gold-glow: #D4AF6A;
+        --gold-amber: #8C6B3D;
+        --gold-dark: #5C4526;
         
         /* Ethereal Starlight, Frost & Highlights */
-        --cream: #F0F8FF;
-        --paper: #E0F2FE;
-        --ink: #050814;
-        --muted: #94A3B8;
-        --muted-blue: #64748B;
+        --cream: #F7F1E3;
+        --paper: #A1A1AA;
+        --ink: #0A0A0A;
+        --muted: #A1A1AA;
+        --muted-blue: #8B8B94;
         
         /* Glowing Hairline Borders & Shadows */
-        --hair: rgba(56, 189, 248, 0.22);
-        --hair-gold: rgba(251, 191, 36, 0.28);
-        --glow-cyan: 0 0 25px rgba(56, 189, 248, 0.35);
-        --glow-gold: 0 0 25px rgba(245, 158, 11, 0.35);
+        --hair: rgba(179, 18, 58, 0.22);
+        --hair-gold: rgba(176, 141, 87, 0.35);
+        --glow-cyan: 0 0 25px rgba(179, 18, 58, 0.4);
+        --glow-gold: 0 0 25px rgba(176, 141, 87, 0.45);
       }
 
       html {
@@ -57,7 +57,7 @@ export default function GlobalStyle() {
 
       .crx-root {
         font-family: 'Space Grotesk', sans-serif;
-        background: radial-gradient(ellipse at 50% -10%, #172554 0%, #070C20 45%, #050814 100%);
+        background: radial-gradient(ellipse at 50% -10%, #141010 0%, #0A0A0A 45%, #0A0A0A 100%);
         color: var(--paper);
         min-height: 100vh;
         position: relative;
@@ -78,15 +78,15 @@ export default function GlobalStyle() {
         outline-offset: 3px;
       }
 
-      /* Cosmic background dust & ambient vignetting */
+      /* Ambient background dust & vignetting — deep wine glow only, no muddy gold mix */
       .crx-dots {
         position: fixed;
         inset: 0;
         z-index: 0;
         pointer-events: none;
-        background-image: radial-gradient(rgba(56, 189, 248, 0.18) 1px, transparent 1.5px);
+        background-image: radial-gradient(rgba(179, 18, 58, 0.14) 1px, transparent 1.5px);
         background-size: 34px 34px;
-        opacity: 0.55;
+        opacity: 0.45;
       }
 
       .crx-vignette {
@@ -94,37 +94,50 @@ export default function GlobalStyle() {
         inset: 0;
         z-index: 0;
         pointer-events: none;
-        background: radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.12), transparent 60%),
-                    radial-gradient(ellipse at 100% 100%, rgba(251, 191, 36, 0.09), transparent 60%);
+        background: radial-gradient(ellipse at 50% 0%, rgba(185, 28, 28, 0.10), transparent 60%);
       }
 
       /* Angled Festival Sticker Badges */
       .crx-sticker {
         display: inline-block;
         font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
+        font-weight: 600;
         font-size: 11px;
         letter-spacing: 1.5px;
         text-transform: uppercase;
         padding: 7px 14px;
         border-radius: 6px;
-        color: var(--ink);
-        box-shadow: 0 4px 14px rgba(0,0,0,0.45);
         white-space: nowrap;
-        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(212, 175, 85, 0.06);
+        border: 1px solid rgba(212, 175, 85, 0.3);
+        color: #E5C07B;
+        box-shadow: none;
       }
 
-      .crx-sticker.gold {
-        background: linear-gradient(135deg, var(--gold-glow) 0%, var(--gold) 50%, var(--gold-dark) 100%);
-        color: #050814;
-        box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), 3px 3px 0 rgba(0,0,0,0.5);
-      }
-
+      /* All tones render identically now — one unified design system, no solid fills */
+      .crx-sticker.gold,
       .crx-sticker.orange,
       .crx-sticker.cyan {
-        background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dark) 100%);
-        color: #FFFFFF;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3), 3px 3px 0 rgba(0,0,0,0.5);
+        background: rgba(212, 175, 85, 0.06);
+        border: 1px solid rgba(212, 175, 85, 0.3);
+        color: #E5C07B;
+        box-shadow: none;
+      }
+
+      /* Dedicated subtle badge for stat labels (Edition Live, Total Events, etc.) */
+      .crx-stat-badge {
+        display: inline-block;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 6px;
+        white-space: nowrap;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #A1A1AA;
       }
 
       /* Buttons with Cosmic Glows */
@@ -154,16 +167,25 @@ export default function GlobalStyle() {
       }
 
       .crx-btn.gold {
-        background: linear-gradient(135deg, #FDE047 0%, #F59E0B 50%, #D97706 100%);
-        color: #050814;
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 4px 10px rgba(0,0,0,0.4);
+        background: #DC2626;
+        color: #FFFFFF;
+        box-shadow: 0 4px 20px rgba(220, 38, 38, 0.35);
       }
 
       .crx-btn.orange,
       .crx-btn.cyan {
-        background: linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #1D4ED8 100%);
-        color: #FFFFFF;
-        box-shadow: 0 0 20px rgba(56, 189, 248, 0.4), 0 4px 10px rgba(0,0,0,0.4);
+        background: rgba(212, 175, 106, 0.08);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(212, 175, 106, 0.4);
+        color: #F5EDE0;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      }
+
+      .crx-btn.orange:hover,
+      .crx-btn.cyan:hover {
+        background: rgba(212, 175, 106, 0.16);
+        border-color: rgba(212, 175, 106, 0.7);
       }
 
       /* Continuous Marquee Tickers */
@@ -204,9 +226,9 @@ export default function GlobalStyle() {
       }
 
       .crx-card:hover {
-        transform: translateY(-6px) rotate(-0.5deg);
-        box-shadow: 0 20px 40px -15px rgba(0, 163, 255, 0.35), 0 0 25px rgba(245, 158, 11, 0.2);
-        border-color: rgba(56, 189, 248, 0.5) !important;
+        transform: translateY(-4px);
+        border-color: rgba(220, 38, 38, 0.5) !important;
+        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
       }
 
       .crx-idcard {
@@ -215,7 +237,7 @@ export default function GlobalStyle() {
 
       .crx-idcard:hover {
         transform: translateY(-5px) rotate(0.6deg);
-        box-shadow: 0 20px 35px -10px rgba(56, 189, 248, 0.25);
+        box-shadow: 0 20px 35px -10px rgba(179, 18, 58, 0.25);
       }
 
       .crx-social {
@@ -250,7 +272,7 @@ export default function GlobalStyle() {
       }
       input:focus, textarea:focus {
         border-color: var(--cyan) !important;
-        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+        box-shadow: 0 0 0 3px rgba(179, 18, 58, 0.25) !important;
       }
 
       /* Floating Ambient Keyframe Animations */
@@ -261,9 +283,9 @@ export default function GlobalStyle() {
       }
 
       @keyframes crx-pulse-glow {
-        0% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); }
-        50% { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.6)); }
-        100% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); }
+        0% { filter: drop-shadow(0 0 10px rgba(179, 18, 58, 0.4)); }
+        50% { filter: drop-shadow(0 0 25px rgba(176, 141, 87, 0.6)); }
+        100% { filter: drop-shadow(0 0 10px rgba(179, 18, 58, 0.4)); }
       }
 
       /* Glitch title reveal — tiny jitter while resolving */
@@ -277,6 +299,54 @@ export default function GlobalStyle() {
 
       @media (prefers-reduced-motion: reduce) {
         [style*="crx-glitch-jitter"] { animation: none !important; }
+      }
+
+      /* ==========================================================================
+         MASCOT HALO FX — rotating rays, spinning ring, pulsing light beam
+         ========================================================================== */
+      @keyframes crx-rays-spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to   { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      @keyframes crx-ring-spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to   { transform: translate(-50%, -50%) rotate(-360deg); }
+      }
+
+      @keyframes crx-beam-pulse {
+        0%, 100% { opacity: 0.35; transform: translateX(-50%) scaleY(0.92); }
+        50%      { opacity: 0.9;  transform: translateX(-50%) scaleY(1.05); }
+      }
+
+      @keyframes crx-halo-breathe {
+        0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+        50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.08); }
+      }
+
+      .crx-mascot-rays {
+        animation: crx-rays-spin 18s linear infinite;
+      }
+
+      .crx-mascot-ring {
+        animation: crx-ring-spin 26s linear infinite;
+      }
+
+      .crx-mascot-beam {
+        animation: crx-beam-pulse 3.2s ease-in-out infinite;
+      }
+
+      .crx-mascot-halo {
+        animation: crx-halo-breathe 3.2s ease-in-out infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .crx-mascot-rays,
+        .crx-mascot-ring,
+        .crx-mascot-beam,
+        .crx-mascot-halo {
+          animation: none !important;
+        }
       }
     `}</style>
   );
