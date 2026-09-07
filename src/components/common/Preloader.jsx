@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 
-const BATS_COUNT = 150;
+const BATS_COUNT = 300;
 
 export default function Preloader({ onDone }) {
   const [stage, setStage] = useState(0);
@@ -36,7 +36,7 @@ export default function Preloader({ onDone }) {
       const startY = Math.sin(angle) * startRadius;
 
       // End up covering the center logo
-      const endRadius = Math.random() * 90;
+      const endRadius = Math.random() * 125;
       const endAngle = Math.random() * 2 * Math.PI;
       const endX = Math.cos(endAngle) * endRadius;
       const endY = Math.sin(endAngle) * endRadius;
@@ -83,7 +83,7 @@ export default function Preloader({ onDone }) {
           zIndex: 99999,
         }}
       >
-        <div style={{ position: 'relative', width: 240, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', width: 320, height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           
           {/* Background Glow */}
           <div 
@@ -100,14 +100,14 @@ export default function Preloader({ onDone }) {
 
           {/* Logo */}
           <img
-            src={stage >= 2 ? '/new-logo-red.png' : '/new-logo-blue.png'}
+            src={stage >= 2 ? '/new-logo-red2.png' : '/new-logo-blue.png'}
             alt="Cerebrexia Logo"
             style={{
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: 180,
-              height: 180,
+              width: 250,
+              height: 250,
               borderRadius: '50%',
               objectFit: 'cover',
               boxShadow: stage >= 2 ? '0 0 40px rgba(220,38,38,0.6)' : '0 0 40px rgba(59,130,246,0.6)',

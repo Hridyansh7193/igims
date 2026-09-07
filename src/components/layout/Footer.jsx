@@ -1,122 +1,83 @@
 import React from 'react';
-
-import { LOGO_SRC } from '../../constants/logo';
+import { Instagram, Facebook, Linkedin, Youtube } from '../common/SocialIcons';
+import Sticker from '../common/Sticker';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function Footer({ setPage }) {
-  const narrow = useIsNarrow(768);
+  const socials = [Instagram, Facebook, Linkedin, Youtube];
+  const narrow = useIsNarrow(760);
 
   return (
     <footer
       style={{
-        background: '#0a0a0a',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        padding: '80px 24px 40px',
+        borderTop: '1px solid rgba(179, 18, 58, 0.25)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(10, 5, 5, 0.9) 100%)',
+        padding: '60px 24px 40px',
         position: 'relative',
         zIndex: 2,
       }}
     >
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: 1100,
           margin: '0 auto',
           display: 'grid',
-          gridTemplateColumns: narrow ? '1fr' : '1.5fr 1fr 1fr',
-          gap: 60,
-          marginBottom: 80,
+          gridTemplateColumns: narrow ? '1fr' : '1.2fr 1fr 1fr',
+          gap: 30,
         }}
       >
-        {/* Left Column */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <img src={LOGO_SRC} alt="Cerebrexia Logo" style={{ width: 32, height: 32, borderRadius: '50%' }} />
-            <div>
-              <h3 style={{ fontSize: 16, margin: 0, fontWeight: 700, letterSpacing: '0.05em' }}>CEREBREXIA</h3>
-              <p style={{ fontSize: 10, margin: 0, color: 'var(--crx-gold)', letterSpacing: '0.1em' }}>IGIMS PATNA · DECEMBER 18-20, 2026</p>
-            </div>
+          <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 14 }}>
+            Cerebrexia '26
+          </Sticker>
+          <p style={{ fontSize: 13.5, color: 'var(--paper)', lineHeight: 1.7, maxWidth: 320, margin: '0 0 16px' }}>
+            The annual medical-college fest of IGIMS. Compete, perform, belong.
+          </p>
+        </div>
+        <div>
+          <Sticker tone="gold" rotate={2} style={{ marginBottom: 14 }}>
+            Explore
+          </Sticker>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {['Events', 'Pronites', 'Accommodation', 'Team', 'Contact', 'Home'].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p.toLowerCase())}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontSize: 13.5,
+                  padding: 0,
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--cyan)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
+              >
+                {p}
+              </button>
+            ))}
           </div>
-          <p style={{ fontSize: 13, color: 'var(--crx-text-muted)', lineHeight: 1.8, maxWidth: 360, marginBottom: 24 }}>
-            The annual student festival of the Indira Gandhi Institute of Medical Sciences, Patna — culture, creativity, academics, competition and unforgettable nights.
-          </p>
-          <p style={{ fontSize: 11, color: 'var(--crx-gold)', fontWeight: 600, letterSpacing: '0.05em' }}>
-            COGNITORESOURCES@GMAIL.COM
-          </p>
         </div>
-
-        {/* Middle Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {['HOME', 'SCHEDULE', 'PROFILE', 'TERMS AND CONDITIONS', 'REFUND POLICY'].map((item) => (
-            <button
-              key={item}
-              onClick={() => setPage(item === 'HOME' ? 'home' : item.toLowerCase())}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--crx-text-muted)',
-                textAlign: 'left',
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-                cursor: 'pointer',
-                padding: 0,
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--crx-text-muted)')}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {/* Right Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {['EVENTS', 'DELEGATE REGISTRATION', 'PRIVACY POLICY', 'CODE OF CONDUCT'].map((item) => (
-            <button
-              key={item}
-              onClick={() => setPage(item.toLowerCase())}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--crx-text-muted)',
-                textAlign: 'left',
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-                cursor: 'pointer',
-                padding: 0,
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--crx-text-muted)')}
-            >
-              {item}
-            </button>
-          ))}
+        <div>
+          <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 14 }}>
+            Connect
+          </Sticker>
+          <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
+            {socials.map((Icon, i) => (
+              <a key={i} href="#" className="crx-social" style={{ color: 'var(--paper)' }}>
+                <Icon size={17} />
+              </a>
+            ))}
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>cerebrexia@igims.edu</p>
         </div>
       </div>
-
-      {/* Bottom Bar */}
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          paddingTop: 32,
-          display: 'flex',
-          flexDirection: narrow ? 'column' : 'row',
-          justifyContent: 'space-between',
-          alignItems: narrow ? 'flex-start' : 'center',
-          gap: 20,
-        }}
-      >
-        <p style={{ fontSize: 10, color: 'var(--crx-text-muted)', margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          © CEREBREXIA · IGIMS PATNA · SHEIKHPURA, PATNA — 800014, BIHAR, INDIA
-        </p>
-        <p style={{ fontSize: 10, color: 'var(--crx-text-muted)', margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          CULTURE · CREATIVITY · ACADEMICS · COMPETITION
-        </p>
-      </div>
+      <p style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--muted)', marginTop: 44 }}>
+        IGIMS, Sheikhpura, Patna &ndash; 800014 &middot; The Crowned Diagnosis
+      </p>
     </footer>
   );
 }
