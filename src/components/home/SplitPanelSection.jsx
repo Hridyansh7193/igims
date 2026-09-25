@@ -151,7 +151,7 @@ export default function SplitPanelSection({ setPage }) {
                   zIndex: 0,
                 }}
               >
-                <source src="/team-bg.mp4" type="video/mp4" />
+                <source src="/events-bg.mp4" type="video/mp4" />
               </video>
               <div
                 style={{
