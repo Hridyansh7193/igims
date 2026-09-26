@@ -47,7 +47,7 @@ export default function App() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <NavBar page={page} setPage={setPage} />
         {page === 'home' && <HomePage setPage={setPage} revealHeroTitle={revealHeroTitle} />}
-        {page === 'events' && <EventsPage />}
+        {page === 'events' && <EventsPage setPage={setPage} />}
         {page === 'pronites' && <PronitesPage />}
         {page === 'accommodation' && <AccommodationPage />}
         {page === 'team' && <TeamPage />}
