@@ -52,7 +52,7 @@ export default function App() {
         {page === 'accommodation' && <AccommodationPage />}
         {page === 'team' && <TeamPage />}
         {page === 'contact' && <ContactPage />}
-        {page === 'dashboard' && <DashboardPage />}
+        {page === 'dashboard' && <DashboardPage setPage={setPage} />}
         <Footer setPage={setPage} />
       </div>
       </div>

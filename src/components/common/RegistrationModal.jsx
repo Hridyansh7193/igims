@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Phone, Building2, MapPin, Mail, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabaseClient';
+import { saveParticipantProfile, addRegisteredEvent, normalizeProfile } from '../../lib/eventsService';
 
 // DB-level error translator
 function mapDbError(err) {
   const code = err?.code || '';
   const msg  = (err?.message || '').toLowerCase();
   if (code === '23505' || msg.includes('duplicate') || msg.includes('unique'))
-    return 'You are already registered! Visit your Dashboard for details.';
+    return 'Your profile is already registered! Details have been updated.';
   if (code === '23503')
     return 'Session expired. Please sign in again.';
   if (code === '42501' || msg.includes('permission') || msg.includes('rls'))
@@ -18,24 +18,38 @@ function mapDbError(err) {
   return err?.message || 'Registration failed. Please try again.';
 }
 
-async function withRetry(fn, maxAttempts = 3) {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const result = await fn();
-    if (!result.error) return result;
-    const isTransient = [503, 504, 429].includes(result.error?.status);
-    if (!isTransient || attempt === maxAttempts) return result;
-    await new Promise(r => setTimeout(r, 800 * attempt));
-  }
-}
-
-export default function RegistrationModal({ onClose, onSuccess }) {
+export default function RegistrationModal({
+  eventName,
+  eventCat,
+  initialProfile,
+  onClose,
+  onSuccess,
+}) {
   const { user } = useAuth();
   const [form, setForm] = useState({
-    first_name: '', surname: '', college_name: '',
-    phone_number: '', city_of_college: '', state_of_college: '',
+    first_name      : initialProfile?.first_name || '',
+    surname         : initialProfile?.last_name || initialProfile?.surname || '',
+    college_name    : initialProfile?.college_name || '',
+    phone_number    : initialProfile?.phone_number || '',
+    city_of_college : initialProfile?.college_city || initialProfile?.city_of_college || '',
+    state_of_college: initialProfile?.college_state || initialProfile?.state_of_college || '',
   });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
+
+  // Sync if initialProfile changes
+  useEffect(() => {
+    if (initialProfile) {
+      setForm({
+        first_name      : initialProfile.first_name || '',
+        surname         : initialProfile.last_name || initialProfile.surname || '',
+        college_name    : initialProfile.college_name || '',
+        phone_number    : initialProfile.phone_number || '',
+        city_of_college : initialProfile.college_city || initialProfile.city_of_college || '',
+        state_of_college: initialProfile.college_state || initialProfile.state_of_college || '',
+      });
+    }
+  }, [initialProfile]);
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -55,7 +69,6 @@ export default function RegistrationModal({ onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Client-side validation
     const trimmed = {
       first_name      : form.first_name.trim(),
       surname         : form.surname.trim(),
@@ -64,6 +77,7 @@ export default function RegistrationModal({ onClose, onSuccess }) {
       city_of_college : form.city_of_college.trim(),
       state_of_college: form.state_of_college.trim(),
     };
+
     if (!trimmed.first_name)       { setError('First name is required.');            return; }
     if (!trimmed.surname)          { setError('Surname is required.');               return; }
     if (!trimmed.college_name)     { setError('College name is required.');          return; }
@@ -71,20 +85,26 @@ export default function RegistrationModal({ onClose, onSuccess }) {
     if (!trimmed.city_of_college)  { setError('City is required.');                  return; }
     if (!trimmed.state_of_college) { setError('State is required.');                 return; }
 
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
 
     try {
-      const result = await withRetry(() =>
-        supabase.from('participants').insert({
-          user_id         : user.id,
-          email           : user.email,
-          payment_status  : 'PENDING',
-          ...trimmed,
-        })
-      );
+      // 1. Save or update participant profile in Supabase table with correct column names
+      const savedProfile = await saveParticipantProfile(user.id, user.email, {
+        first_name   : trimmed.first_name,
+        last_name    : trimmed.surname,
+        college_name : trimmed.college_name,
+        phone_number : trimmed.phone_number,
+        college_city : trimmed.city_of_college,
+        college_state: trimmed.state_of_college,
+      });
 
-      if (result?.error) throw result.error;
-      if (onSuccess) onSuccess();
+      // 2. If an event is selected, register user for this event
+      if (eventName) {
+        await addRegisteredEvent(user.id, eventName, user.user_metadata);
+      }
+
+      if (onSuccess) onSuccess(savedProfile, eventName);
     } catch (err) {
       setError(mapDbError(err));
     } finally {
@@ -104,7 +124,7 @@ export default function RegistrationModal({ onClose, onSuccess }) {
 
   const fields = [
     { label:'First Name',       field:'first_name',       icon:User,      type:'text', placeholder:'Arjun',         span:1 },
-    { label:'Surname',          field:'surname',           icon:User,      type:'text', placeholder:'Sharma',        span:1 },
+    { label:'Surname',          field:'surname',          icon:User,      type:'text', placeholder:'Sharma',        span:1 },
     { label:'College Name',     field:'college_name',      icon:Building2, type:'text', placeholder:'IGIMS, Patna',  span:2 },
     { label:'Phone Number',     field:'phone_number',      icon:Phone,     type:'tel',  placeholder:'9XXXXXXXXX',    span:1 },
     { label:'City of College',  field:'city_of_college',   icon:MapPin,    type:'text', placeholder:'Patna',         span:1 },
@@ -135,8 +155,14 @@ export default function RegistrationModal({ onClose, onSuccess }) {
         </button>
 
         <div style={{ marginBottom:24 }}>
-          <h2 className="crx-display" style={{ fontSize:24, color:'var(--cream)', marginBottom:6 }}>EVENT REGISTRATION</h2>
-          <p style={{ color:'var(--muted)', fontSize:12, letterSpacing:0.5 }}>Complete your details to secure your spot at Cerebrexia.</p>
+          <h2 className="crx-display" style={{ fontSize:24, color:'var(--cream)', marginBottom:6 }}>
+            {initialProfile ? 'UPDATE DETAILS' : 'CANDIDATE REGISTRATION'}
+          </h2>
+          <p style={{ color:'var(--muted)', fontSize:12, letterSpacing:0.5 }}>
+            {eventName
+              ? `Registering for "${eventName}". Enter your details once to register for all future events seamlessly.`
+              : 'Complete your details once to register for any Cerebrexia events.'}
+          </p>
         </div>
 
         {error && (
@@ -176,7 +202,7 @@ export default function RegistrationModal({ onClose, onSuccess }) {
           <button type="submit" disabled={loading} className="crx-btn gold"
             style={{ width:'100%', justifyContent:'center', marginTop:10, fontSize:13 }}>
             {loading
-              ? <><Loader2 size={14} style={{ animation:'spin 1s linear infinite' }} /> REGISTERING...</>
+              ? <><Loader2 size={14} style={{ animation:'spin 1s linear infinite' }} /> SAVING...</>
               : <><CheckCircle size={14} /> CONFIRM REGISTRATION</>}
           </button>
         </form>
