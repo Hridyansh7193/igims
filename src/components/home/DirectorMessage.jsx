@@ -1,15 +1,29 @@
 import React from 'react';
 import directorPhoto from '../../assets/director_photo.jpg';
+import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function DirectorMessage() {
+  const narrow = useIsNarrow(768);
+
   return (
     <section
       style={{
-        padding: '70px 20px 50px',
+        padding: narrow ? '40px 16px 30px' : '70px 20px 50px',
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div className="section-container" style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: 60, alignItems: 'center' }}>
+      <div
+        className="section-container"
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: narrow ? '1fr' : '0.8fr 1.2fr',
+          gap: narrow ? 30 : 60,
+          alignItems: 'center',
+        }}
+      >
         
         {/* Left Side: Photo */}
         <div style={{ position: 'relative', width: '100%', maxWidth: 280, justifySelf: 'center' }}>

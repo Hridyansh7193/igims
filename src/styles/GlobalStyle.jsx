@@ -52,14 +52,23 @@ export default function GlobalStyle() {
         --font-sans: 'Inter', sans-serif;
       }
 
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
       html {
         scroll-behavior: smooth;
         background-color: var(--navy-void);
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       body {
         margin: 0;
         padding: 0;
+        width: 100%;
+        max-width: 100%;
         background-color: var(--navy-void);
         color: var(--paper);
         overflow-x: hidden;
@@ -70,6 +79,8 @@ export default function GlobalStyle() {
         background: radial-gradient(ellipse at 50% -10%, #141010 0%, #0A0A0A 45%, #0A0A0A 100%);
         color: var(--paper);
         min-height: 100vh;
+        width: 100%;
+        max-width: 100%;
         position: relative;
         overflow-x: hidden;
       }
@@ -122,6 +133,7 @@ export default function GlobalStyle() {
         border: 1px solid rgba(212, 175, 85, 0.3);
         color: #E5C07B;
         box-shadow: none;
+        max-width: 100%;
       }
 
       /* All tones render identically now — one unified design system, no solid fills */
@@ -370,7 +382,8 @@ export default function GlobalStyle() {
       /* Prevent horizontal scroll everywhere */
       html, body, .crx-root {
         overflow-x: hidden;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
       }
 
       /* Ensure touch targets are at least 44px tall */
@@ -383,7 +396,12 @@ export default function GlobalStyle() {
 
         .crx-sticker {
           font-size: 10px;
-          padding: 6px 10px;
+          padding: 6px 12px;
+          white-space: normal;
+          text-align: center;
+          word-break: break-word;
+          max-width: 92vw;
+          line-height: 1.35;
         }
 
         .crx-stat-badge {
@@ -403,6 +421,12 @@ export default function GlobalStyle() {
           padding: 12px 16px;
           font-size: 11px;
           letter-spacing: 0.4px;
+        }
+
+        .crx-sticker {
+          font-size: 9.5px;
+          letter-spacing: 0.8px;
+          padding: 5px 10px;
         }
       }
     `}</style>

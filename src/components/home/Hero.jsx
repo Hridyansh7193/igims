@@ -14,6 +14,9 @@ export default function Hero({ setPage, revealTitle = true }) {
       <section
         style={{
           minHeight: '100vh',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -110,7 +113,9 @@ export default function Hero({ setPage, revealTitle = true }) {
           style={{
             position: 'relative',
             zIndex: 10,
+            width: '100%',
             maxWidth: 1180,
+            boxSizing: 'border-box',
             margin: '0 auto',
             display: 'flex',
             flexDirection: 'column',
@@ -118,7 +123,20 @@ export default function Hero({ setPage, revealTitle = true }) {
           }}
         >
           {/* Tagline Sticker Badge — same component used across the rest of the site */}
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 22, fontSize: 11.5 }}>
+          <Sticker
+            tone="gold"
+            rotate={0}
+            style={{
+              marginBottom: 22,
+              fontSize: 'clamp(9px, 2.5vw, 11.5px)',
+              letterSpacing: '1px',
+              maxWidth: '92%',
+              lineHeight: 1.4,
+              whiteSpace: 'normal',
+              textAlign: 'center',
+              boxSizing: 'border-box',
+            }}
+          >
             India's Biggest Medical College Cultural Festival
           </Sticker>
 
@@ -128,6 +146,7 @@ export default function Hero({ setPage, revealTitle = true }) {
               position: 'relative',
               width: '100%',
               maxWidth: 1100,
+              boxSizing: 'border-box',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -136,25 +155,28 @@ export default function Hero({ setPage, revealTitle = true }) {
           >
             <div
               style={{
-                padding: '10px 24px',
+                padding: '10px 14px',
                 width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
-              <h1 style={{ margin: 0, lineHeight: 1 }}>
+              <h1 style={{ margin: 0, lineHeight: 1, maxWidth: '100%' }}>
                 {titleSettled ? (
                   <span
                     style={{
                       color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(32px, 10vw, 120px)',
+                      fontSize: 'clamp(28px, 9.5vw, 120px)',
                       fontWeight: 900,
                       lineHeight: 1,
                       letterSpacing: '2px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
+                      wordBreak: 'break-word',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   >
@@ -172,12 +194,13 @@ export default function Hero({ setPage, revealTitle = true }) {
                     style={{
                       color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(32px, 10vw, 120px)',
+                      fontSize: 'clamp(28px, 9.5vw, 120px)',
                       fontWeight: 900,
                       lineHeight: 1,
                       letterSpacing: '2px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
+                      wordBreak: 'break-word',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   />
@@ -190,23 +213,28 @@ export default function Hero({ setPage, revealTitle = true }) {
           <div
             style={{
               display: 'flex',
-              alignItems: 'flex-start',
-              gap: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
               maxWidth: 600,
+              boxSizing: 'border-box',
               textAlign: 'center',
               margin: '0 auto 34px',
               padding: '0 16px',
-              justifyContent: 'center',
             }}
           >
             <p
               style={{
                 margin: 0,
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
                 fontSize: 'clamp(13px, 1.8vw, 15.5px)',
                 lineHeight: 1.65,
                 color: 'var(--paper)',
                 fontWeight: 500,
                 fontFamily: "'Space Grotesk', sans-serif",
+                wordBreak: 'break-word',
               }}
             >
               Four days. Hundreds of stages. One incredible story, and you're in it. The 51st edition returns louder than ever.

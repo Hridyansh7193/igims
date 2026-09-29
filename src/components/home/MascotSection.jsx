@@ -9,7 +9,7 @@ export default function MascotSection() {
   const narrow = useIsNarrow(820);
 
   return (
-    <section style={{ padding: '30px 24px 90px' }}>
+    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden' }}>
       <div
         style={{
           maxWidth: 1080,
