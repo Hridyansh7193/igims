@@ -128,16 +128,16 @@ export default function Hero({ setPage, revealTitle = true }) {
             rotate={0}
             style={{
               marginBottom: 22,
-              fontSize: 'clamp(9px, 2.5vw, 11.5px)',
+              fontSize: 'clamp(9.5px, 2.6vw, 11.5px)',
               letterSpacing: '1px',
-              maxWidth: '92%',
-              lineHeight: 1.4,
+              maxWidth: '92vw',
+              lineHeight: 1.45,
               whiteSpace: 'normal',
               textAlign: 'center',
               boxSizing: 'border-box',
             }}
           >
-            India's Biggest Medical College Cultural Festival
+            India's Biggest Medical College <br className="crx-mobile-break" />Cultural Festival
           </Sticker>
 
           {/* Giant Centerpiece Title */}

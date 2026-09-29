@@ -376,6 +376,32 @@ export default function GlobalStyle() {
       }
 
       /* ====================================================================
+         NAVBAR GLASSMORPHISM & SCROLL BEHAVIOR
+         ==================================================================== */
+      header.crx-nav-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        padding: 20px 32px;
+        transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
+      }
+
+      header.crx-nav-header.scrolled {
+        background: rgba(10, 5, 5, 0.92);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(179, 18, 58, 0.22);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        padding: 14px 32px;
+      }
+
+      .crx-mobile-break {
+        display: none;
+      }
+
+      /* ====================================================================
          MOBILE RESPONSIVENESS
          ==================================================================== */
 
@@ -386,8 +412,45 @@ export default function GlobalStyle() {
         max-width: 100%;
       }
 
-      /* Ensure touch targets are at least 44px tall */
+      /* Ensure touch targets and mobile spacing */
       @media (max-width: 768px) {
+        .crx-mobile-break {
+          display: inline;
+        }
+
+        header.crx-nav-header {
+          padding: 10px 16px !important;
+          background: rgba(10, 5, 5, 0.88);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-bottom: 1px solid rgba(179, 18, 58, 0.2);
+        }
+
+        header.crx-nav-header.scrolled {
+          padding: 10px 16px !important;
+          background: rgba(10, 5, 5, 0.97);
+          border-bottom: 1px solid rgba(179, 18, 58, 0.35);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+        }
+
+        .crx-logo-badge {
+          width: 42px !important;
+          height: 42px !important;
+          border-radius: 12px !important;
+        }
+
+        .crx-hamburger-btn {
+          width: 42px !important;
+          height: 42px !important;
+          border-radius: 12px !important;
+        }
+
+        .crx-director-grid {
+          grid-template-columns: 1fr !important;
+          gap: 28px !important;
+          text-align: center;
+        }
+
         .crx-btn {
           padding: 14px 20px;
           font-size: 12px;
@@ -395,23 +458,18 @@ export default function GlobalStyle() {
         }
 
         .crx-sticker {
-          font-size: 10px;
-          padding: 6px 12px;
-          white-space: normal;
-          text-align: center;
-          word-break: break-word;
-          max-width: 92vw;
-          line-height: 1.35;
+          font-size: 10px !important;
+          padding: 6px 12px !important;
+          white-space: normal !important;
+          text-align: center !important;
+          word-break: normal !important;
+          max-width: 90vw !important;
+          line-height: 1.35 !important;
         }
 
         .crx-stat-badge {
           font-size: 0.65rem;
           padding: 5px 10px;
-        }
-
-        /* Give breathing room to header on smaller screens */
-        header {
-          padding: 12px 14px !important;
         }
       }
 
@@ -424,9 +482,9 @@ export default function GlobalStyle() {
         }
 
         .crx-sticker {
-          font-size: 9.5px;
-          letter-spacing: 0.8px;
-          padding: 5px 10px;
+          font-size: 9px !important;
+          letter-spacing: 0.6px !important;
+          padding: 5px 10px !important;
         }
       }
     `}</style>

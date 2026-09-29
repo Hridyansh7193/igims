@@ -110,17 +110,17 @@ export default function MascotSection() {
           </div>
         </Reveal>
         <Reveal delay={0.1}>
-          <div>
+          <div style={{ textAlign: narrow ? 'center' : 'left' }}>
             <Sticker tone="gold" rotate={-2} style={{ marginBottom: 14 }}>
               The Presiding Figure
             </Sticker>
             <h3
               className="crx-display"
-              style={{ fontSize: 'clamp(28px,4.5vw,44px)', color: 'var(--cream)', margin: '0 0 16px', textAlign: 'center' }}
+              style={{ fontSize: 'clamp(28px,4.5vw,44px)', color: 'var(--cream)', margin: '0 0 16px', textAlign: narrow ? 'center' : 'left' }}
             >
               THE CROWNED INTELLECT
             </h3>
-            <p style={{ fontSize: 15.5, color: 'var(--paper)', lineHeight: 1.85, margin: 0 }}>
+            <p style={{ fontSize: 'clamp(14px, 2vw, 15.5px)', color: 'var(--paper)', lineHeight: 1.85, margin: 0 }}>
               Part diagnosis, part decree. The Crowned Intellect presides over Cerebrexia the way a senior clinician reads a chart — missing nothing, rushing nothing. Every category, from the debate floor to the football pitch, passes under its watch. Step into any of the {TOTAL_EVENTS}+ events and you step into its court.
             </p>
           </div>

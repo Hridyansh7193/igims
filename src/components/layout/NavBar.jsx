@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function NavBar({ page, setPage }) {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const moreRef = useRef(null);
   const narrow = useIsNarrow(768);
   const { user } = useAuth();
@@ -16,6 +17,13 @@ export default function NavBar({ page, setPage }) {
     setOpen(false);
     setMoreOpen(false);
   };
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -27,16 +35,7 @@ export default function NavBar({ page, setPage }) {
   }, [moreOpen]);
 
   return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        padding: '24px 32px',
-      }}
-    >
+    <header className={`crx-nav-header ${scrolled ? 'scrolled' : ''}`}>
       <div
         style={{
           maxWidth: 1360,
@@ -58,6 +57,7 @@ export default function NavBar({ page, setPage }) {
           }}
         >
           <div
+            className="crx-logo-badge"
             style={{
               width: 50,
               height: 50,
@@ -270,6 +270,7 @@ export default function NavBar({ page, setPage }) {
           <button
             onClick={() => setOpen(!open)}
             aria-label="Menu"
+            className="crx-hamburger-btn"
             style={{
               background: '#DC2626',
               border: '2px solid #170707',
