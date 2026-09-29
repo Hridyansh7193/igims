@@ -50,7 +50,7 @@ const ROW2 = [...ALL.slice(mid), ...ALL.slice(mid)];
 
 function MarqueeRow({ images, reverse, duration }) {
   return (
-    <div style={{ overflow: 'hidden', position: 'relative', width: '100%' }}>
+    <div style={{ overflow: 'hidden', position: 'relative', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <div
         style={{
           display: 'flex',
@@ -88,7 +88,7 @@ function MarqueeRow({ images, reverse, duration }) {
 
 export default function GallerySection() {
   return (
-    <section style={{ padding: '30px 0 100px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding: '30px 0 100px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <style>
         {`
           @keyframes crx-gallery-scroll {

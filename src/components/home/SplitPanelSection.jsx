@@ -9,7 +9,7 @@ export default function SplitPanelSection({ setPage }) {
   const narrow = useIsNarrow(760);
 
   return (
-    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <GhostText>CHOOSE</GhostText>
       <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <Reveal>

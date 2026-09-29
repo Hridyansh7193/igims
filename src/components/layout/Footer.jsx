@@ -15,6 +15,10 @@ export default function Footer({ setPage }) {
         padding: '60px 24px 40px',
         position: 'relative',
         zIndex: 2,
+        width: '100%',
+        maxWidth: '100vw',
+        overflow: 'hidden',
+        contain: 'paint',
       }}
     >
       <div

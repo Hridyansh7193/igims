@@ -60,18 +60,29 @@ export default function GlobalStyle() {
         scroll-behavior: smooth;
         background-color: var(--navy-void);
         width: 100%;
-        max-width: 100%;
+        max-width: 100vw;
         overflow-x: hidden;
+        overflow-x: clip;
       }
 
       body {
         margin: 0;
         padding: 0;
         width: 100%;
-        max-width: 100%;
+        max-width: 100vw;
         background-color: var(--navy-void);
         color: var(--paper);
         overflow-x: hidden;
+        overflow-x: clip;
+        position: relative;
+      }
+
+      #root {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        overflow-x: clip;
+        position: relative;
       }
 
       .crx-root {
@@ -80,9 +91,10 @@ export default function GlobalStyle() {
         color: var(--paper);
         min-height: 100vh;
         width: 100%;
-        max-width: 100%;
+        max-width: 100vw;
         position: relative;
         overflow-x: hidden;
+        overflow-x: clip;
       }
 
       .crx-display {
@@ -408,8 +420,9 @@ export default function GlobalStyle() {
       /* Prevent horizontal scroll everywhere */
       html, body, #root, .crx-root {
         overflow-x: hidden !important;
+        overflow-x: clip !important;
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: 100vw !important;
       }
 
       /* Ensure touch targets and mobile spacing */

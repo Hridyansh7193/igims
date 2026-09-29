@@ -122,6 +122,9 @@ export default function FAQ() {
         padding: '50px 20px 100px',
         position: 'relative',
         overflow: 'hidden',
+        width: '100%',
+        maxWidth: '100vw',
+        contain: 'paint',
       }}
     >
       <div className="section-container" style={{ maxWidth: 1180, margin: '0 auto' }}>

@@ -15,7 +15,7 @@ export default function Hero({ setPage, revealTitle = true }) {
         style={{
           minHeight: '100vh',
           width: '100%',
-          maxWidth: '100%',
+          maxWidth: '100vw',
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
@@ -28,6 +28,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           paddingRight: 16,
           position: 'relative',
           overflow: 'hidden',
+          contain: 'paint',
         }}
       >
         {/* CSS for Ken Burns Effect */}
@@ -39,77 +40,90 @@ export default function Hero({ setPage, revealTitle = true }) {
             }
           `}
         </style>
-        {/* Full-screen video background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
+
+        {/* Contained Video Background Layer to prevent Ken Burns scale from leaking overflow */}
+        <div
           style={{
             position: 'absolute',
             inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: 0.95,
-            filter: 'contrast(1.05) saturate(1.15)',
-            animation: 'kenburns 25s ease-in-out infinite alternate',
+            overflow: 'hidden',
+            contain: 'paint',
+            pointerEvents: 'none',
             zIndex: 0,
           }}
         >
-          <source src="/events-bg.mp4" type="video/mp4" />
-        </video>
+          {/* Full-screen video background */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.95,
+              filter: 'contrast(1.05) saturate(1.15)',
+              animation: 'kenburns 25s ease-in-out infinite alternate',
+              zIndex: 0,
+            }}
+          >
+            <source src="/events-bg.mp4" type="video/mp4" />
+          </video>
 
-        {/* Red Color-Tint Layer — shifts the raw footage's blue stage lighting toward the crimson theme */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(190, 20, 35, 0.12)',
-            mixBlendMode: 'color',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
+          {/* Red Color-Tint Layer */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(190, 20, 35, 0.12)',
+              mixBlendMode: 'color',
+              zIndex: 0,
+              pointerEvents: 'none',
+            }}
+          />
 
-        {/* Light multiply pass — just enough to settle any leftover blue/purple, without crushing the footage */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(20, 4, 6, 0.1)',
-            mixBlendMode: 'multiply',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
+          {/* Light multiply pass */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(20, 4, 6, 0.1)',
+              mixBlendMode: 'multiply',
+              zIndex: 0,
+              pointerEvents: 'none',
+            }}
+          />
 
-        {/* Cosmic Vignette Overlay — matches the navy/cyan/gold theme used site-wide */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `
-              radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.1), transparent 55%),
-              radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.2) 0%, rgba(10, 5, 5, 0.42) 65%, rgba(10, 5, 5, 0.72) 100%),
-              linear-gradient(180deg, rgba(10, 5, 5, 0.45) 0%, rgba(10, 5, 5, 0.1) 25%, rgba(10, 5, 5, 0.1) 75%, rgba(10, 5, 5, 0.78) 100%)
-            `,
-            zIndex: 1,
-            pointerEvents: 'none',
-          }}
-        />
+          {/* Cosmic Vignette Overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: `
+                radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.1), transparent 55%),
+                radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.2) 0%, rgba(10, 5, 5, 0.42) 65%, rgba(10, 5, 5, 0.72) 100%),
+                linear-gradient(180deg, rgba(10, 5, 5, 0.45) 0%, rgba(10, 5, 5, 0.1) 25%, rgba(10, 5, 5, 0.1) 75%, rgba(10, 5, 5, 0.78) 100%)
+              `,
+              zIndex: 1,
+              pointerEvents: 'none',
+            }}
+          />
 
-        {/* Subtle Film Grain / Scanline Texture */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
-            opacity: 0.35,
-            zIndex: 2,
-            pointerEvents: 'none',
-          }}
-        />
+          {/* Subtle Film Grain / Scanline Texture */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
+              opacity: 0.35,
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
 
         {/* Foreground Content */}
         <div

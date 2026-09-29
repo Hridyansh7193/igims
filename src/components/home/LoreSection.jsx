@@ -4,7 +4,7 @@ import Sticker from '../common/Sticker';
 
 export default function LoreSection() {
   return (
-    <section style={{ padding: 'clamp(85px, 14vh, 120px) 20px 70px', position: 'relative' }}>
+    <section style={{ padding: 'clamp(85px, 14vh, 120px) 20px 70px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
         <Reveal>
           <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 20 }}>

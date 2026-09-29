@@ -11,6 +11,9 @@ export default function DirectorMessage() {
         padding: narrow ? '60px 20px 40px' : '70px 20px 50px',
         position: 'relative',
         overflow: 'hidden',
+        width: '100%',
+        maxWidth: '100vw',
+        contain: 'paint',
       }}
     >
       <div

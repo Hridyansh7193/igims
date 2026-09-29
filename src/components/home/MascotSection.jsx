@@ -9,7 +9,7 @@ export default function MascotSection() {
   const narrow = useIsNarrow(820);
 
   return (
-    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <div
         style={{
           maxWidth: 1080,
@@ -20,77 +20,80 @@ export default function MascotSection() {
           alignItems: 'center',
         }}
       >
-        <Reveal>
-          <div style={{ position: 'relative', width: '100%', maxWidth: 340, margin: '0 auto', aspectRatio: '1 / 1' }}>
-            {/* Spinning conic light rays burst */}
-            <div
-              className="crx-mascot-rays"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '220%',
-                height: '220%',
-                background:
-                  'conic-gradient(from 0deg, transparent 0deg, rgba(230,57,80,0.28) 4deg, transparent 14deg, transparent 40deg, rgba(212,175,106,0.22) 44deg, transparent 54deg, transparent 90deg, rgba(230,57,80,0.24) 94deg, transparent 104deg, transparent 140deg, rgba(212,175,106,0.2) 144deg, transparent 154deg, transparent 190deg, rgba(230,57,80,0.26) 194deg, transparent 204deg, transparent 240deg, rgba(212,175,106,0.2) 244deg, transparent 254deg, transparent 290deg, rgba(230,57,80,0.24) 294deg, transparent 304deg, transparent 340deg, rgba(212,175,106,0.22) 344deg, transparent 354deg)',
-                maskImage: 'radial-gradient(circle, black 0%, black 30%, transparent 68%)',
-                WebkitMaskImage: 'radial-gradient(circle, black 0%, black 30%, transparent 68%)',
-                pointerEvents: 'none',
-                zIndex: 0,
-              }}
-            />
+        <Reveal style={{ overflow: 'hidden', maxWidth: '100%' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: narrow ? 260 : 340, margin: '0 auto', aspectRatio: '1 / 1' }}>
+            {/* Halo and rays background container — contained to avoid pushing section scrollWidth */}
+            <div style={{ position: 'absolute', inset: narrow ? '0%' : '-15%', overflow: 'hidden', pointerEvents: 'none', zIndex: 0, borderRadius: '50%' }}>
+              {/* Spinning conic light rays burst */}
+              <div
+                className="crx-mascot-rays"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '200%',
+                  height: '200%',
+                  background:
+                    'conic-gradient(from 0deg, transparent 0deg, rgba(230,57,80,0.28) 4deg, transparent 14deg, transparent 40deg, rgba(212,175,106,0.22) 44deg, transparent 54deg, transparent 90deg, rgba(230,57,80,0.24) 94deg, transparent 104deg, transparent 140deg, rgba(212,175,106,0.2) 144deg, transparent 154deg, transparent 190deg, rgba(230,57,80,0.26) 194deg, transparent 204deg, transparent 240deg, rgba(212,175,106,0.2) 244deg, transparent 254deg, transparent 290deg, rgba(230,57,80,0.24) 294deg, transparent 304deg, transparent 340deg, rgba(212,175,106,0.22) 344deg, transparent 354deg)',
+                  maskImage: 'radial-gradient(circle, black 0%, black 30%, transparent 68%)',
+                  WebkitMaskImage: 'radial-gradient(circle, black 0%, black 30%, transparent 68%)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
 
-            {/* Soft breathing halo glow behind everything */}
-            <div
-              className="crx-mascot-halo"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '150%',
-                height: '150%',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(230,57,80,0.30) 0%, rgba(212,175,106,0.14) 45%, transparent 72%)',
-                filter: 'blur(14px)',
-                pointerEvents: 'none',
-                zIndex: 0,
-              }}
-            />
+              {/* Soft breathing halo glow behind everything */}
+              <div
+                className="crx-mascot-halo"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '150%',
+                  height: '150%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(230,57,80,0.30) 0%, rgba(212,175,106,0.14) 45%, transparent 72%)',
+                  filter: 'blur(14px)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
 
-            {/* Slow-spinning dashed ring orbit */}
-            <div
-              className="crx-mascot-ring"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '128%',
-                height: '128%',
-                borderRadius: '50%',
-                border: '1px dashed rgba(212, 175, 106, 0.45)',
-                boxShadow: '0 0 18px rgba(230,57,80,0.15) inset',
-                pointerEvents: 'none',
-                zIndex: 0,
-              }}
-            />
+              {/* Slow-spinning dashed ring orbit */}
+              <div
+                className="crx-mascot-ring"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '128%',
+                  height: '128%',
+                  borderRadius: '50%',
+                  border: '1px dashed rgba(212, 175, 106, 0.45)',
+                  boxShadow: '0 0 18px rgba(230,57,80,0.15) inset',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
 
-            {/* Vertical pulsing light beam shooting up through the crown */}
-            <div
-              className="crx-mascot-beam"
-              style={{
-                position: 'absolute',
-                top: '-18%',
-                left: '50%',
-                width: 10,
-                height: '55%',
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(230,57,80,0.5) 55%, transparent 100%)',
-                filter: 'blur(4px)',
-                borderRadius: 10,
-                pointerEvents: 'none',
-                zIndex: 0,
-                transformOrigin: 'top center',
-              }}
-            />
+              {/* Vertical pulsing light beam shooting up through the crown */}
+              <div
+                className="crx-mascot-beam"
+                style={{
+                  position: 'absolute',
+                  top: '-18%',
+                  left: '50%',
+                  width: 10,
+                  height: '55%',
+                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(230,57,80,0.5) 55%, transparent 100%)',
+                  filter: 'blur(4px)',
+                  borderRadius: 10,
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                  transformOrigin: 'top center',
+                }}
+              />
+            </div>
 
             <img
               src={LOGO_SRC}
