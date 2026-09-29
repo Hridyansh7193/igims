@@ -406,10 +406,10 @@ export default function GlobalStyle() {
          ==================================================================== */
 
       /* Prevent horizontal scroll everywhere */
-      html, body, .crx-root {
-        overflow-x: hidden;
-        width: 100%;
-        max-width: 100%;
+      html, body, #root, .crx-root {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
       }
 
       /* Ensure touch targets and mobile spacing */

@@ -70,7 +70,7 @@ export default function HostCampusSection() {
   ];
 
   return (
-    <section style={{ padding: '30px 20px 100px', position: 'relative' }}>
+    <section style={{ padding: '30px 20px 100px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* Banner */}
         <Reveal>

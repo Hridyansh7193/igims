@@ -9,7 +9,7 @@ export default function StatsSection() {
   const narrow = useIsNarrow(700);
 
   return (
-    <section style={{ padding: '20px 24px 90px' }}>
+    <section style={{ padding: '20px 24px 90px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <Reveal>
           <Sticker tone="gold" rotate={-2} style={{ marginBottom: 20 }}>

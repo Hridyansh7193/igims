@@ -22,7 +22,10 @@ export default function Hero({ setPage, revealTitle = true }) {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: 'clamp(80px, 15vh, 120px) 16px 60px',
+          paddingTop: 'clamp(80px, 15vh, 120px)',
+          paddingBottom: 60,
+          paddingLeft: 16,
+          paddingRight: 16,
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -120,6 +123,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           {/* Tagline Sticker Badge — same component used across the rest of the site */}
@@ -135,6 +139,7 @@ export default function Hero({ setPage, revealTitle = true }) {
               whiteSpace: 'normal',
               textAlign: 'center',
               boxSizing: 'border-box',
+              display: 'inline-block',
             }}
           >
             India's Biggest Medical College <br className="crx-mobile-break" />Cultural Festival
@@ -150,7 +155,7 @@ export default function Hero({ setPage, revealTitle = true }) {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: '10px 0 24px',
+              margin: '10px auto 24px',
             }}
           >
             <div
@@ -162,9 +167,10 @@ export default function Hero({ setPage, revealTitle = true }) {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                textAlign: 'center',
               }}
             >
-              <h1 style={{ margin: 0, lineHeight: 1, maxWidth: '100%' }}>
+              <h1 style={{ margin: '0 auto', lineHeight: 1, maxWidth: '100%', textAlign: 'center' }}>
                 {titleSettled ? (
                   <span
                     style={{
@@ -177,6 +183,8 @@ export default function Hero({ setPage, revealTitle = true }) {
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      textAlign: 'center',
+                      display: 'inline-block',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   >
@@ -201,6 +209,8 @@ export default function Hero({ setPage, revealTitle = true }) {
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      textAlign: 'center',
+                      display: 'inline-block',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   />
@@ -225,7 +235,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           >
             <p
               style={{
-                margin: 0,
+                margin: '0 auto',
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
@@ -235,6 +245,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                 fontWeight: 500,
                 fontFamily: "'Space Grotesk', sans-serif",
                 wordBreak: 'break-word',
+                textAlign: 'center',
               }}
             >
               Four days. Hundreds of stages. One incredible story, and you're in it. The 51st edition returns louder than ever.
@@ -247,6 +258,9 @@ export default function Hero({ setPage, revealTitle = true }) {
               display: 'flex',
               gap: 16,
               justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              margin: '0 auto',
               flexWrap: 'wrap',
             }}
           >

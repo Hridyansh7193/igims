@@ -52,7 +52,7 @@ export default function App() {
       <DynamicBackground />
       <div className="crx-dots" />
       <div className="crx-vignette" />
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
         <NavBar page={page} setPage={setPage} />
         {page === 'home' && <HomePage setPage={setPage} revealHeroTitle={revealHeroTitle} />}
         {page === 'events' && <EventsPage setPage={setPage} />}

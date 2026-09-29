@@ -13,17 +13,18 @@ export default function ClosingHero({ setPage }) {
         borderBottom: '1px solid var(--hair)',
       }}
     >
-      <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: 900, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1, boxSizing: 'border-box', padding: '0 16px' }}>
         <Sticker tone="gold" rotate={-2} style={{ marginBottom: 20 }}>
           IGIMS's Biggest Annual Fest
         </Sticker>
         <h2
           className="crx-display"
           style={{
-            fontSize: 'clamp(46px,10vw,110px)',
+            fontSize: 'clamp(28px, 9vw, 110px)',
             color: '#fff',
             lineHeight: 0.95,
             margin: '0 0 20px',
+            wordBreak: 'break-word',
           }}
         >
           CEREBREXIA'26

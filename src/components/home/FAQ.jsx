@@ -121,6 +121,7 @@ export default function FAQ() {
       style={{
         padding: '50px 20px 100px',
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <div className="section-container" style={{ maxWidth: 1180, margin: '0 auto' }}>

@@ -12,7 +12,7 @@ export default function SponsorsSection() {
   const narrow = useIsNarrow(700);
 
   return (
-    <section style={{ padding: '30px 24px 100px', position: 'relative' }}>
+    <section style={{ padding: '30px 24px 100px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
         <Reveal>
           <div
