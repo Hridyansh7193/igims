@@ -1,32 +1,60 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
 
-const BATS_COUNT = 300;
+const BATS_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 120 : 300;
+
+// All images that must load before the animation stages begin
+const PRELOAD_SRCS = ['/new-logo-blue.png', '/new-logo-red2.png', '/bat1.png', '/bat2.png', '/bat3.png'];
+
+function preloadImages(srcs) {
+  return Promise.all(
+    srcs.map(
+      (src) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve; // don't block if an image is missing
+          img.src = src;
+        })
+    )
+  );
+}
 
 export default function Preloader({ onDone }) {
-  const [stage, setStage] = useState(0);
+  const [stage, setStage] = useState(-1); // -1 = preloading images
+  const timersRef = useRef([]);
 
+  // Preload, then start animation stages
   useEffect(() => {
+    let cancelled = false;
+
+    preloadImages(PRELOAD_SRCS).then(() => {
+      if (cancelled) return;
+      setStage(0);
+    });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Stage timers — only start once stage becomes 0 (images loaded)
+  useEffect(() => {
+    if (stage !== 0) return;
+
     // Stage 0: Blue logo visible (0 - 500ms)
     // Stage 1: Bats slowly swarm from all sides (500ms - 2500ms)
     // Stage 2: Logo swaps to red while engulfed (2500ms - 3000ms)
     // Stage 3: Bats disperse quickly (3000ms - 4000ms)
-    // Stage 4: Trigger onDone (4200ms)
+    // Stage 4: Trigger onDone (5500ms)
 
-    const t1 = setTimeout(() => setStage(1), 500);
-    const t2 = setTimeout(() => setStage(2), 2500);
-    const t3 = setTimeout(() => setStage(3), 3000);
-    const t4 = setTimeout(() => {
-      if (onDone) onDone();
-    }, 5500);
+    timersRef.current = [
+      setTimeout(() => setStage(1), 500),
+      setTimeout(() => setStage(2), 2500),
+      setTimeout(() => setStage(3), 3000),
+      setTimeout(() => { if (onDone) onDone(); }, 5500),
+    ];
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-    };
-  }, [onDone]);
+    return () => timersRef.current.forEach(clearTimeout);
+  }, [stage, onDone]);
 
   const bats = useMemo(() => {
     return Array.from({ length: BATS_COUNT }).map((_, i) => {
@@ -60,6 +88,9 @@ export default function Preloader({ onDone }) {
     });
   }, []);
 
+  // While preloading, show an empty black screen (the DynamicBackground provides ambiance)
+  const effectiveStage = stage < 0 ? 0 : stage;
+
   return (
     <>
       <style>
@@ -86,7 +117,15 @@ export default function Preloader({ onDone }) {
       >
         {/* Same ambient red particle/glow background used across the main site */}
         <DynamicBackground />
-        <div style={{ position: 'relative', zIndex: 1, width: 320, height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          width: 'min(320px, 80vw)',
+          height: 'min(320px, 80vw)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
           
           {/* Background Glow */}
           <div 
@@ -94,7 +133,7 @@ export default function Preloader({ onDone }) {
               position: 'absolute',
               width: '100%',
               height: '100%',
-              background: stage >= 2 ? 'rgba(220, 38, 38, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+              background: effectiveStage >= 2 ? 'rgba(220, 38, 38, 0.5)' : 'rgba(59, 130, 246, 0.5)',
               filter: 'blur(50px)',
               transition: 'background 0.5s ease',
               borderRadius: '50%',
@@ -103,19 +142,19 @@ export default function Preloader({ onDone }) {
 
           {/* Logo */}
           <img
-            src={stage >= 2 ? '/new-logo-red2.png' : '/new-logo-blue.png'}
+            src={effectiveStage >= 2 ? '/new-logo-red2.png' : '/new-logo-blue.png'}
             alt="Cerebrexia Logo"
             style={{
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: 250,
-              height: 250,
+              width: 'min(250px, 65vw)',
+              height: 'min(250px, 65vw)',
               borderRadius: '50%',
               objectFit: 'cover',
-              boxShadow: stage >= 2 ? '0 0 40px rgba(220,38,38,0.6)' : '0 0 40px rgba(59,130,246,0.6)',
+              boxShadow: effectiveStage >= 2 ? '0 0 40px rgba(220,38,38,0.6)' : '0 0 40px rgba(59,130,246,0.6)',
               transition: 'box-shadow 0.5s ease, transform 1s ease',
-              transform: stage >= 3 ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%) scale(1)',
+              transform: effectiveStage >= 3 ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%) scale(1)',
             }}
           />
 
@@ -126,12 +165,12 @@ export default function Preloader({ onDone }) {
             let scale = 0.5;
             let opacity = 0;
 
-            if (stage === 1 || stage === 2) {
+            if (effectiveStage === 1 || effectiveStage === 2) {
               x = bat.endX;
               y = bat.endY;
               scale = 1;
               opacity = 1;
-            } else if (stage === 3) {
+            } else if (effectiveStage === 3) {
               x = bat.outX;
               y = bat.outY;
               scale = 1.5;
@@ -146,7 +185,7 @@ export default function Preloader({ onDone }) {
                   left: '50%',
                   top: '50%',
                   transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`,
-                  opacity: stage === 0 ? 0 : opacity,
+                  opacity: effectiveStage === 0 ? 0 : opacity,
                   // The overall movement of the bat from off-screen -> logo -> off-screen
                   transition: `transform ${1.5 + Math.random() * 0.5}s cubic-bezier(0.25, 0.1, 0.25, 1) ${bat.delay}s, opacity ${1.5}s ease ${bat.delay}s`,
                   zIndex: 10,
@@ -172,15 +211,15 @@ export default function Preloader({ onDone }) {
         <div
           style={{
             position: 'absolute',
-            bottom: 60,
+            bottom: 'max(30px, 5vh)',
             zIndex: 1,
             fontFamily: 'var(--font-sans)',
             fontSize: 12,
             letterSpacing: '0.3em',
             textTransform: 'uppercase',
-            color: stage >= 2 ? 'var(--crx-red)' : 'rgba(255,255,255,0.3)',
+            color: effectiveStage >= 2 ? 'var(--crx-red)' : 'rgba(255,255,255,0.3)',
             transition: 'color 1s ease',
-            opacity: stage >= 3 ? 0 : 1,
+            opacity: effectiveStage >= 3 ? 0 : 1,
           }}
         >
           Initializing

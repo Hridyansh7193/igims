@@ -362,6 +362,49 @@ export default function GlobalStyle() {
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
       }
+
+      /* ====================================================================
+         MOBILE RESPONSIVENESS
+         ==================================================================== */
+
+      /* Prevent horizontal scroll everywhere */
+      html, body, .crx-root {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+
+      /* Ensure touch targets are at least 44px tall */
+      @media (max-width: 768px) {
+        .crx-btn {
+          padding: 14px 20px;
+          font-size: 12px;
+          min-height: 44px;
+        }
+
+        .crx-sticker {
+          font-size: 10px;
+          padding: 6px 10px;
+        }
+
+        .crx-stat-badge {
+          font-size: 0.65rem;
+          padding: 5px 10px;
+        }
+
+        /* Give breathing room to header on smaller screens */
+        header {
+          padding: 12px 14px !important;
+        }
+      }
+
+      /* Small phones (under 400px) */
+      @media (max-width: 400px) {
+        .crx-btn {
+          padding: 12px 16px;
+          font-size: 11px;
+          letter-spacing: 0.4px;
+        }
+      }
     `}</style>
   );
 }

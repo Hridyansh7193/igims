@@ -19,7 +19,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: '120px 20px 60px',
+          padding: 'clamp(80px, 15vh, 120px) 16px 60px',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -154,7 +154,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                       lineHeight: 1,
                       letterSpacing: '2px',
                       textTransform: 'uppercase',
-                      whiteSpace: 'nowrap',
+                      whiteSpace: 'normal',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   >
@@ -177,7 +177,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                       lineHeight: 1,
                       letterSpacing: '2px',
                       textTransform: 'uppercase',
-                      whiteSpace: 'nowrap',
+                      whiteSpace: 'normal',
                       textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   />

@@ -21,10 +21,11 @@ export default function SponsorPopup({ onClose }) {
         background: 'rgba(16, 9, 14, 0.95)',
         border: '1px solid rgba(220, 38, 38, 0.3)',
         borderRadius: 24,
-        padding: '50px 30px',
+        padding: 'clamp(30px, 6vw, 50px) clamp(16px, 5vw, 30px)',
         textAlign: 'center',
         boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(220, 38, 38, 0.1)',
         backdropFilter: 'blur(20px)',
+        boxSizing: 'border-box',
       }}>
         <button
           onClick={onClose}

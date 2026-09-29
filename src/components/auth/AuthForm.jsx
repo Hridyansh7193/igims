@@ -93,9 +93,10 @@ export default function AuthForm({ onSuccess }) {
   return (
     <div style={{
       background: 'rgba(255,243,214,0.03)', border: '1px solid rgba(220,38,38,0.35)',
-      borderRadius: 16, padding: '40px 30px', maxWidth: 420, margin: '0 auto',
+      borderRadius: 16, padding: 'clamp(24px, 5vw, 40px) clamp(16px, 4vw, 30px)', width: '92%', maxWidth: 420, margin: '0 auto',
       boxShadow: '0 10px 40px rgba(0,0,0,0.6),0 0 60px rgba(220,38,38,0.07)',
       backdropFilter: 'blur(10px)', position: 'relative', overflow: 'hidden',
+      boxSizing: 'border-box',
     }}>
       {/* Ambient glows */}
       <div style={{ position:'absolute', top:-50, left:-50, width:160, height:160, background:'rgba(220,38,38,0.14)', filter:'blur(50px)', borderRadius:'50%', pointerEvents:'none' }} />
