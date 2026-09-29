@@ -24,37 +24,29 @@ export default function Preloader({ onDone }) {
   const [stage, setStage] = useState(-1); // -1 = preloading images
   const timersRef = useRef([]);
 
-  // Preload, then start animation stages
+  // Preload images, then start the sequence of timers
   useEffect(() => {
     let cancelled = false;
+    let timers = [];
 
     preloadImages(PRELOAD_SRCS).then(() => {
       if (cancelled) return;
-      setStage(0);
+      
+      setStage(0); // Stage 0: Blue logo visible
+
+      timers = [
+        setTimeout(() => { if (!cancelled) setStage(1); }, 500),  // Bats swarm
+        setTimeout(() => { if (!cancelled) setStage(2); }, 2500), // Logo swaps to red
+        setTimeout(() => { if (!cancelled) setStage(3); }, 3000), // Bats disperse
+        setTimeout(() => { if (!cancelled && onDone) onDone(); }, 5500)
+      ];
     });
 
-    return () => { cancelled = true; };
-  }, []);
-
-  // Stage timers — only start once stage becomes 0 (images loaded)
-  useEffect(() => {
-    if (stage !== 0) return;
-
-    // Stage 0: Blue logo visible (0 - 500ms)
-    // Stage 1: Bats slowly swarm from all sides (500ms - 2500ms)
-    // Stage 2: Logo swaps to red while engulfed (2500ms - 3000ms)
-    // Stage 3: Bats disperse quickly (3000ms - 4000ms)
-    // Stage 4: Trigger onDone (5500ms)
-
-    timersRef.current = [
-      setTimeout(() => setStage(1), 500),
-      setTimeout(() => setStage(2), 2500),
-      setTimeout(() => setStage(3), 3000),
-      setTimeout(() => { if (onDone) onDone(); }, 5500),
-    ];
-
-    return () => timersRef.current.forEach(clearTimeout);
-  }, [stage, onDone]);
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [onDone]);
 
   const bats = useMemo(() => {
     return Array.from({ length: BATS_COUNT }).map((_, i) => {
