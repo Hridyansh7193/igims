@@ -19,8 +19,16 @@ export default function App() {
   const [revealHeroTitle, setRevealHeroTitle] = useState(false);
 
   useEffect(() => {
+    // Scroll on page change
     window.scrollTo(0, 0);
   }, [page]);
+
+  useEffect(() => {
+    // Force scroll to top on initial load, bypassing browser's attempt to restore scroll
+    window.scrollTo(0, 0);
+    const timer = setTimeout(() => window.scrollTo(0, 0), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleIntroComplete = useCallback(() => {
     setIntroComplete(true);

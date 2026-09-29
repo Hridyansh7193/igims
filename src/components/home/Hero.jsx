@@ -126,7 +126,7 @@ export default function Hero({ setPage, revealTitle = true }) {
           <div
             style={{
               position: 'relative',
-              width: '100vw',
+              width: '100%',
               maxWidth: 1100,
               display: 'flex',
               justifyContent: 'center',
@@ -149,7 +149,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                     style={{
                       color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(52px, 11vw, 135px)',
+                      fontSize: 'clamp(32px, 10vw, 120px)',
                       fontWeight: 900,
                       lineHeight: 1,
                       letterSpacing: '2px',
@@ -172,7 +172,7 @@ export default function Hero({ setPage, revealTitle = true }) {
                     style={{
                       color: 'var(--cream)',
                       fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(52px, 11vw, 135px)',
+                      fontSize: 'clamp(32px, 10vw, 120px)',
                       fontWeight: 900,
                       lineHeight: 1,
                       letterSpacing: '2px',
