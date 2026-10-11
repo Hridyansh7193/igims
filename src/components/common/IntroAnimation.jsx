@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Preloader from './Preloader';
 import AuthForm from '../auth/AuthForm';
-import SponsorPopup from './SponsorPopup';
 import { useAuth } from '../../context/AuthContext';
 
 /**
@@ -14,25 +13,30 @@ import { useAuth } from '../../context/AuthContext';
  * onComplete fires once the wipe has fully finished.
  */
 export default function IntroAnimation({ onComplete, onWipeStart }) {
-  const [stage, setStage] = useState('loading'); // 'loading' -> 'auth' -> 'sponsor' -> 'wiping'
+  const [stage, setStage] = useState('loading'); // 'loading' -> 'auth' -> 'wiping'
   const [frameScale, setFrameScale] = useState(0);
   const rafRef = useRef(null);
   const startTimeRef = useRef(null);
   const { user } = useAuth();
 
+  const startWipe = useCallback(() => {
+    setStage('wiping');
+    if (onWipeStart) onWipeStart();
+  }, [onWipeStart]);
+
   const handleLoaderDone = useCallback(() => {
     if (user) {
-      setStage('sponsor');
+      startWipe();
     } else {
       setStage('auth');
     }
-  }, [user]);
+  }, [user, startWipe]);
 
   useEffect(() => {
     if (stage === 'auth' && user) {
-      setStage('sponsor');
+      startWipe();
     }
-  }, [user, stage]);
+  }, [user, stage, startWipe]);
 
   useEffect(() => {
     if (stage !== 'wiping') return;
@@ -69,22 +73,15 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        pointerEvents: (stage === 'auth' || stage === 'sponsor') ? 'auto' : 'none',
+        pointerEvents: stage === 'auth' ? 'auto' : 'none',
       }}
     >
       {stage === 'loading' && <Preloader onDone={handleLoaderDone} />}
       
       {stage === 'auth' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020101' }}>
-          <AuthForm onSuccess={() => setStage('sponsor')} />
+          <AuthForm onSuccess={startWipe} />
         </div>
-      )}
-
-      {stage === 'sponsor' && (
-        <SponsorPopup onClose={() => {
-          setStage('wiping');
-          onWipeStart && onWipeStart();
-        }} />
       )}
 
       {stage === 'wiping' && (
