@@ -19,14 +19,14 @@ export default function DynamicBackground() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Particle colors extracted directly from the logo:
-    // Cyan/Azure (hair & cosmic halo), Gold/Amber (crown & glowing eyes), and Pale Starlight
+    // Particle colors extracted from the new logo:
+    // Vermillion red, hot magenta, sapphire blue, gold amber, and warm cream
     const colors = [
-      'rgba(179, 18, 58, ',    // ruby
-      'rgba(230, 57, 80, ',    // ruby glow
-      'rgba(176, 141, 87, ',   // antique gold
-      'rgba(212, 175, 106, ',  // champagne gold
-      'rgba(232, 214, 208, ',  // bone / ash white
+      'rgba(192, 57, 43, ',    // vermillion red
+      'rgba(212, 80, 10, ',    // saffron orange
+      'rgba(192, 24, 90, ',    // hot magenta
+      'rgba(21, 101, 192, ',   // sapphire blue
+      'rgba(201, 151, 58, ',   // royal gold
     ];
 
     const count = Math.min(width > 768 ? 65 : 35, 80);

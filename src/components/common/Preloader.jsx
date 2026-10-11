@@ -102,7 +102,7 @@ export default function Preloader({ onDone }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'radial-gradient(ellipse at 50% 40%, #1a0a0a 0%, #0a0505 55%, #050303 100%)',
+          background: 'radial-gradient(ellipse at 50% 40%, #1C0810 0%, #0C0508 55%, #060306 100%)',
           overflow: 'hidden',
           zIndex: 99999,
         }}
@@ -125,16 +125,16 @@ export default function Preloader({ onDone }) {
               position: 'absolute',
               width: '100%',
               height: '100%',
-              background: effectiveStage >= 2 ? 'rgba(220, 38, 38, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+              background: effectiveStage >= 2 ? 'rgba(192, 57, 43, 0.55)' : 'rgba(59, 130, 246, 0.5)',
               filter: 'blur(50px)',
               transition: 'background 0.5s ease',
               borderRadius: '50%',
             }}
           />
 
-          {/* Logo */}
+          {/* Logo — blue first, then the new logo after bat swarm */}
           <img
-            src={effectiveStage >= 2 ? '/new-logo-red2.png' : '/new-logo-blue.png'}
+            src={effectiveStage >= 2 ? '/new-logo.jpg' : '/new-logo-blue.png'}
             alt="Cerebrexia Logo"
             style={{
               position: 'absolute',
@@ -144,7 +144,7 @@ export default function Preloader({ onDone }) {
               height: 'min(250px, 65vw)',
               borderRadius: '50%',
               objectFit: 'cover',
-              boxShadow: effectiveStage >= 2 ? '0 0 40px rgba(220,38,38,0.6)' : '0 0 40px rgba(59,130,246,0.6)',
+              boxShadow: effectiveStage >= 2 ? '0 0 40px rgba(192,57,43,0.7), 0 0 80px rgba(192,24,90,0.3)' : '0 0 40px rgba(59,130,246,0.6)',
               transition: 'box-shadow 0.5s ease, transform 1s ease',
               transform: effectiveStage >= 3 ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%) scale(1)',
             }}

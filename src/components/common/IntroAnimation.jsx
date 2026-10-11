@@ -101,8 +101,8 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
               top: `${insetY}%`,
               right: `${insetX}%`,
               bottom: `${insetY}%`,
-              border: `2px solid rgba(179, 18, 58, ${0.8 - frameScale * 0.6})`,
-              boxShadow: `0 0 ${20 + frameScale * 30}px rgba(179, 18, 58, ${0.4 - frameScale * 0.3}), inset 0 0 ${10 + frameScale * 20}px rgba(176, 141, 87, ${0.15 - frameScale * 0.1})`,
+              border: `2px solid rgba(192, 57, 43, ${0.8 - frameScale * 0.6})`,
+              boxShadow: `0 0 ${20 + frameScale * 30}px rgba(192, 57, 43, ${0.4 - frameScale * 0.3}), inset 0 0 ${10 + frameScale * 20}px rgba(192, 24, 90, ${0.2 - frameScale * 0.15})`,
             }}
           />
         </>
