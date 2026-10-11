@@ -20,7 +20,7 @@ export default function DashboardPage({ setPage }) {
     setFetchingReg(true);
     setFetchError(null);
     try {
-      const profile = await fetchParticipantProfile(user.id);
+      const profile = await fetchParticipantProfile(user.id, user.user_metadata);
       setParticipant(profile);
       const evs = getRegisteredEvents(user.id, user.user_metadata);
       setRegisteredEvents(evs);

@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, CheckCircle, Shield, User, Building2, Phone, MapPin, Loader2, Edit3 } from 'lucide-react';
 
 export default function QuickRegisterModal({ eventName, eventCat, participant, onConfirm, onEditProfile, onClose }) {
   const [loading, setLoading] = useState(false);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -13,7 +28,7 @@ export default function QuickRegisterModal({ eventName, eventCat, participant, o
     }
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
@@ -21,7 +36,7 @@ export default function QuickRegisterModal({ eventName, eventCat, participant, o
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 200,
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -213,4 +228,6 @@ export default function QuickRegisterModal({ eventName, eventCat, participant, o
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }

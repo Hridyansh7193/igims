@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
 import RegistrationModal from '../components/common/RegistrationModal';
@@ -42,7 +43,7 @@ export default function EventsPage({ setPage }) {
     }
     setLoadingInitial(true);
     try {
-      const p = await fetchParticipantProfile(user.id);
+      const p = await fetchParticipantProfile(user.id, user.user_metadata);
       setProfile(p);
       const evs = getRegisteredEvents(user.id, user.user_metadata);
       setRegisteredEvents(evs);
@@ -182,13 +183,13 @@ export default function EventsPage({ setPage }) {
       )}
 
       {/* Toast Notification */}
-      {toast && (
+      {toast && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             bottom: 28,
             right: 28,
-            zIndex: 300,
+            zIndex: 999999,
             maxWidth: 380,
             background: 'linear-gradient(135deg, #1C0808 0%, #0D0505 100%)',
             border: toast.type === 'info'
@@ -234,7 +235,8 @@ export default function EventsPage({ setPage }) {
               {toast.text}
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <section style={{ padding: '150px 24px 100px', position: 'relative' }}>

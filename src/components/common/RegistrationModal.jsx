@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, User, Phone, Building2, MapPin, Mail, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { saveParticipantProfile, addRegisteredEvent, normalizeProfile } from '../../lib/eventsService';
@@ -26,9 +27,15 @@ export default function RegistrationModal({
   onSuccess,
 }) {
   const { user } = useAuth();
+
+  // Prefill name from Google OAuth metadata if initialProfile is not yet filled
+  const googleNameParts = (user?.user_metadata?.full_name || user?.user_metadata?.name || '').trim().split(/\s+/);
+  const defaultFirstName = initialProfile?.first_name || (googleNameParts[0] && googleNameParts[0] !== 'undefined' ? googleNameParts[0] : '');
+  const defaultSurname = initialProfile?.last_name || initialProfile?.surname || (googleNameParts.length > 1 ? googleNameParts.slice(1).join(' ') : '');
+
   const [form, setForm] = useState({
-    first_name      : initialProfile?.first_name || '',
-    surname         : initialProfile?.last_name || initialProfile?.surname || '',
+    first_name      : defaultFirstName,
+    surname         : defaultSurname,
     college_name    : initialProfile?.college_name || '',
     phone_number    : initialProfile?.phone_number || '',
     city_of_college : initialProfile?.college_city || initialProfile?.city_of_college || '',
@@ -41,15 +48,15 @@ export default function RegistrationModal({
   useEffect(() => {
     if (initialProfile) {
       setForm({
-        first_name      : initialProfile.first_name || '',
-        surname         : initialProfile.last_name || initialProfile.surname || '',
+        first_name      : initialProfile.first_name || defaultFirstName,
+        surname         : initialProfile.last_name || initialProfile.surname || defaultSurname,
         college_name    : initialProfile.college_name || '',
         phone_number    : initialProfile.phone_number || '',
         city_of_college : initialProfile.college_city || initialProfile.city_of_college || '',
         state_of_college: initialProfile.college_state || initialProfile.state_of_college || '',
       });
     }
-  }, [initialProfile]);
+  }, [initialProfile, defaultFirstName, defaultSurname]);
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -131,20 +138,21 @@ export default function RegistrationModal({
     { label:'State of College', field:'state_of_college',  icon:MapPin,    type:'text', placeholder:'Bihar',         span:1 },
   ];
 
-  return (
+  const modalContent = (
     <div
       role="dialog" aria-modal="true" aria-label="Event Registration"
-      style={{ position:'fixed', inset:0, zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px 16px' }}
+      style={{ position:'fixed', inset:0, zIndex:99999, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px 16px' }}
     >
       {/* Backdrop */}
-      <div onClick={onClose} style={{ position:'absolute', inset:0, background:'rgba(2,1,1,0.88)', backdropFilter:'blur(6px)' }} />
+      <div onClick={onClose} style={{ position:'absolute', inset:0, background:'rgba(2,1,1,0.88)', backdropFilter:'blur(8px)' }} />
 
       {/* Modal panel */}
       <div style={{
         position:'relative', width:'100%', maxWidth:560, maxHeight:'90vh', overflowY:'auto',
         background:'linear-gradient(160deg,#190808 0%,#0A0505 100%)',
         border:'1px solid rgba(220,38,38,0.35)', borderRadius:20, padding:'36px 32px',
-        boxShadow:'0 24px 80px rgba(0,0,0,0.8),0 0 80px rgba(220,38,38,0.08)',
+        boxShadow:'0 24px 80px rgba(0,0,0,0.9),0 0 80px rgba(220,38,38,0.12)',
+        zIndex: 1,
       }}>
         {/* Glow */}
         <div style={{ position:'absolute', top:-60, right:-60, width:200, height:200, background:'rgba(220,38,38,0.1)', filter:'blur(60px)', borderRadius:'50%', pointerEvents:'none' }} />
@@ -209,4 +217,6 @@ export default function RegistrationModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
