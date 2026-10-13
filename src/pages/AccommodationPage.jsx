@@ -1,8 +1,16 @@
 import React from 'react';
-import { BedDouble } from 'lucide-react';
+import { BedDouble, Phone, ShieldCheck } from 'lucide-react';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
-import { ACCOMMODATION_FACTS, ACCOMMODATION_STEPS } from '../constants/accommodationData';
+import {
+  ACCOMMODATION_FACTS,
+  ACCOMMODATION_STEPS,
+  ACCOMMODATION_BOYS,
+  ACCOMMODATION_GIRLS,
+  ACCOMMODATION_GUIDELINES,
+  ACCOMMODATION_CONTACTS,
+  ACCOMMODATION_INSTAGRAM,
+} from '../constants/accommodationData';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 
 export default function AccommodationPage() {
@@ -19,8 +27,8 @@ export default function AccommodationPage() {
             ACCOMMODATION
           </h1>
           <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 50, maxWidth: 580, lineHeight: 1.7 }}>
-            A confirmed Delegate Registration makes you eligible to apply for on-campus accommodation. It's
-            separately charged, subject to availability, and never guaranteed automatically.
+            Stay on campus during Cerebrexia '26, 27 – 30 Nov, for just ₹150. Basic Registration (BR) is
+            mandatory — no accommodation is provided without it.
           </p>
         </Reveal>
 
@@ -57,6 +65,56 @@ export default function AccommodationPage() {
             ))}
           </div>
         </Reveal>
+
+        {/* Boys / Girls facilities */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: narrow ? '1fr' : '1fr 1fr',
+            gap: 18,
+            marginBottom: 70,
+          }}
+        >
+          {[ACCOMMODATION_BOYS, ACCOMMODATION_GIRLS].map((g, i) => (
+            <Reveal key={g.title} delay={i * 0.07}>
+              <div
+                style={{
+                  height: '100%',
+                  background: 'linear-gradient(160deg, #181212 0%, #0A0505 100%)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 16,
+                  padding: '26px 24px',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    color: 'var(--gold)',
+                    fontWeight: 700,
+                    margin: '0 0 8px',
+                  }}
+                >
+                  {g.subtitle}
+                </p>
+                <h3 className="crx-display" style={{ fontSize: 26, color: 'var(--cream)', margin: '0 0 18px' }}>
+                  {g.title}
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--cream)', fontWeight: 700, margin: '0 0 10px' }}>
+                  Facilities Provided
+                </p>
+                <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: 'var(--muted)', fontSize: 13.5, lineHeight: 1.8 }}>
+                  {g.facilities.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+                <p style={{ fontSize: 12, color: 'var(--cream)', fontWeight: 700, margin: '0 0 8px' }}>Food &amp; Mess</p>
+                <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.7, margin: 0 }}>{g.food}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
 
         {/* Process steps */}
         <Reveal>
@@ -114,6 +172,59 @@ export default function AccommodationPage() {
         <Reveal>
           <div
             style={{
+              background: 'rgba(220,38,38,0.06)',
+              border: '1px solid rgba(220,38,38,0.25)',
+              borderRadius: 14,
+              padding: '24px 24px',
+              marginBottom: 40,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <ShieldCheck size={22} color="#DC2626" />
+              <h3 style={{ fontSize: 16, color: 'var(--cream)', margin: 0, fontWeight: 700 }}>Important Guidelines</h3>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--paper)', fontSize: 13.5, lineHeight: 1.9 }}>
+              {ACCOMMODATION_GUIDELINES.map((g) => (
+                <li key={g}>{g}</li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <div style={{ marginBottom: 40 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <Phone size={20} color="#DC2626" />
+              <h3 style={{ fontSize: 16, color: 'var(--cream)', margin: 0, fontWeight: 700 }}>Contact</h3>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
+              {ACCOMMODATION_CONTACTS.map((c) => (
+                <a
+                  key={c.name}
+                  href={`tel:+91${c.phone}`}
+                  style={{
+                    display: 'block',
+                    textDecoration: 'none',
+                    background: 'linear-gradient(160deg, #181212 0%, #0A0505 100%)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 12,
+                    padding: '16px 18px',
+                  }}
+                >
+                  <p style={{ fontSize: 14.5, color: 'var(--cream)', margin: '0 0 4px', fontWeight: 700 }}>{c.name}</p>
+                  <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0 }}>{c.phone}</p>
+                </a>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--muted)', margin: '14px 0 0' }}>
+              Instagram: {ACCOMMODATION_INSTAGRAM}
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <div
+            style={{
               display: 'flex',
               alignItems: 'center',
               gap: 16,
@@ -125,8 +236,8 @@ export default function AccommodationPage() {
           >
             <BedDouble size={26} color="#DC2626" style={{ flexShrink: 0 }} />
             <p style={{ fontSize: 13.5, color: 'var(--paper)', margin: 0, lineHeight: 1.7 }}>
-              Accommodation is limited and offered on a first-come basis to confirmed delegates. We recommend
-              registering early if you plan to stay on campus.
+              Basic Registration (BR) is mandatory for accommodation. Closed campus, 24x7 accessibility, safe and
+              secure environment.
             </p>
           </div>
         </Reveal>
