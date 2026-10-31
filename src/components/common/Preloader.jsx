@@ -1,10 +1,8 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
 
-const BATS_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 120 : 300;
-
-// All images that must load before the animation stages begin
-const PRELOAD_SRCS = ['/new-logo-blue.png', '/new-logo-red2.png', '/bat1.png', '/bat2.png', '/bat3.png'];
+// Only preload the two logos we need
+const PRELOAD_SRCS = ['/new-logo-blue.png', '/new-logo.jpg'];
 
 function preloadImages(srcs) {
   return Promise.all(
@@ -13,32 +11,59 @@ function preloadImages(srcs) {
         new Promise((resolve) => {
           const img = new Image();
           img.onload = resolve;
-          img.onerror = resolve; // don't block if an image is missing
+          img.onerror = resolve;
           img.src = src;
         })
     )
   );
 }
 
+/**
+ * Preloader — cinematic logo morph:
+ *
+ *  Stage 0: Old blue logo is displayed crisply (0.6s hold)
+ *  Stage 1: Old logo zooms in + blurs simultaneously over ~1.8s
+ *           (simulates "diving into" the red center of the crest)
+ *  Stage 2: Screen is fully blurred red → flash white → new red logo
+ *           fades/scales in from the blur (0.8s)
+ *  Stage 3: New logo holds + slight pulse → onDone fires
+ */
 export default function Preloader({ onDone }) {
   const [stage, setStage] = useState(-1); // -1 = preloading images
-  const timersRef = useRef([]);
+  const [zoomProgress, setZoomProgress] = useState(0); // 0→1 during zoom
+  const rafRef = useRef(null);
+  const startRef = useRef(null);
 
-  // Preload images, then start the sequence of timers
+  // Preload images then kick off the animation timeline
   useEffect(() => {
     let cancelled = false;
     let timers = [];
 
     preloadImages(PRELOAD_SRCS).then(() => {
       if (cancelled) return;
-      
-      setStage(0); // Stage 0: Blue logo visible
+
+      setStage(0); // Show blue logo
 
       timers = [
-        setTimeout(() => { if (!cancelled) setStage(1); }, 500),  // Bats swarm
-        setTimeout(() => { if (!cancelled) setStage(2); }, 2500), // Logo swaps to red
-        setTimeout(() => { if (!cancelled) setStage(3); }, 3000), // Bats disperse
-        setTimeout(() => { if (!cancelled && onDone) onDone(); }, 5500)
+        // After a short hold, begin the zoom+blur
+        setTimeout(() => {
+          if (!cancelled) setStage(1);
+        }, 700),
+
+        // After zoom completes, flash and reveal new logo
+        setTimeout(() => {
+          if (!cancelled) setStage(2);
+        }, 2500),
+
+        // Hold new logo, then finish
+        setTimeout(() => {
+          if (!cancelled) setStage(3);
+        }, 3400),
+
+        // Fire onDone
+        setTimeout(() => {
+          if (!cancelled && onDone) onDone();
+        }, 4200),
       ];
     });
 
@@ -48,50 +73,58 @@ export default function Preloader({ onDone }) {
     };
   }, [onDone]);
 
-  const bats = useMemo(() => {
-    return Array.from({ length: BATS_COUNT }).map((_, i) => {
-      const angle = (i / BATS_COUNT) * 2 * Math.PI + Math.random();
-      // Start far outside the screen
-      const startRadius = 600 + Math.random() * 400;
-      const startX = Math.cos(angle) * startRadius;
-      const startY = Math.sin(angle) * startRadius;
+  // Animate zoomProgress from 0→1 during stage 1
+  useEffect(() => {
+    if (stage !== 1) return;
+    startRef.current = performance.now();
+    const duration = 1800; // 1.8 seconds of zoom + blur
 
-      // End up covering the center logo
-      const endRadius = Math.random() * 125;
-      const endAngle = Math.random() * 2 * Math.PI;
-      const endX = Math.cos(endAngle) * endRadius;
-      const endY = Math.sin(endAngle) * endRadius;
+    const tick = (now) => {
+      const elapsed = now - startRef.current;
+      const t = Math.min(1, elapsed / duration);
+      // Ease-in curve for accelerating zoom
+      const eased = t * t * (3 - 2 * t); // smoothstep
+      setZoomProgress(eased);
 
-      // Disperse out of bounds
-      const outX = Math.cos(angle) * (800 + Math.random() * 200);
-      const outY = Math.sin(angle) * (800 + Math.random() * 200);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
 
-      // Random delay to make them come in organically
-      const delay = Math.random() * 0.8;
-      // Random sizes
-      const size = 20 + Math.random() * 60;
-      
-      // Cycle through bat1, bat2, bat3
-      const batImg = `/bat${(i % 3) + 1}.png`; 
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [stage]);
 
-      const flutterDur = 0.15 + Math.random() * 0.2;
-
-      return { id: i, startX, startY, endX, endY, outX, outY, delay, size, batImg, flutterDur };
-    });
-  }, []);
-
-  // While preloading, show an empty black screen (the DynamicBackground provides ambiance)
   const effectiveStage = stage < 0 ? 0 : stage;
+
+  // ── Derived animation values ──────────────────────────────────────────
+  // Zoom: scale from 1 → 6 (deep zoom into the logo's red center)
+  const zoomScale = 1 + zoomProgress * 5;
+  // Blur: 0px → 30px
+  const blurAmount = zoomProgress * 30;
+  // Old logo opacity: fade out towards the end of zoom
+  const oldLogoOpacity = effectiveStage >= 2 ? 0 : 1;
+  // Red overlay that builds as we "enter" the red portion
+  const redOverlayOpacity = effectiveStage >= 2 ? 1 : zoomProgress * 0.7;
+  // White flash for the transition moment
+  const flashOpacity = effectiveStage === 2 ? 1 : 0;
+  // New logo: appears in stage 2+
+  const newLogoOpacity = effectiveStage >= 2 ? 1 : 0;
+  const newLogoScale = effectiveStage >= 3 ? 1.05 : effectiveStage >= 2 ? 1 : 0.7;
 
   return (
     <>
       <style>
         {`
-          @keyframes crx-bat-flutter {
-            0% { transform: translate(-3px, -3px) rotate(-15deg); }
-            33% { transform: translate(3px, -2px) rotate(10deg); }
-            66% { transform: translate(-2px, 3px) rotate(-5deg); }
-            100% { transform: translate(2px, 2px) rotate(15deg); }
+          @keyframes crx-logo-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.06); }
+          }
+          @keyframes crx-flash-in {
+            0% { opacity: 0.85; }
+            100% { opacity: 0; }
           }
         `}
       </style>
@@ -107,34 +140,92 @@ export default function Preloader({ onDone }) {
           zIndex: 99999,
         }}
       >
-        {/* Same ambient red particle/glow background used across the main site */}
+        {/* Ambient background particles */}
         <DynamicBackground />
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          width: 'min(320px, 80vw)',
-          height: 'min(320px, 80vw)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          
-          {/* Background Glow */}
-          <div 
+
+        {/* ── Red color overlay (builds during zoom to simulate entering the red crest) ── */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(circle at 50% 50%, rgba(192,57,43,0.9) 0%, rgba(140,20,40,0.7) 40%, rgba(12,5,8,0.95) 100%)',
+            opacity: redOverlayOpacity,
+            transition: effectiveStage >= 2 ? 'opacity 0.3s ease' : 'none',
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* ── White flash at the transition point ── */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: '#fff',
+            opacity: 0,
+            zIndex: 5,
+            pointerEvents: 'none',
+            ...(effectiveStage === 2
+              ? { animation: 'crx-flash-in 0.5s ease-out forwards' }
+              : {}),
+          }}
+        />
+
+        {/* ── Logo container ── */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 3,
+            width: 'min(320px, 80vw)',
+            height: 'min(320px, 80vw)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {/* Background glow behind the logo */}
+          <div
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
-              background: effectiveStage >= 2 ? 'rgba(192, 57, 43, 0.55)' : 'rgba(59, 130, 246, 0.5)',
+              background:
+                effectiveStage >= 2
+                  ? 'rgba(192, 57, 43, 0.55)'
+                  : 'rgba(59, 130, 246, 0.5)',
               filter: 'blur(50px)',
-              transition: 'background 0.5s ease',
+              transition: 'background 0.4s ease',
               borderRadius: '50%',
             }}
           />
 
-          {/* Logo — blue first, then the new logo after bat swarm */}
+          {/* ── OLD LOGO (blue) — zooms in and blurs ── */}
           <img
-            src={effectiveStage >= 2 ? '/new-logo.jpg' : '/new-logo-blue.png'}
+            src="/new-logo-blue.png"
+            alt="Cerebrexia Old Logo"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: 'min(250px, 65vw)',
+              height: 'min(250px, 65vw)',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              boxShadow: '0 0 40px rgba(59,130,246,0.6)',
+              transform: `translate(-50%, -50%) scale(${zoomScale})`,
+              filter: `blur(${blurAmount}px)`,
+              opacity: oldLogoOpacity,
+              transition:
+                effectiveStage >= 2
+                  ? 'opacity 0.25s ease'
+                  : 'none', // zoom+blur are driven by RAF, not transition
+              zIndex: 1,
+            }}
+          />
+
+          {/* ── NEW LOGO (red) — fades in after the zoom-blur completes ── */}
+          <img
+            src="/new-logo.jpg"
             alt="Cerebrexia Logo"
             style={{
               position: 'absolute',
@@ -144,77 +235,40 @@ export default function Preloader({ onDone }) {
               height: 'min(250px, 65vw)',
               borderRadius: '50%',
               objectFit: 'cover',
-              boxShadow: effectiveStage >= 2 ? '0 0 40px rgba(192,57,43,0.7), 0 0 80px rgba(192,24,90,0.3)' : '0 0 40px rgba(59,130,246,0.6)',
-              transition: 'box-shadow 0.5s ease, transform 1s ease',
-              transform: effectiveStage >= 3 ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%) scale(1)',
+              boxShadow:
+                effectiveStage >= 2
+                  ? '0 0 40px rgba(192,57,43,0.7), 0 0 80px rgba(192,24,90,0.3)'
+                  : 'none',
+              transform: `translate(-50%, -50%) scale(${newLogoScale})`,
+              opacity: newLogoOpacity,
+              transition: 'opacity 0.6s ease, transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.5s ease',
+              zIndex: 2,
+              ...(effectiveStage >= 3
+                ? { animation: 'crx-logo-pulse 2s ease-in-out infinite' }
+                : {}),
             }}
           />
-
-          {/* Bat Swarm */}
-          {bats.map((bat) => {
-            let x = bat.startX;
-            let y = bat.startY;
-            let scale = 0.5;
-            let opacity = 0;
-
-            if (effectiveStage === 1 || effectiveStage === 2) {
-              x = bat.endX;
-              y = bat.endY;
-              scale = 1;
-              opacity = 1;
-            } else if (effectiveStage === 3) {
-              x = bat.outX;
-              y = bat.outY;
-              scale = 1.5;
-              opacity = 0;
-            }
-
-            return (
-              <div
-                key={bat.id}
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`,
-                  opacity: effectiveStage === 0 ? 0 : opacity,
-                  // The overall movement of the bat from off-screen -> logo -> off-screen
-                  transition: `transform ${1.5 + Math.random() * 0.5}s cubic-bezier(0.25, 0.1, 0.25, 1) ${bat.delay}s, opacity ${1.5}s ease ${bat.delay}s`,
-                  zIndex: 10,
-                  pointerEvents: 'none',
-                }}
-              >
-                {/* The individual flutter jitter of the bat */}
-                <img 
-                  src={bat.batImg} 
-                  alt="" 
-                  style={{
-                    width: bat.size,
-                    height: 'auto',
-                    animation: `crx-bat-flutter ${bat.flutterDur}s infinite alternate ease-in-out`,
-                  }} 
-                />
-              </div>
-            );
-          })}
         </div>
-        
-        {/* Tagline */}
+
+        {/* ── Tagline ── */}
         <div
           style={{
             position: 'absolute',
             bottom: 'max(30px, 5vh)',
-            zIndex: 1,
+            zIndex: 4,
             fontFamily: 'var(--font-sans)',
             fontSize: 12,
             letterSpacing: '0.3em',
             textTransform: 'uppercase',
-            color: effectiveStage >= 2 ? 'var(--crx-red)' : 'rgba(255,255,255,0.3)',
-            transition: 'color 1s ease',
+            color:
+              effectiveStage >= 2
+                ? 'var(--crx-red, #DC2626)'
+                : 'rgba(255,255,255,0.3)',
+            transition: 'color 0.6s ease, opacity 0.6s ease',
             opacity: effectiveStage >= 3 ? 0 : 1,
           }}
         >
-          Initializing
+          {effectiveStage >= 2 ? 'The Crowned Diagnosis' : 'Initializing'}
         </div>
       </div>
     </>
