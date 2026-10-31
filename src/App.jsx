@@ -29,12 +29,7 @@ export default function App() {
   };
 
   const [page, setPage] = useState(getInitialPage);
-  const [introComplete, setIntroComplete] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('crx_intro_seen') === '1';
-    }
-    return false;
-  });
+  const [introComplete, setIntroComplete] = useState(false);
   const [revealHeroTitle, setRevealHeroTitle] = useState(false);
 
   const navigateTo = useCallback((nextPage) => {
