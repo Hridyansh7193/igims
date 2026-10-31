@@ -1,157 +1,160 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
 
 /**
- * Preloader — Cinematic Logo Morph:
+ * Preloader — Cinematic Logo Morph with Circular 0-100% Loader:
  *
- * 1. (0.0s – 0.7s): Crisp old blue logo displayed with blue aura
- * 2. (0.7s – 2.5s): Old logo simultaneously zooms in (scale 1 -> 7.5) and blurs (0 -> 35px)
- *                   diving deep into the red center crest, while a rich crimson-red
- *                   atmosphere engulfs the screen
- * 3. (2.5s – 2.9s): High-energy radiant flash transition
- * 4. (2.7s – 3.8s): New red Cerebrexia logo materializes crisply from the center
- * 5. (3.8s): onDone() fires -> curtain wipe reveals the portal
+ * Stage 0 (0.0s – 0.6s): Old blue logo holds with initial blue glow
+ * Stage 1 (0.6s – 1.8s): Old logo zooms in deep (1x -> 8x) & blurs (0 -> 35px)
+ *                        into the red core. Blue light completely fades to 0.
+ * Stage 2 (1.8s – 2.0s): Flash burst transition. Zero blue remains.
+ * Stage 3 (2.0s – 3.8s): New red logo materializes.
+ *                        A circular progress ring animates around it (0% -> 100%)
+ *                        with a digital percentage counter.
+ * Stage 4 (3.8s – 4.1s): Progress hits 100% -> onDone() triggers -> site opens!
  */
 export default function Preloader({ onDone }) {
-  useEffect(() => {
-    // Exact timestamp when intro completes and site reveals
-    const timer = setTimeout(() => {
-      if (onDone) onDone();
-    }, 3900);
+  const [stage, setStage] = useState(0); // 0: blue hold, 1: zoom/blur, 2: flash, 3: new logo + ring
+  const [progress, setProgress] = useState(0);
+  const onDoneCalledRef = useRef(false);
 
-    return () => clearTimeout(timer);
-  }, [onDone]);
+  useEffect(() => {
+    // Stage 1: Begin zoom & blur at 600ms
+    const t1 = setTimeout(() => setStage(1), 600);
+
+    // Stage 2: Flash & clear all blue at 1800ms
+    const t2 = setTimeout(() => setStage(2), 1800);
+
+    // Stage 3: New logo + 0-100% circle animation starts at 2000ms
+    const t3 = setTimeout(() => setStage(3), 2000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
+
+  // 0% -> 100% Progress Animation in Stage 3
+  useEffect(() => {
+    if (stage !== 3) return;
+
+    let startTime = performance.now();
+    const duration = 1800; // 1.8 seconds to trace 0 -> 100%
+    let animId;
+
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const p = Math.min(100, (elapsed / duration) * 100);
+      setProgress(p);
+
+      if (p < 100) {
+        animId = requestAnimationFrame(tick);
+      } else {
+        // Finished 100% — hold momentarily then open the website
+        setTimeout(() => {
+          if (!onDoneCalledRef.current) {
+            onDoneCalledRef.current = true;
+            if (onDone) onDone();
+          }
+        }, 350);
+      }
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [stage, onDone]);
+
+  // SVG circular geometry
+  const SVG_SIZE = 280;
+  const RADIUS = 124;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~779.11
+  const strokeOffset = CIRCUMFERENCE - (CIRCUMFERENCE * progress) / 100;
+
+  // Position of glowing laser tip on the circle
+  const angle = (progress / 100) * 2 * Math.PI - Math.PI / 2;
+  const tipX = 140 + RADIUS * Math.cos(angle);
+  const tipY = 140 + RADIUS * Math.sin(angle);
 
   return (
     <>
       <style>
         {`
-          /* Old blue logo: Hold -> Zoom in (1 to 7.5x) + Blur (0 to 35px) simultaneously */
-          @keyframes crx-old-logo-dive {
+          /* Old blue logo: Hold then Zoom (1 to 8x) + Blur (0 to 35px) */
+          @keyframes crx-blue-dive {
             0% {
               transform: translate(-50%, -50%) scale(1);
               filter: blur(0px);
               opacity: 1;
             }
-            15% {
-              transform: translate(-50%, -50%) scale(1);
-              filter: blur(0px);
-              opacity: 1;
-            }
-            55% {
+            80% {
               transform: translate(-50%, -50%) scale(7.5);
               filter: blur(32px);
-              opacity: 0.95;
-            }
-            62% {
-              transform: translate(-50%, -50%) scale(9);
-              filter: blur(40px);
-              opacity: 0;
+              opacity: 0.7;
             }
             100% {
-              transform: translate(-50%, -50%) scale(9);
+              transform: translate(-50%, -50%) scale(8.5);
               filter: blur(40px);
               opacity: 0;
             }
           }
 
-          /* Ambient blue aura that transitions into red */
-          @keyframes crx-ambient-aura {
-            0%, 15% {
-              background: rgba(59, 130, 246, 0.55);
-              filter: blur(50px);
+          /* Blue aura: Fades out completely during zoom — NEVER persistent */
+          @keyframes crx-blue-aura-fadeout {
+            0% {
+              opacity: 0.8;
               transform: scale(1);
             }
-            45% {
-              background: rgba(220, 38, 38, 0.85);
-              filter: blur(60px);
-              transform: scale(2.2);
+            40% {
+              opacity: 0.3;
+              transform: scale(1.4);
             }
-            60%, 100% {
-              background: rgba(220, 38, 38, 0.5);
-              filter: blur(45px);
-              transform: scale(1);
+            70%, 100% {
+              opacity: 0;
+              transform: scale(1.8);
             }
           }
 
-          /* Crimson surge: builds up as we dive into the red part of the logo */
-          @keyframes crx-red-surge {
-            0%, 15% {
+          /* Crimson surge that overtakes the blue and enters the red crest */
+          @keyframes crx-crimson-surge {
+            0% {
               opacity: 0;
             }
-            45% {
-              opacity: 0.9;
-            }
-            58% {
-              opacity: 0.95;
-            }
-            70% {
-              opacity: 0.35;
+            50% {
+              opacity: 0.85;
             }
             100% {
-              opacity: 0.2;
+              opacity: 0.4;
             }
           }
 
-          /* High-intensity radiant flash at the transition moment */
-          @keyframes crx-flash-burst {
-            0%, 53% {
+          /* Transition flash between blue and new red logo */
+          @keyframes crx-flash-transition {
+            0% {
               opacity: 0;
               transform: scale(0.6);
             }
-            58% {
-              opacity: 0.9;
-              transform: scale(1.5);
-            }
-            68% {
-              opacity: 0;
-              transform: scale(2.5);
+            50% {
+              opacity: 0.95;
+              transform: scale(1.6);
             }
             100% {
               opacity: 0;
+              transform: scale(2.4);
             }
           }
 
-          /* New red logo: emerges from the crimson flash */
-          @keyframes crx-new-logo-reveal {
-            0%, 55% {
+          /* New logo reveal: sharp fade-in from center */
+          @keyframes crx-new-logo-in {
+            0% {
               opacity: 0;
-              transform: translate(-50%, -50%) scale(0.75);
-              filter: blur(16px);
-            }
-            65% {
-              opacity: 1;
-              transform: translate(-50%, -50%) scale(1.05);
-              filter: blur(0px);
-            }
-            75% {
-              transform: translate(-50%, -50%) scale(1);
-            }
-            90% {
-              transform: translate(-50%, -50%) scale(1.03);
+              transform: translate(-50%, -50%) scale(0.85);
+              filter: blur(10px);
             }
             100% {
               opacity: 1;
               transform: translate(-50%, -50%) scale(1);
               filter: blur(0px);
-            }
-          }
-
-          /* Subtitle text transition */
-          @keyframes crx-subtitle-fade {
-            0%, 15% {
-              opacity: 1;
-              color: rgba(255, 255, 255, 0.4);
-            }
-            45% {
-              opacity: 0;
-            }
-            65% {
-              opacity: 0;
-            }
-            72%, 100% {
-              opacity: 1;
-              color: #DC2626;
             }
           }
         `}
@@ -162,6 +165,7 @@ export default function Preloader({ onDone }) {
           position: 'absolute',
           inset: 0,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           background: 'radial-gradient(ellipse at 50% 45%, #18060A 0%, #0C0508 55%, #050204 100%)',
@@ -172,110 +176,248 @@ export default function Preloader({ onDone }) {
         {/* Dynamic ambient particles */}
         <DynamicBackground />
 
-        {/* Full-screen crimson surge that engulfs the view during the zoom */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.95) 0%, rgba(140, 18, 40, 0.8) 45%, rgba(10, 3, 5, 0.95) 100%)',
-            animation: 'crx-red-surge 3.9s cubic-bezier(0.25, 1, 0.5, 1) forwards',
-            zIndex: 2,
-            pointerEvents: 'none',
-          }}
-        />
+        {/* ── Crimson surge that builds as we zoom into the red core ── */}
+        {stage >= 1 && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.95) 0%, rgba(140, 18, 40, 0.75) 45%, rgba(10, 3, 5, 0.95) 100%)',
+              animation: 'crx-crimson-surge 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+              zIndex: 2,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
 
-        {/* Central radiant white/gold transition flash */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 'min(500px, 90vw)',
-            height: 'min(500px, 90vw)',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(254,202,202,0.6) 40%, transparent 70%)',
-            animation: 'crx-flash-burst 3.9s ease-out forwards',
-            zIndex: 6,
-            pointerEvents: 'none',
-          }}
-        />
+        {/* ── Central White Flash Transition (Stage 2) ── */}
+        {stage === 2 && (
+          <div
+            style={{
+              position: 'absolute',
+              width: 'min(500px, 90vw)',
+              height: 'min(500px, 90vw)',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(254,202,202,0.6) 40%, transparent 70%)',
+              animation: 'crx-flash-transition 0.4s ease-out forwards',
+              zIndex: 6,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
 
-        {/* Logo Container */}
+        {/* ── Central Stage Container ── */}
         <div
           style={{
             position: 'relative',
             zIndex: 4,
-            width: 'min(300px, 75vw)',
-            height: 'min(300px, 75vw)',
+            width: SVG_SIZE,
+            height: SVG_SIZE,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {/* Glowing Aura behind the logos */}
+          {/* 1. BLUE AURA: strictly visible only in stage 0 and fading out in stage 1 */}
+          {stage < 2 && (
+            <div
+              style={{
+                position: 'absolute',
+                width: 210,
+                height: 210,
+                borderRadius: '50%',
+                background: 'rgba(59, 130, 246, 0.55)',
+                filter: 'blur(45px)',
+                animation: stage === 1 ? 'crx-blue-aura-fadeout 1.2s ease-out forwards' : 'none',
+                zIndex: 1,
+              }}
+            />
+          )}
+
+          {/* 2. OLD BLUE LOGO: Zooms in and blurs into red center (Stages 0 & 1 only) */}
+          {stage < 2 && (
+            <img
+              src="/new-logo-blue.png"
+              alt="Cerebrexia Blue Logo"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: 210,
+                height: 210,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                boxShadow: stage === 0 ? '0 0 35px rgba(59, 130, 246, 0.65)' : 'none',
+                transformOrigin: 'center center',
+                animation: stage === 1 ? 'crx-blue-dive 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards' : 'translate(-50%, -50%) scale(1)',
+                zIndex: 3,
+              }}
+            />
+          )}
+
+          {/* 3. NEW RED LOGO & CIRCULAR PROGRESS RING (Stage 3 & 4) */}
+          {stage >= 3 && (
+            <>
+              {/* Red glow behind the new logo */}
+              <div
+                style={{
+                  position: 'absolute',
+                  width: 210,
+                  height: 210,
+                  borderRadius: '50%',
+                  background: 'rgba(220, 38, 38, 0.45)',
+                  filter: 'blur(35px)',
+                  zIndex: 2,
+                }}
+              />
+
+              {/* New Red Logo Image */}
+              <img
+                src="/new-logo.jpg"
+                alt="Cerebrexia Logo"
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: 210,
+                  height: 210,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  boxShadow: '0 0 30px rgba(220, 38, 38, 0.7), 0 0 60px rgba(185, 28, 28, 0.35)',
+                  animation: 'crx-new-logo-in 0.5s ease-out forwards',
+                  zIndex: 4,
+                }}
+              />
+
+              {/* SVG 0 - 100% Circular Progress Ring Around the Logo */}
+              <svg
+                width={SVG_SIZE}
+                height={SVG_SIZE}
+                viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 5,
+                  pointerEvents: 'none',
+                }}
+              >
+                <defs>
+                  {/* Glowing gradient for progress stroke */}
+                  <linearGradient id="crxProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#EF4444" />
+                    <stop offset="50%" stopColor="#DC2626" />
+                    <stop offset="100%" stopColor="#B91C1C" />
+                  </linearGradient>
+                  <filter id="crxGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+
+                {/* Background track circle */}
+                <circle
+                  cx={140}
+                  cy={140}
+                  r={RADIUS}
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="3.5"
+                />
+
+                {/* Animated active progress circle (0 to 100%) */}
+                <circle
+                  cx={140}
+                  cy={140}
+                  r={RADIUS}
+                  fill="none"
+                  stroke="url(#crxProgressGrad)"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  strokeDasharray={CIRCUMFERENCE}
+                  strokeDashoffset={strokeOffset}
+                  transform="rotate(-90 140 140)"
+                  filter="url(#crxGlow)"
+                  style={{
+                    transition: 'stroke-dashoffset 0.05s linear',
+                  }}
+                />
+
+                {/* Glowing Laser Tip at leading edge */}
+                {progress > 0 && progress < 100 && (
+                  <circle
+                    cx={tipX}
+                    cy={tipY}
+                    r={5}
+                    fill="#FFFFFF"
+                    style={{
+                      filter: 'drop-shadow(0 0 6px #DC2626) drop-shadow(0 0 10px #FFFFFF)',
+                    }}
+                  />
+                )}
+              </svg>
+            </>
+          )}
+        </div>
+
+        {/* ── Percentage Counter & Status (Stage 3 & 4) ── */}
+        {stage >= 3 && (
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 7,
+              textAlign: 'center',
+              marginTop: 24,
+            }}
+          >
+            {/* 0 - 100% Digital Counter */}
+            <div
+              style={{
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                fontSize: 'clamp(22px, 4vw, 28px)',
+                fontWeight: 800,
+                color: '#FFFFFF',
+                letterSpacing: 2.5,
+                textShadow: '0 0 14px rgba(220, 38, 38, 0.8), 0 0 28px rgba(220, 38, 38, 0.4)',
+              }}
+            >
+              {Math.round(progress)}%
+            </div>
+
+            {/* Sub-label */}
+            <div
+              style={{
+                fontSize: 11,
+                letterSpacing: '0.28em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                color: progress >= 100 ? '#4ADE80' : 'rgba(255, 255, 255, 0.5)',
+                marginTop: 6,
+                transition: 'color 0.25s ease',
+              }}
+            >
+              {progress >= 100 ? 'INITIALIZATION COMPLETE' : 'CALIBRATING CORE'}
+            </div>
+          </div>
+        )}
+
+        {/* ── Subtitle before Stage 3 ── */}
+        {stage < 3 && (
           <div
             style={{
               position: 'absolute',
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              animation: 'crx-ambient-aura 3.9s ease-in-out forwards',
+              bottom: 'max(35px, 6vh)',
+              zIndex: 7,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 11.5,
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.4)',
             }}
-          />
-
-          {/* ── 1. OLD LOGO (BLUE): Zooms in + blurs into the red center ── */}
-          <img
-            src="/new-logo-blue.png"
-            alt="Cerebrexia Blue Logo"
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: 'min(240px, 62vw)',
-              height: 'min(240px, 62vw)',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              boxShadow: '0 0 35px rgba(59, 130, 246, 0.65)',
-              transformOrigin: 'center center',
-              animation: 'crx-old-logo-dive 3.9s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
-              zIndex: 3,
-            }}
-          />
-
-          {/* ── 2. NEW LOGO (RED): Emerges cleanly from the red glow ── */}
-          <img
-            src="/new-logo.jpg"
-            alt="Cerebrexia Red Logo"
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              width: 'min(240px, 62vw)',
-              height: 'min(240px, 62vw)',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              boxShadow: '0 0 45px rgba(220, 38, 38, 0.8), 0 0 90px rgba(185, 28, 28, 0.4)',
-              transformOrigin: 'center center',
-              animation: 'crx-new-logo-reveal 3.9s cubic-bezier(0.22, 1, 0.36, 1) forwards',
-              zIndex: 5,
-            }}
-          />
-        </div>
-
-        {/* Tagline */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 'max(35px, 6vh)',
-            zIndex: 7,
-            fontFamily: 'var(--font-sans)',
-            fontSize: 12,
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            fontWeight: 600,
-            animation: 'crx-subtitle-fade 3.9s ease-in-out forwards',
-          }}
-        >
-          The Crowned Diagnosis
-        </div>
+          >
+            Initializing
+          </div>
+        )}
       </div>
     </>
   );
