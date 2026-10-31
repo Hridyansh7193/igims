@@ -2,37 +2,45 @@ import React, { useEffect, useState, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
 
 /**
- * Preloader — Cinematic Logo Transition:
+ * Preloader — Cinematic Inverted Zoom Morph:
  *
- * 1. (0.0s – 0.6s): Blue logo holds calmly in the centre.
- * 2. (0.6s – 2.4s): Blue logo smoothly zooms to almost cover the screen (1x -> 4.8x)
- *                   and simultaneously blurs. Total blue time: ~2.4 seconds (not persistent).
- * 3. (2.4s): Sudden, crisp transition into the red logo. All blue is extinguished immediately.
- * 4. (2.5s – 5.5s): Red logo rests in the centre while an unhurried, easy-on-the-eye
- *                   0% - 100% circular loader traces around it with digital counter.
- * 5. (5.5s – 5.9s): Holds at 100% complete, then website opens smoothly!
+ * 1. (0.0s – 2.0s): Blue logo starts in centre, then zooms up (1x -> 4.8x) & blurs (0 -> 24px)
+ *                   to almost cover the screen. Total blue time: ~2.0 seconds.
+ * 2. (2.0s – 3.2s): Red logo starts zoomed in and blurred (4.8x, 24px blur) and smoothly
+ *                   shrinks / focuses down into the crisp red logo in the centre (1x, 0px blur).
+ * 3. (3.2s – 6.0s): The red logo rests in the centre while an unhurried 0% - 100% circular
+ *                   loader traces around its perimeter with synchronized digital percentage.
+ * 4. (6.0s – 6.4s): Holds at 100% complete, then the website starts!
  */
 export default function Preloader({ onDone }) {
-  // 'blue-phase' -> 'red-loading'
-  const [phase, setPhase] = useState('blue-phase');
+  // 'blue' -> 'red-shrink' -> 'red-loading'
+  const [phase, setPhase] = useState('blue');
   const [progress, setProgress] = useState(0);
   const onDoneCalledRef = useRef(false);
 
   useEffect(() => {
-    // Exactly 2.4 seconds total for the blue phase (within 2-3 sec requirement)
-    const timer = setTimeout(() => {
-      setPhase('red-loading');
-    }, 2400);
+    // 1. At 2.0s, switch from blue zoom to red shrink
+    const t1 = setTimeout(() => {
+      setPhase('red-shrink');
+    }, 2000);
 
-    return () => clearTimeout(timer);
+    // 2. At 3.2s, red logo has settled in the centre -> start circular 0-100% loader
+    const t2 = setTimeout(() => {
+      setPhase('red-loading');
+    }, 3200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
 
-  // 0% -> 100% unhurried circular loader during 'red-loading' (3.0 seconds)
+  // 0% -> 100% unhurried circular loader during 'red-loading'
   useEffect(() => {
     if (phase !== 'red-loading') return;
 
     let startTime = performance.now();
-    const duration = 3000; // 3.0 seconds: smooth, deliberate, easy on the eyes
+    const duration = 2800; // 2.8 seconds: smooth, deliberate, easy on the eyes
     let animId;
 
     const tick = (now) => {
@@ -43,13 +51,13 @@ export default function Preloader({ onDone }) {
       if (p < 100) {
         animId = requestAnimationFrame(tick);
       } else {
-        // Hold for 400ms at 100% so completion is felt, then open the website
+        // Hold for 380ms at 100% so completion is felt, then open the website
         setTimeout(() => {
           if (!onDoneCalledRef.current) {
             onDoneCalledRef.current = true;
             if (onDone) onDone();
           }
-        }, 400);
+        }, 380);
       }
     };
 
@@ -68,15 +76,15 @@ export default function Preloader({ onDone }) {
   const tipX = 140 + RADIUS * Math.cos(angle);
   const tipY = 140 + RADIUS * Math.sin(angle);
 
-  const isBluePhase = phase === 'blue-phase';
-  const isRedPhase = phase === 'red-loading';
+  const isBlue = phase === 'blue';
+  const isRed = phase === 'red-shrink' || phase === 'red-loading';
 
   return (
     <>
       <style>
         {`
-          /* Blue logo: Hold 0.6s, then zoom to almost cover the screen (4.8x) & blur (22px) over 1.8s */
-          @keyframes crx-blue-screen-zoom {
+          /* ── 1. Blue Logo: Hold 0.5s then zoom up (1x -> 4.8x) & blur (0 -> 24px) ── */
+          @keyframes crx-blue-zoom-blur {
             0% {
               transform: translate(-50%, -50%) scale(1);
               filter: blur(0px);
@@ -87,9 +95,9 @@ export default function Preloader({ onDone }) {
               filter: blur(0px);
               opacity: 1;
             }
-            82% {
+            85% {
               transform: translate(-50%, -50%) scale(4.4);
-              filter: blur(18px);
+              filter: blur(20px);
               opacity: 0.85;
             }
             100% {
@@ -99,14 +107,14 @@ export default function Preloader({ onDone }) {
             }
           }
 
-          /* Blue glow: Expands with the zoom and fades out completely (never persistent) */
+          /* Blue glow: Expands with the zoom and fades out completely */
           @keyframes crx-blue-glow-fadeout {
             0%, 25% {
               opacity: 0.6;
               transform: scale(1);
             }
-            75% {
-              opacity: 0.25;
+            80% {
+              opacity: 0.2;
               transform: scale(2.8);
             }
             100% {
@@ -115,23 +123,39 @@ export default function Preloader({ onDone }) {
             }
           }
 
-          /* Sudden transition snap flash (120ms) */
-          @keyframes crx-sudden-snap {
-            0% { opacity: 0; }
-            40% { opacity: 0.85; }
-            100% { opacity: 0; }
-          }
-
-          /* Red logo clean entrance */
-          @keyframes crx-red-logo-enter {
+          /* ── 2. Red Logo: Starts zoomed & blurred (4.8x, 24px) and shrinks into centre (1x, 0px) ── */
+          @keyframes crx-red-shrink-focus {
             0% {
-              transform: translate(-50%, -50%) scale(0.95);
-              opacity: 0.7;
+              transform: translate(-50%, -50%) scale(4.8);
+              filter: blur(24px);
+              opacity: 0.6;
+            }
+            20% {
+              opacity: 0.95;
             }
             100% {
               transform: translate(-50%, -50%) scale(1);
+              filter: blur(0px);
               opacity: 1;
             }
+          }
+
+          /* Red aura: shrinks and concentrates around the resting red logo */
+          @keyframes crx-red-aura-settle {
+            0% {
+              opacity: 0.3;
+              transform: scale(3.2);
+            }
+            100% {
+              opacity: 0.65;
+              transform: scale(1);
+            }
+          }
+
+          /* Subtle breathing glow for red logo once settled */
+          @keyframes crx-red-settled-pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.04); }
           }
         `}
       </style>
@@ -152,20 +176,6 @@ export default function Preloader({ onDone }) {
         {/* Dynamic ambient particles */}
         <DynamicBackground />
 
-        {/* ── Sudden Transition Flash (triggers at 2.4s for 120ms) ── */}
-        {isRedPhase && progress < 8 && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(220,38,38,0.4) 50%, transparent 80%)',
-              animation: 'crx-sudden-snap 0.14s ease-out forwards',
-              zIndex: 10,
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-
         {/* ── Center Stage Container ── */}
         <div
           style={{
@@ -179,9 +189,9 @@ export default function Preloader({ onDone }) {
           }}
         >
           {/* ═════════════════════════════════════════════════════════════ */}
-          {/* 1. BLUE LOGO PHASE (0.0s – 2.4s) — NOT PERSISTENT            */}
+          {/* 1. BLUE LOGO PHASE (0.0s – 2.0s): Zoom & Blur Outward        */}
           {/* ═════════════════════════════════════════════════════════════ */}
-          {isBluePhase && (
+          {isBlue && (
             <>
               {/* Blue ambient aura — expands and completely fades out */}
               <div
@@ -192,12 +202,12 @@ export default function Preloader({ onDone }) {
                   borderRadius: '50%',
                   background: 'rgba(59, 130, 246, 0.5)',
                   filter: 'blur(45px)',
-                  animation: 'crx-blue-glow-fadeout 2.4s ease-out forwards',
+                  animation: 'crx-blue-glow-fadeout 2.0s ease-out forwards',
                   zIndex: 1,
                 }}
               />
 
-              {/* Blue Logo: Zooms to almost cover the screen + blurs over 2.4s */}
+              {/* Blue Logo: Zooms to almost cover screen + blurs over 2.0s */}
               <img
                 src="/new-logo-blue.png"
                 alt="Cerebrexia Blue Logo"
@@ -211,7 +221,7 @@ export default function Preloader({ onDone }) {
                   objectFit: 'cover',
                   transformOrigin: 'center center',
                   boxShadow: '0 0 35px rgba(59, 130, 246, 0.45)',
-                  animation: 'crx-blue-screen-zoom 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
+                  animation: 'crx-blue-zoom-blur 2.0s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
                   zIndex: 3,
                 }}
               />
@@ -219,9 +229,9 @@ export default function Preloader({ onDone }) {
           )}
 
           {/* ═════════════════════════════════════════════════════════════ */}
-          {/* 2. RED LOGO & 0-100% CIRCULAR LOADER PHASE (2.4s – 5.9s)     */}
+          {/* 2. RED LOGO PHASE (2.0s+): Shrinks & Focuses Inward          */}
           {/* ═════════════════════════════════════════════════════════════ */}
-          {isRedPhase && (
+          {isRed && (
             <>
               {/* Red ambient aura */}
               <div
@@ -230,13 +240,17 @@ export default function Preloader({ onDone }) {
                   width: 210,
                   height: 210,
                   borderRadius: '50%',
-                  background: 'rgba(220, 38, 38, 0.35)',
+                  background: 'rgba(220, 38, 38, 0.45)',
                   filter: 'blur(35px)',
+                  animation:
+                    phase === 'red-shrink'
+                      ? 'crx-red-aura-settle 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                      : 'crx-red-settled-pulse 2.5s ease-in-out infinite',
                   zIndex: 1,
                 }}
               />
 
-              {/* Red Logo in the Centre */}
+              {/* Red Logo: Starts zoomed & blurred (4.8x, 24px) -> shrinks into centre (1x, 0px) */}
               <img
                 src="/new-logo.jpg"
                 alt="Cerebrexia Logo"
@@ -248,78 +262,86 @@ export default function Preloader({ onDone }) {
                   height: 210,
                   borderRadius: '50%',
                   objectFit: 'cover',
-                  boxShadow: '0 0 32px rgba(220, 38, 38, 0.65), 0 0 65px rgba(185, 28, 28, 0.3)',
-                  animation: 'crx-red-logo-enter 0.25s ease-out forwards',
+                  transformOrigin: 'center center',
+                  boxShadow: '0 0 32px rgba(220, 38, 38, 0.7), 0 0 65px rgba(185, 28, 28, 0.35)',
+                  animation:
+                    phase === 'red-shrink'
+                      ? 'crx-red-shrink-focus 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                      : 'translate(-50%, -50%) scale(1)',
                   zIndex: 3,
                 }}
               />
 
-              {/* SVG 0 - 100% Circular Loader Around the Logo */}
-              <svg
-                width={SVG_SIZE}
-                height={SVG_SIZE}
-                viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: 5,
-                  pointerEvents: 'none',
-                }}
-              >
-                <defs>
-                  {/* Glowing gradient for progress stroke */}
-                  <linearGradient id="crxProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#EF4444" />
-                    <stop offset="60%" stopColor="#DC2626" />
-                    <stop offset="100%" stopColor="#B91C1C" />
-                  </linearGradient>
-                  <filter id="crxNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="2.5" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                </defs>
-
-                {/* Subtle background track */}
-                <circle
-                  cx={140}
-                  cy={140}
-                  r={RADIUS}
-                  fill="none"
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeWidth="3.5"
-                />
-
-                {/* Animated progress circle (0 to 100%) */}
-                <circle
-                  cx={140}
-                  cy={140}
-                  r={RADIUS}
-                  fill="none"
-                  stroke="url(#crxProgressGrad)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={CIRCUMFERENCE}
-                  strokeDashoffset={strokeOffset}
-                  transform="rotate(-90 140 140)"
-                  filter="url(#crxNeonGlow)"
+              {/* ═════════════════════════════════════════════════════════ */}
+              {/* 3. CIRCULAR 0% – 100% PROGRESS RING (Once settled)        */}
+              {/* ═════════════════════════════════════════════════════════ */}
+              {phase === 'red-loading' && (
+                <svg
+                  width={SVG_SIZE}
+                  height={SVG_SIZE}
+                  viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
                   style={{
-                    transition: 'stroke-dashoffset 0.04s linear',
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 5,
+                    pointerEvents: 'none',
                   }}
-                />
+                >
+                  <defs>
+                    {/* Glowing gradient for progress stroke */}
+                    <linearGradient id="crxProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#EF4444" />
+                      <stop offset="60%" stopColor="#DC2626" />
+                      <stop offset="100%" stopColor="#B91C1C" />
+                    </linearGradient>
+                    <filter id="crxNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
 
-                {/* Glowing laser tip leading the progress */}
-                {progress > 1 && progress < 100 && (
+                  {/* Subtle background track */}
                   <circle
-                    cx={tipX}
-                    cy={tipY}
-                    r={4.5}
-                    fill="#FFFFFF"
+                    cx={140}
+                    cy={140}
+                    r={RADIUS}
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.08)"
+                    strokeWidth="3.5"
+                  />
+
+                  {/* Animated progress circle (0 to 100%) */}
+                  <circle
+                    cx={140}
+                    cy={140}
+                    r={RADIUS}
+                    fill="none"
+                    stroke="url(#crxProgressGrad)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={CIRCUMFERENCE}
+                    strokeDashoffset={strokeOffset}
+                    transform="rotate(-90 140 140)"
+                    filter="url(#crxNeonGlow)"
                     style={{
-                      filter: 'drop-shadow(0 0 5px #DC2626) drop-shadow(0 0 8px #FFFFFF)',
+                      transition: 'stroke-dashoffset 0.04s linear',
                     }}
                   />
-                )}
-              </svg>
+
+                  {/* Glowing laser tip leading the progress */}
+                  {progress > 1 && progress < 100 && (
+                    <circle
+                      cx={tipX}
+                      cy={tipY}
+                      r={4.5}
+                      fill="#FFFFFF"
+                      style={{
+                        filter: 'drop-shadow(0 0 5px #DC2626) drop-shadow(0 0 8px #FFFFFF)',
+                      }}
+                    />
+                  )}
+                </svg>
+              )}
             </>
           )}
         </div>
@@ -334,7 +356,7 @@ export default function Preloader({ onDone }) {
             minHeight: 52,
           }}
         >
-          {isRedPhase ? (
+          {phase === 'red-loading' ? (
             <>
               {/* Digital 0 - 100% Counter */}
               <div
