@@ -2,45 +2,37 @@ import React, { useEffect, useState, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
 
 /**
- * Preloader — Cinematic Unhurried Logo Transition:
+ * Preloader — Cinematic Logo Transition:
  *
- * 1. (0.0s – 1.4s): Blue logo rests cleanly in the centre with gentle blue ambience.
- * 2. (1.4s – 3.0s): A gentle, unhurried little zoom (1x -> 1.28x) and soft blur (0 -> 10px).
- *                   Easy on the eye.
- * 3. (3.0s): Sudden, crisp cinematic cut into the new red logo! All blue is extinguished instantly.
- * 4. (3.1s – 5.9s): The red logo rests in the centre while a luminous 0 - 100% circular
- *                   loader smoothly traces around its perimeter with a digital counter.
- * 5. (5.9s – 6.3s): Holds at 100% complete, then triggers onDone() to open the website!
+ * 1. (0.0s – 0.6s): Blue logo holds calmly in the centre.
+ * 2. (0.6s – 2.4s): Blue logo smoothly zooms to almost cover the screen (1x -> 4.8x)
+ *                   and simultaneously blurs. Total blue time: ~2.4 seconds (not persistent).
+ * 3. (2.4s): Sudden, crisp transition into the red logo. All blue is extinguished immediately.
+ * 4. (2.5s – 5.5s): Red logo rests in the centre while an unhurried, easy-on-the-eye
+ *                   0% - 100% circular loader traces around it with digital counter.
+ * 5. (5.5s – 5.9s): Holds at 100% complete, then website opens smoothly!
  */
 export default function Preloader({ onDone }) {
-  // 'blue-idle' -> 'blue-zoom' -> 'red-loading' -> 'done'
-  const [phase, setPhase] = useState('blue-idle');
+  // 'blue-phase' -> 'red-loading'
+  const [phase, setPhase] = useState('blue-phase');
   const [progress, setProgress] = useState(0);
   const onDoneCalledRef = useRef(false);
 
   useEffect(() => {
-    // 1. After 1.4s calm hold, begin the gentle little zoom and blur
-    const t1 = setTimeout(() => {
-      setPhase('blue-zoom');
-    }, 1400);
-
-    // 2. At 3.0s, sudden transition into the red logo
-    const t2 = setTimeout(() => {
+    // Exactly 2.4 seconds total for the blue phase (within 2-3 sec requirement)
+    const timer = setTimeout(() => {
       setPhase('red-loading');
-    }, 3000);
+    }, 2400);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
-  // 0% -> 100% smooth circular animation during 'red-loading'
+  // 0% -> 100% unhurried circular loader during 'red-loading' (3.0 seconds)
   useEffect(() => {
     if (phase !== 'red-loading') return;
 
     let startTime = performance.now();
-    const duration = 2800; // 2.8 seconds: unhurried, graceful, easy on the eye
+    const duration = 3000; // 3.0 seconds: smooth, deliberate, easy on the eyes
     let animId;
 
     const tick = (now) => {
@@ -51,7 +43,7 @@ export default function Preloader({ onDone }) {
       if (p < 100) {
         animId = requestAnimationFrame(tick);
       } else {
-        // Hold for 400ms at 100% so the completion is felt, then open the website
+        // Hold for 400ms at 100% so completion is felt, then open the website
         setTimeout(() => {
           if (!onDoneCalledRef.current) {
             onDoneCalledRef.current = true;
@@ -65,7 +57,7 @@ export default function Preloader({ onDone }) {
     return () => cancelAnimationFrame(animId);
   }, [phase, onDone]);
 
-  // SVG Geometry
+  // SVG circular geometry
   const SVG_SIZE = 280;
   const RADIUS = 124;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~779.11
@@ -76,31 +68,51 @@ export default function Preloader({ onDone }) {
   const tipX = 140 + RADIUS * Math.cos(angle);
   const tipY = 140 + RADIUS * Math.sin(angle);
 
-  const isBluePhase = phase === 'blue-idle' || phase === 'blue-zoom';
+  const isBluePhase = phase === 'blue-phase';
   const isRedPhase = phase === 'red-loading';
 
   return (
     <>
       <style>
         {`
-          /* Gentle little zoom and soft blur: 1.6s, very easy on the eyes */
-          @keyframes crx-gentle-zoom-blur {
+          /* Blue logo: Hold 0.6s, then zoom to almost cover the screen (4.8x) & blur (22px) over 1.8s */
+          @keyframes crx-blue-screen-zoom {
             0% {
               transform: translate(-50%, -50%) scale(1);
               filter: blur(0px);
-              box-shadow: 0 0 35px rgba(59, 130, 246, 0.45);
+              opacity: 1;
+            }
+            25% {
+              transform: translate(-50%, -50%) scale(1);
+              filter: blur(0px);
+              opacity: 1;
+            }
+            82% {
+              transform: translate(-50%, -50%) scale(4.4);
+              filter: blur(18px);
+              opacity: 0.85;
             }
             100% {
-              transform: translate(-50%, -50%) scale(1.28);
-              filter: blur(10px);
-              box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+              transform: translate(-50%, -50%) scale(4.8);
+              filter: blur(24px);
+              opacity: 0;
             }
           }
 
-          /* Soft ambient blue glow during blue-idle */
-          @keyframes crx-blue-glow-pulse {
-            0%, 100% { opacity: 0.55; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
+          /* Blue glow: Expands with the zoom and fades out completely (never persistent) */
+          @keyframes crx-blue-glow-fadeout {
+            0%, 25% {
+              opacity: 0.6;
+              transform: scale(1);
+            }
+            75% {
+              opacity: 0.25;
+              transform: scale(2.8);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(3.5);
+            }
           }
 
           /* Sudden transition snap flash (120ms) */
@@ -110,10 +122,10 @@ export default function Preloader({ onDone }) {
             100% { opacity: 0; }
           }
 
-          /* Red logo gentle entrance */
+          /* Red logo clean entrance */
           @keyframes crx-red-logo-enter {
             0% {
-              transform: translate(-50%, -50%) scale(0.96);
+              transform: translate(-50%, -50%) scale(0.95);
               opacity: 0.7;
             }
             100% {
@@ -137,10 +149,10 @@ export default function Preloader({ onDone }) {
           zIndex: 99999,
         }}
       >
-        {/* Dynamic subtle background embers */}
+        {/* Dynamic ambient particles */}
         <DynamicBackground />
 
-        {/* ── Sudden Transition Flash (triggers at 3.0s for 120ms) ── */}
+        {/* ── Sudden Transition Flash (triggers at 2.4s for 120ms) ── */}
         {isRedPhase && progress < 8 && (
           <div
             style={{
@@ -154,7 +166,7 @@ export default function Preloader({ onDone }) {
           />
         )}
 
-        {/* ── Center Stage Container (280px x 280px) ── */}
+        {/* ── Center Stage Container ── */}
         <div
           style={{
             position: 'relative',
@@ -167,27 +179,25 @@ export default function Preloader({ onDone }) {
           }}
         >
           {/* ═════════════════════════════════════════════════════════════ */}
-          {/* 1. BLUE LOGO PHASE (0.0s – 3.0s)                             */}
+          {/* 1. BLUE LOGO PHASE (0.0s – 2.4s) — NOT PERSISTENT            */}
           {/* ═════════════════════════════════════════════════════════════ */}
           {isBluePhase && (
             <>
-              {/* Soft ambient blue aura */}
+              {/* Blue ambient aura — expands and completely fades out */}
               <div
                 style={{
                   position: 'absolute',
                   width: 210,
                   height: 210,
                   borderRadius: '50%',
-                  background: 'rgba(59, 130, 246, 0.45)',
+                  background: 'rgba(59, 130, 246, 0.5)',
                   filter: 'blur(45px)',
-                  animation: phase === 'blue-idle' ? 'crx-blue-glow-pulse 2s ease-in-out infinite' : 'none',
-                  opacity: phase === 'blue-zoom' ? 0.3 : 0.6,
-                  transition: 'opacity 1.6s ease',
+                  animation: 'crx-blue-glow-fadeout 2.4s ease-out forwards',
                   zIndex: 1,
                 }}
               />
 
-              {/* Blue Logo in the Centre */}
+              {/* Blue Logo: Zooms to almost cover the screen + blurs over 2.4s */}
               <img
                 src="/new-logo-blue.png"
                 alt="Cerebrexia Blue Logo"
@@ -200,27 +210,20 @@ export default function Preloader({ onDone }) {
                   borderRadius: '50%',
                   objectFit: 'cover',
                   transformOrigin: 'center center',
+                  boxShadow: '0 0 35px rgba(59, 130, 246, 0.45)',
+                  animation: 'crx-blue-screen-zoom 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
                   zIndex: 3,
-                  ...(phase === 'blue-idle'
-                    ? {
-                        transform: 'translate(-50%, -50%) scale(1)',
-                        filter: 'blur(0px)',
-                        boxShadow: '0 0 35px rgba(59, 130, 246, 0.45)',
-                      }
-                    : {
-                        animation: 'crx-gentle-zoom-blur 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-                      }),
                 }}
               />
             </>
           )}
 
           {/* ═════════════════════════════════════════════════════════════ */}
-          {/* 2. RED LOGO & 0-100% CIRCULAR LOADER PHASE (3.0s – 6.3s)     */}
+          {/* 2. RED LOGO & 0-100% CIRCULAR LOADER PHASE (2.4s – 5.9s)     */}
           {/* ═════════════════════════════════════════════════════════════ */}
           {isRedPhase && (
             <>
-              {/* Rich red ambient aura */}
+              {/* Red ambient aura */}
               <div
                 style={{
                   position: 'absolute',
