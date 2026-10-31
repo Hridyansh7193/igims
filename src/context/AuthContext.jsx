@@ -11,7 +11,11 @@ function mapAuthError(err) {
   if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong'))
     return { message: 'Incorrect email or password.', isRateLimit: false };
   if (msg.includes('email not confirmed') || msg.includes('not confirmed'))
-    return { message: 'Please confirm your email before signing in.', isRateLimit: false };
+    return {
+      message: 'Your email has not been verified yet. Please check your inbox and click the verification link before logging in.',
+      isRateLimit: false,
+      isEmailNotConfirmed: true,
+    };
   if (msg.includes('user already registered') || msg.includes('already registered'))
     return { message: 'An account with this email already exists. Try signing in.', isRateLimit: false };
   if (msg.includes('password should be'))
@@ -69,10 +73,41 @@ export function AuthProvider({ children }) {
 
   // ── Auth Methods ───────────────────────────────────────────────────────────
 
+  const getRedirectUrl = useCallback(() => {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    return isLocalhost ? window.location.origin : 'https://igims-sand.vercel.app';
+  }, []);
+
   const signUpWithEmail = useCallback(async (email, password) => {
+    const redirectUrl = getRedirectUrl();
     const { data, error } = await withRetry(() =>
-      supabase.auth.signUp({ email: email.trim().toLowerCase(), password })
+      supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      })
     );
+    if (error) {
+      const mapped = mapAuthError(error);
+      const e = new Error(mapped.message);
+      e.isRateLimit = mapped.isRateLimit;
+      e.isEmailNotConfirmed = mapped.isEmailNotConfirmed;
+      throw e;
+    }
+    return data;
+  }, [getRedirectUrl]);
+
+  const resendVerificationEmail = useCallback(async (email) => {
+    const redirectUrl = getRedirectUrl();
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
     if (error) {
       const mapped = mapAuthError(error);
       const e = new Error(mapped.message);
@@ -80,7 +115,7 @@ export function AuthProvider({ children }) {
       throw e;
     }
     return data;
-  }, []);
+  }, [getRedirectUrl]);
 
   const signInWithEmail = useCallback(async (email, password) => {
     const { data, error } = await withRetry(() =>
@@ -90,14 +125,14 @@ export function AuthProvider({ children }) {
       const mapped = mapAuthError(error);
       const e = new Error(mapped.message);
       e.isRateLimit = mapped.isRateLimit;
+      e.isEmailNotConfirmed = mapped.isEmailNotConfirmed;
       throw e;
     }
     return data;
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const redirectUrl = isLocalhost ? window.location.origin : 'https://igims-sand.vercel.app';
+    const redirectUrl = getRedirectUrl();
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -108,7 +143,7 @@ export function AuthProvider({ children }) {
     });
     if (error) throw new Error(mapAuthError(error).message);
     return data;
-  }, []);
+  }, [getRedirectUrl]);
 
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -121,6 +156,7 @@ export function AuthProvider({ children }) {
     signUpWithEmail,
     signInWithEmail,
     signInWithGoogle,
+    resendVerificationEmail,
     signOut,
   };
 

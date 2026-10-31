@@ -12,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
  * (e.g. the hero title) can time its own reveal animation to it.
  * onComplete fires once the wipe has fully finished.
  */
-export default function IntroAnimation({ onComplete, onWipeStart }) {
+export default function IntroAnimation({ onComplete, onWipeStart, onOpenPolicy }) {
   const [stage, setStage] = useState('loading'); // 'loading' -> 'auth' -> 'wiping'
   const [frameScale, setFrameScale] = useState(0);
   const rafRef = useRef(null);
@@ -79,8 +79,10 @@ export default function IntroAnimation({ onComplete, onWipeStart }) {
       {stage === 'loading' && <Preloader onDone={handleLoaderDone} />}
       
       {stage === 'auth' && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#020101' }}>
-          <AuthForm onSuccess={startWipe} />
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#020101', padding: '20px 16px', overflowY: 'auto' }}>
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            <AuthForm onSuccess={startWipe} onOpenPolicy={onOpenPolicy} />
+          </div>
         </div>
       )}
 

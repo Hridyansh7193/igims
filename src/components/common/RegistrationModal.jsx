@@ -199,7 +199,7 @@ export default function RegistrationModal({
                   <input
                     type={type} value={form[field]} onChange={update(field)}
                     required placeholder={placeholder}
-                    maxLength={field === 'phone_number' ? 10 : undefined}
+                    maxLength={field === 'phone_number' ? 10 : (field === 'college_name' ? 150 : 60)}
                     style={inp} onFocus={focusInp} onBlur={blurInp}
                   />
                 </div>

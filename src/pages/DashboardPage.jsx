@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw, Calendar, ArrowRight, Edit3, PlusCircle } from 'lucide-react';
+import { LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw, Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import AuthForm from '../components/auth/AuthForm';
@@ -8,12 +8,14 @@ import { fetchParticipantProfile, getRegisteredEvents, normalizeProfile } from '
 
 export default function DashboardPage({ setPage }) {
   const { user, signOut } = useAuth();
-  const [participant,    setParticipant]    = useState(null);
+  const [participant,      setParticipant]      = useState(null);
   const [registeredEvents, setRegisteredEvents] = useState([]);
-  const [fetchingReg,    setFetchingReg]    = useState(false);
-  const [fetchError,     setFetchError]     = useState(null);
-  const [signOutLoading, setSignOutLoading] = useState(false);
-  const [showEditModal,  setShowEditModal]  = useState(false);
+  const [fetchingReg,      setFetchingReg]      = useState(false);
+  const [fetchError,       setFetchError]       = useState(null);
+  const [signOutLoading,   setSignOutLoading]   = useState(false);
+  const [showEditModal,    setShowEditModal]    = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [copiedUpi,        setCopiedUpi]        = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -71,6 +73,10 @@ export default function DashboardPage({ setPage }) {
       await signOut();
       setParticipant(null);
       setRegisteredEvents([]);
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('crx_intro_seen');
+      }
+      setPage && setPage('home');
     } catch (err) {
       console.error('[Dashboard] signOut error:', err);
     } finally {
@@ -103,6 +109,163 @@ export default function DashboardPage({ setPage }) {
           onClose={() => setShowEditModal(false)}
           onSuccess={handleEditSuccess}
         />
+      )}
+
+      {showPaymentModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Payment Information"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px 16px',
+          }}
+        >
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowPaymentModal(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(2,1,1,0.85)',
+              backdropFilter: 'blur(8px)',
+            }}
+          />
+
+          {/* Modal Card */}
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: 480,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              background: 'linear-gradient(160deg, #1b0909 0%, #0a0404 100%)',
+              border: '1px solid rgba(220,38,38,0.4)',
+              borderRadius: 20,
+              padding: '32px 28px',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.9), 0 0 60px rgba(220,38,38,0.12)',
+              zIndex: 1,
+            }}
+          >
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--cream)',
+              }}
+            >
+              <X size={15} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: 'rgba(220,38,38,0.15)',
+                  border: '1px solid rgba(220,38,38,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CreditCard size={18} color="#DC2626" />
+              </div>
+              <h2 className="crx-display" style={{ fontSize: 21, color: 'var(--cream)', margin: 0 }}>
+                PAYMENT SYSTEM SETUP
+              </h2>
+            </div>
+
+            <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, margin: '0 0 18px' }}>
+              Your registration details and claimed events have been recorded. Online payment configuration is currently in progress.
+            </p>
+
+            {/* Price & Status Box */}
+            <div
+              style={{
+                background: 'rgba(220,38,38,0.08)',
+                border: '1px solid rgba(220,38,38,0.25)',
+                borderRadius: 12,
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 18,
+              }}
+            >
+              <div>
+                <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--muted)' }}>
+                  Fest Pass Fee
+                </span>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#fca5a5' }}>
+                  All events, pronites & festival pass
+                </p>
+              </div>
+              <span style={{ fontSize: 26, fontWeight: 800, color: '#fff' }}>
+                ₹800
+              </span>
+            </div>
+
+            {/* Notice: Razorpay and UPI under configuration */}
+            <div
+              style={{
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.35)',
+                borderRadius: 12,
+                padding: '16px',
+                marginBottom: 16,
+              }}
+            >
+              <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                Gateway & UPI Under Setup
+              </p>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--cream)', lineHeight: 1.6 }}>
+                The official festival UPI ID and Razorpay payment gateway are currently being finalized with the IGIMS Finance &amp; Organising Committee.
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 12,
+                padding: '14px 16px',
+                marginBottom: 20,
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
+                Once the payment system goes live, an online payment button will activate right here on your dashboard, and an alert will be sent to your verified email.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPaymentModal(false)}
+              className="crx-btn gold"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              UNDERSTOOD, CLOSE
+            </button>
+          </div>
+        </div>
       )}
 
       <section style={{ padding: '150px 24px 100px', maxWidth: 960, margin: '0 auto' }}>
@@ -205,12 +368,12 @@ export default function DashboardPage({ setPage }) {
                 <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, margin: 0 }}>
                   {isPaid
                     ? 'Your payment is confirmed. See you at Cerebrexia!'
-                    : 'Registration saved. Complete payment to confirm your spot.'}
+                    : 'Profile registered. Payment collection (Razorpay & UPI) is currently under configuration by the finance committee.'}
                 </p>
                 {!isPaid && (
                   <button className="crx-btn gold" style={{ justifyContent: 'center' }}
-                    onClick={() => alert('Payment gateway coming soon!')}>
-                    PROCEED TO PAYMENT
+                    onClick={() => setShowPaymentModal(true)}>
+                    PAYMENT GATEWAY STATUS
                   </button>
                 )}
                 <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>

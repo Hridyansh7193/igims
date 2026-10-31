@@ -22,6 +22,7 @@ export function normalizeProfile(raw) {
     college_state   : state,
     state_of_college: state,
     payment_status  : raw.payment_status || 'PENDING',
+    reminder_sent_count: raw.reminder_sent_count ?? 0,
   };
 }
 
@@ -68,16 +69,24 @@ export async function fetchParticipantProfile(userId, userMetadata = null) {
  * and maintains local cache and user_metadata so registration never fails.
  */
 export async function saveParticipantProfile(userId, email, formData) {
+  const cleanFirst = (formData.first_name || '').trim().slice(0, 100);
+  const cleanLast  = (formData.last_name || formData.surname || '').trim().slice(0, 100);
+  const cleanColl  = (formData.college_name || '').trim().slice(0, 200);
+  const cleanPhone = (formData.phone_number || '').trim().replace(/[^\d+]/g, '').slice(0, 15);
+  const cleanCity  = (formData.college_city || formData.city_of_college || '').trim().slice(0, 100);
+  const cleanState = (formData.college_state || formData.state_of_college || '').trim().slice(0, 100);
+
   const payload = {
     user_id     : userId,
-    email       : email,
-    first_name  : (formData.first_name || '').trim(),
-    last_name   : (formData.last_name || formData.surname || '').trim(),
-    college_name: (formData.college_name || '').trim(),
-    phone_number: (formData.phone_number || '').trim(),
-    college_city: (formData.college_city || formData.city_of_college || '').trim(),
-    college_state: (formData.college_state || formData.state_of_college || '').trim(),
+    email       : (email || '').trim().toLowerCase().slice(0, 255),
+    first_name  : cleanFirst,
+    last_name   : cleanLast,
+    college_name: cleanColl,
+    phone_number: cleanPhone,
+    college_city: cleanCity,
+    college_state: cleanState,
     payment_status: 'PENDING',
+    reminder_sent_count: 0,
   };
 
   // Immediate local cache
@@ -114,6 +123,7 @@ export async function saveParticipantProfile(userId, email, formData) {
           college_state: payload.college_state,
         })
         .eq('id', existing.id)
+        .eq('user_id', userId) // Security: scope update to user_id
         .select()
         .maybeSingle();
 

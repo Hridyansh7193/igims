@@ -38,7 +38,7 @@ export default function ContactPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {[
                 { icon: Mail, l: 'Email', v: 'cerebrexia@igims.edu' },
-                { icon: Phone, l: 'Phone', v: '+91 00000 00000' },
+                { icon: Phone, l: 'Student Helplines', v: '+91 82102 23381 / +91 95720 68244' },
                 { icon: MapPin, l: 'Venue', v: 'IGIMS, Sheikhpura, Patna – 800014' },
               ].map((item) => (
                 <div key={item.l} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -93,14 +93,30 @@ export default function ContactPage() {
               }}
             >
               {sent ? (
-                <p style={{ color: 'var(--gold)', fontSize: 14, textAlign: 'center', padding: '30px 0' }}>
-                  Message sent — we'll respond soon.
-                </p>
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <p style={{ color: 'var(--gold)', fontSize: 15, fontWeight: 600, margin: '0 0 16px' }}>
+                    Message received — our team will get back to you shortly.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSent(false)}
+                    className="crx-btn"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'var(--cream)',
+                      fontSize: 11,
+                      margin: '0 auto',
+                    }}
+                  >
+                    Send Another Message
+                  </button>
+                </div>
               ) : (
                 <>
-                  <input required placeholder="Your name" style={inputStyle} />
-                  <input required type="email" placeholder="Your email" style={inputStyle} />
-                  <textarea required placeholder="Your message" rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
+                  <input required maxLength={80} placeholder="Your name" style={inputStyle} />
+                  <input required maxLength={120} type="email" placeholder="Your email" style={inputStyle} />
+                  <textarea required maxLength={1000} placeholder="Your message" rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
                   <button type="submit" className="crx-btn gold" style={{ justifyContent: 'center' }}>
                     Send Message <Send size={14} />
                   </button>
