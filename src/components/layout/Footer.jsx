@@ -47,7 +47,7 @@ export default function Footer({ setPage }) {
             Explore
           </Sticker>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {['Home', 'Events', 'Pronites', 'Accommodation', 'Team', 'Contact'].map((p) => (
+            {['Home', 'Events', 'Pronites', 'Accommodation', 'Contact'].map((p) => (
               <button
                 key={p}
                 onClick={() => setPage(p.toLowerCase())}

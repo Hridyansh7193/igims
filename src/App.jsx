@@ -8,14 +8,13 @@ import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
 import PronitesPage from './pages/PronitesPage';
 import AccommodationPage from './pages/AccommodationPage';
-import TeamPage from './pages/TeamPage';
 import ContactPage from './pages/ContactPage';
 import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'team', 'contact', 'dashboard'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'contact', 'dashboard'];
 
 export default function App() {
   const getInitialPage = () => {
@@ -99,7 +98,6 @@ export default function App() {
           {page === 'events' && <EventsPage setPage={navigateTo} />}
           {page === 'pronites' && <PronitesPage />}
           {page === 'accommodation' && <AccommodationPage />}
-          {page === 'team' && <TeamPage />}
           {page === 'contact' && <ContactPage />}
           {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
           {isPolicyPage && (
