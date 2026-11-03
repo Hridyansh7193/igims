@@ -5,11 +5,9 @@ import MascotSection from '../components/home/MascotSection';
 import StatsSection from '../components/home/StatsSection';
 import SplitPanelSection from '../components/home/SplitPanelSection';
 import GallerySection from '../components/home/GallerySection';
-import HostCampusSection from '../components/home/HostCampusSection';
 import ClosingHero from '../components/home/ClosingHero';
 
 // Missing components from the competitor site
-import DirectorMessage from '../components/home/DirectorMessage';
 import FAQ from '../components/home/FAQ';
 
 export default function HomePage({ setPage, revealHeroTitle }) {
@@ -24,11 +22,7 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       {/* Continuing original sections */}
       <SplitPanelSection setPage={setPage} />
       <GallerySection />
-      <HostCampusSection />
 
-      {/* Competitor additions integrated */}
-      <DirectorMessage />
-      
       {/* Final competitor additions */}
       <FAQ />
 
