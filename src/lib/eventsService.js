@@ -12,6 +12,8 @@ export function normalizeProfile(raw) {
 
   return {
     ...raw,
+    id              : raw.id || null,
+    user_id         : raw.user_id || null,
     first_name      : raw.first_name || '',
     last_name       : lastName,
     surname         : lastName,
@@ -28,6 +30,7 @@ export function normalizeProfile(raw) {
 
 /**
  * Fetch participant profile from Supabase 'participants' table with fallbacks.
+ * Guaranteed to return single identity entry.
  */
 export async function fetchParticipantProfile(userId, userMetadata = null) {
   if (!userId) return null;
@@ -66,7 +69,7 @@ export async function fetchParticipantProfile(userId, userMetadata = null) {
 
 /**
  * Inserts or updates participant record in Supabase with correct column names,
- * and maintains local cache and user_metadata so registration never fails.
+ * ENSURING a single participant ID entry is maintained for this user.
  */
 export async function saveParticipantProfile(userId, email, formData) {
   const cleanFirst = (formData.first_name || '').trim().slice(0, 100);
@@ -103,7 +106,7 @@ export async function saveParticipantProfile(userId, email, formData) {
     console.warn('[eventsService] updateUser metadata notice:', metaErr);
   }
 
-  // Save to Supabase 'participants' table
+  // Save to Supabase 'participants' table (Single row guarantee)
   try {
     const { data: existing } = await supabase
       .from('participants')
@@ -121,9 +124,10 @@ export async function saveParticipantProfile(userId, email, formData) {
           phone_number : payload.phone_number,
           college_city : payload.college_city,
           college_state: payload.college_state,
+          updated_at   : new Date().toISOString(),
         })
         .eq('id', existing.id)
-        .eq('user_id', userId) // Security: scope update to user_id
+        .eq('user_id', userId)
         .select()
         .maybeSingle();
 
@@ -141,12 +145,120 @@ export async function saveParticipantProfile(userId, email, formData) {
     console.warn('[eventsService] participants table db notice:', dbErr);
   }
 
-  // Gracefully return normalized payload even if table write had RLS restrictions
   return normalizeProfile(payload);
 }
 
 /**
- * Gets registered event names for a user, combining Supabase user_metadata and localStorage.
+ * Fetch Basic Registration (Concert / Pronite pass) for a user.
+ */
+export async function fetchBasicRegistration(userId) {
+  if (!userId) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('basic_registrations')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      return data;
+    }
+  } catch (err) {
+    console.warn('[eventsService] fetchBasicRegistration err:', err);
+  }
+
+  // Fallback to local storage
+  try {
+    const local = localStorage.getItem('crx_basic_reg_' + userId);
+    if (local) return JSON.parse(local);
+  } catch (_) {}
+
+  return null;
+}
+
+/**
+ * Register user for Basic Registration (Concert & Pronites pass only).
+ * Ensures single participant record in `participants` and creates an entry in `basic_registrations`.
+ * Does NOT register for any events.
+ */
+export async function saveBasicRegistration(userId, email, formData) {
+  if (!userId) throw new Error('User authentication required.');
+
+  // 1. First ensure single candidate profile in `participants` table
+  const profile = await saveParticipantProfile(userId, email, formData);
+  const participantId = profile?.id || null;
+
+  const brRecord = {
+    user_id       : userId,
+    participant_id: participantId,
+    pass_type     : 'CONCERT_PRONITES',
+    fee_amount    : 800,
+    payment_status: 'PENDING',
+    updated_at    : new Date().toISOString(),
+  };
+
+  // Local storage cache
+  try {
+    localStorage.setItem('crx_basic_reg_' + userId, JSON.stringify(brRecord));
+  } catch (_) {}
+
+  // Update user_metadata
+  try {
+    await supabase.auth.updateUser({
+      data: { basic_registration: brRecord },
+    });
+  } catch (err) {
+    console.warn('[eventsService] updateUser basic_registration error:', err);
+  }
+
+  // Insert or update in `basic_registrations` table
+  try {
+    const { data, error } = await supabase
+      .from('basic_registrations')
+      .upsert(brRecord, { onConflict: 'user_id' })
+      .select()
+      .maybeSingle();
+
+    if (!error && data) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: data } }));
+      }
+      return { profile, basicRegistration: data };
+    }
+  } catch (err) {
+    console.warn('[eventsService] saveBasicRegistration db error:', err);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: brRecord } }));
+  }
+
+  return { profile, basicRegistration: brRecord };
+}
+
+/**
+ * Fetch all registrations across Sports and Cultural tables for a user.
+ */
+export async function fetchCategorizedRegistrations(userId) {
+  if (!userId) return { sports: [], cultural: [], basic: null };
+
+  const [sportsRes, culturalRes, basicRes] = await Promise.allSettled([
+    supabase.from('sports_registrations').select('*').eq('user_id', userId),
+    supabase.from('cultural_registrations').select('*').eq('user_id', userId),
+    supabase.from('basic_registrations').select('*').eq('user_id', userId).maybeSingle(),
+  ]);
+
+  const sports = sportsRes.status === 'fulfilled' && !sportsRes.value.error ? sportsRes.value.data || [] : [];
+  const cultural = culturalRes.status === 'fulfilled' && !culturalRes.value.error ? culturalRes.value.data || [] : [];
+  const basic = basicRes.status === 'fulfilled' && !basicRes.value.error ? basicRes.value.data : null;
+
+  return { sports, cultural, basic };
+}
+
+/**
+ * Gets registered event names for a user, combining Supabase user_metadata, localStorage,
+ * and database registrations from sports_registrations and cultural_registrations.
  */
 export function getRegisteredEvents(userId, userMetadata) {
   if (!userId) return [];
@@ -160,19 +272,21 @@ export function getRegisteredEvents(userId, userMetadata) {
 }
 
 /**
- * Registers user for an event, updating user_metadata in Supabase and local cache.
+ * Registers user for an event, dispatching to either `sports_registrations`
+ * or `cultural_registrations` while linking to the single participant record.
  */
-export async function addRegisteredEvent(userId, eventName, userMetadata) {
+export async function addRegisteredEvent(userId, eventName, userMetadata, categoryKey = 'cultural') {
   if (!userId || !eventName) return [];
   const current = getRegisteredEvents(userId, userMetadata);
-  if (current.includes(eventName)) return current;
+  const isAlreadyInLocal = current.includes(eventName);
+  const updated = isAlreadyInLocal ? current : [...current, eventName];
 
-  const updated = [...current, eventName];
-
+  // Update local storage
   try {
     localStorage.setItem('crx_events_' + userId, JSON.stringify(updated));
   } catch (_) {}
 
+  // Update user_metadata
   try {
     await supabase.auth.updateUser({
       data: { registered_events: updated },
@@ -181,9 +295,42 @@ export async function addRegisteredEvent(userId, eventName, userMetadata) {
     console.warn('[eventsService] Supabase updateUser metadata error:', err);
   }
 
+  // Route to the appropriate database table: sports_registrations vs cultural_registrations
+  try {
+    // Lookup participant ID
+    const { data: part } = await supabase
+      .from('participants')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const participantId = part?.id || null;
+    const isSport = categoryKey?.toLowerCase() === 'sports' ||
+      ['cricket', 'football', 'volleyball', 'badminton', 'kabaddi', 'tug of war', 'chess', 'table tennis', 'carrom', 'athletics', 'kho kho', 'bgmi', 'rubik'].some(s => eventName.toLowerCase().includes(s));
+
+    if (isSport) {
+      await supabase.from('sports_registrations').upsert({
+        user_id       : userId,
+        participant_id: participantId,
+        event_name    : eventName,
+        category      : 'Sports',
+      }, { onConflict: 'user_id,event_name' });
+    } else {
+      await supabase.from('cultural_registrations').upsert({
+        user_id       : userId,
+        participant_id: participantId,
+        event_name    : eventName,
+        category      : categoryKey || 'Cultural',
+      }, { onConflict: 'user_id,event_name' });
+    }
+  } catch (dbErr) {
+    console.warn('[eventsService] categorized table insert notice:', dbErr);
+  }
+
   // Dispatch custom window event so open pages can immediately update their UI
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('crx_events_updated', { detail: { events: updated } }));
+    window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { eventName, categoryKey } }));
   }
 
   return updated;

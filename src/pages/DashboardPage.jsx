@@ -1,30 +1,48 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw, Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard, MapPin } from 'lucide-react';
+import {
+  LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw,
+  Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard,
+  MapPin, Ticket, Trophy, Music, Sparkles
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import AuthForm from '../components/auth/AuthForm';
 import RegistrationModal from '../components/common/RegistrationModal';
-import { fetchParticipantProfile, getRegisteredEvents, normalizeProfile } from '../lib/eventsService';
+import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
+import {
+  fetchParticipantProfile, getRegisteredEvents, normalizeProfile,
+  fetchCategorizedRegistrations
+} from '../lib/eventsService';
 
 export default function DashboardPage({ setPage }) {
   const { user, signOut } = useAuth();
   const [participant,      setParticipant]      = useState(null);
   const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [sportsList,       setSportsList]       = useState([]);
+  const [culturalList,     setCulturalList]     = useState([]);
+  const [basicReg,         setBasicReg]         = useState(null);
   const [fetchingReg,      setFetchingReg]      = useState(false);
   const [fetchError,       setFetchError]       = useState(null);
   const [signOutLoading,   setSignOutLoading]   = useState(false);
   const [showEditModal,    setShowEditModal]    = useState(false);
+  const [showBRModal,      setShowBRModal]      = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [copiedUpi,        setCopiedUpi]        = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     setFetchingReg(true);
     setFetchError(null);
     try {
-      const profile = await fetchParticipantProfile(user.id, user.user_metadata);
+      const [profile, categorized, evs] = await Promise.all([
+        fetchParticipantProfile(user.id, user.user_metadata),
+        fetchCategorizedRegistrations(user.id),
+        Promise.resolve(getRegisteredEvents(user.id, user.user_metadata)),
+      ]);
+
       setParticipant(profile);
-      const evs = getRegisteredEvents(user.id, user.user_metadata);
+      setBasicReg(categorized.basic);
+      setSportsList(categorized.sports || []);
+      setCulturalList(categorized.cultural || []);
       setRegisteredEvents(evs);
     } catch (err) {
       console.error('[Dashboard] fetch error:', err);
@@ -34,13 +52,13 @@ export default function DashboardPage({ setPage }) {
     }
   }, [user]);
 
-  // Fetch and subscribe to participant row in real-time
+  // Fetch and subscribe to changes in real-time
   useEffect(() => {
     loadData();
 
     if (!user) return;
 
-    // Real-time subscription — payment_status updates live
+    // Real-time subscription on participants table
     const channel = supabase
       .channel('participant_' + user.id)
       .on('postgres_changes', {
@@ -58,12 +76,20 @@ export default function DashboardPage({ setPage }) {
       if (e?.detail?.events) {
         setRegisteredEvents(e.detail.events);
       }
+      loadData();
     };
+
+    const handleRegistrationsUpdated = () => {
+      loadData();
+    };
+
     window.addEventListener('crx_events_updated', handleEventsUpdated);
+    window.addEventListener('crx_registrations_updated', handleRegistrationsUpdated);
 
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('crx_events_updated', handleEventsUpdated);
+      window.removeEventListener('crx_registrations_updated', handleRegistrationsUpdated);
     };
   }, [user, loadData]);
 
@@ -73,6 +99,9 @@ export default function DashboardPage({ setPage }) {
       await signOut();
       setParticipant(null);
       setRegisteredEvents([]);
+      setBasicReg(null);
+      setSportsList([]);
+      setCulturalList([]);
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('crx_intro_seen');
       }
@@ -87,6 +116,14 @@ export default function DashboardPage({ setPage }) {
   const handleEditSuccess = (savedProfile) => {
     setParticipant(savedProfile);
     setShowEditModal(false);
+    loadData();
+  };
+
+  const handleBRSuccess = (savedProfile, br) => {
+    setParticipant(savedProfile);
+    setBasicReg(br);
+    setShowBRModal(false);
+    loadData();
   };
 
   if (!user) {
@@ -100,6 +137,9 @@ export default function DashboardPage({ setPage }) {
   const isPaid      = participant?.payment_status === 'PAID';
   const statusColor = isPaid ? '#22c55e' : '#f59e0b';
   const StatusIcon  = isPaid ? CheckCircle2 : Clock;
+  const candidateId = participant?.id
+    ? `CRX-26-${participant.id.slice(0, 8).toUpperCase()}`
+    : `CRX-26-${user.id.slice(0, 8).toUpperCase()}`;
 
   return (
     <>
@@ -108,6 +148,14 @@ export default function DashboardPage({ setPage }) {
           initialProfile={participant}
           onClose={() => setShowEditModal(false)}
           onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {showBRModal && (
+        <BasicRegistrationModal
+          initialProfile={participant}
+          onClose={() => setShowBRModal(false)}
+          onSuccess={handleBRSuccess}
         />
       )}
 
@@ -190,15 +238,15 @@ export default function DashboardPage({ setPage }) {
                 <CreditCard size={18} color="#DC2626" />
               </div>
               <h2 className="crx-display" style={{ fontSize: 21, color: 'var(--cream)', margin: 0 }}>
-                PAYMENT SYSTEM SETUP
+                PAYMENT GATEWAY STATUS
               </h2>
             </div>
 
             <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, margin: '0 0 18px' }}>
-              Your registration details and claimed events have been recorded. Online payment configuration is currently in progress.
+              Your registration details have been securely recorded. Online payment collection configuration is currently in progress.
             </p>
 
-            {/* Price & Status Box */}
+            {/* Price Box */}
             <div
               style={{
                 background: 'rgba(220,38,38,0.08)',
@@ -213,10 +261,10 @@ export default function DashboardPage({ setPage }) {
             >
               <div>
                 <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--muted)' }}>
-                  Fest Pass Fee
+                  Delegate Fee
                 </span>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#fca5a5' }}>
-                  All events, pronites & festival pass
+                  {basicReg ? 'Basic Registration (Concert Pass)' : 'Festival delegate pass'}
                 </p>
               </div>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#fff' }}>
@@ -224,7 +272,7 @@ export default function DashboardPage({ setPage }) {
               </span>
             </div>
 
-            {/* Notice: Razorpay and UPI under configuration */}
+            {/* Notice */}
             <div
               style={{
                 background: 'rgba(245,158,11,0.08)',
@@ -235,24 +283,10 @@ export default function DashboardPage({ setPage }) {
               }}
             >
               <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                Gateway & UPI Under Setup
+                Gateway &amp; UPI Under Setup
               </p>
               <p style={{ margin: 0, fontSize: 12, color: 'var(--cream)', lineHeight: 1.6 }}>
                 The official festival UPI ID and Razorpay payment gateway are currently being finalized with the IGIMS Finance &amp; Organising Committee.
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 12,
-                padding: '14px 16px',
-                marginBottom: 20,
-              }}
-            >
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-                Once the payment system goes live, an online payment button will activate right here on your dashboard, and an alert will be sent to your verified email.
               </p>
             </div>
 
@@ -268,21 +302,38 @@ export default function DashboardPage({ setPage }) {
         </div>
       )}
 
-      <section style={{ padding: '150px 24px 100px', maxWidth: 960, margin: '0 auto' }}>
+      <section style={{ padding: '150px 24px 100px', maxWidth: 1040, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 36, flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 20, padding: '4px 12px', marginBottom: 12 }}>
               <ShieldCheck size={12} color="#DC2626" />
               <span style={{ fontSize: 10, color: '#DC2626', letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>Authenticated</span>
             </div>
-            <h1 className="crx-display" style={{ fontSize: 'clamp(22px,4vw,32px)', color: 'var(--cream)', marginBottom: 6 }}>
+            <h1 className="crx-display" style={{ fontSize: 'clamp(24px,4vw,36px)', color: 'var(--cream)', marginBottom: 6 }}>
               COMMAND CENTER
             </h1>
-            <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>Logged in as </span>
-              <span style={{ color: 'var(--cream)' }}>{user.email}</span>
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)' }}>Logged in as </span>
+                <span style={{ color: 'var(--cream)' }}>{user.email}</span>
+              </p>
+              {participant && (
+                <span style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  background: 'rgba(0, 240, 255, 0.12)',
+                  border: '1px solid rgba(0, 240, 255, 0.35)',
+                  color: '#00F0FF',
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  letterSpacing: 0.8,
+                }}>
+                  ID: {candidateId}
+                </span>
+              )}
+            </div>
           </div>
           <button
             onClick={handleSignOut}
@@ -294,6 +345,31 @@ export default function DashboardPage({ setPage }) {
             {signOutLoading ? 'SIGNING OUT...' : 'SIGN OUT'}
           </button>
         </div>
+
+        {/* Database Unified ID Info Callout */}
+        {participant && (
+          <div
+            style={{
+              background: 'linear-gradient(90deg, rgba(0, 240, 255, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%)',
+              border: '1px solid rgba(0, 240, 255, 0.25)',
+              borderRadius: 12,
+              padding: '12px 18px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Sparkles size={16} color="#00F0FF" />
+              <span style={{ fontSize: 12, color: 'var(--cream)' }}>
+                <strong>Unified Candidate Identity:</strong> Your Basic, Sports &amp; Cultural registrations are linked to single participant ID: <code style={{ color: '#00F0FF' }}>{candidateId}</code>.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Body */}
         {fetchingReg ? (
@@ -368,7 +444,7 @@ export default function DashboardPage({ setPage }) {
                 <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, margin: 0 }}>
                   {isPaid
                     ? 'Your payment is confirmed. See you at Cerebrexia!'
-                    : 'Profile registered. Payment collection (Razorpay & UPI) is currently under configuration by the finance committee.'}
+                    : 'Candidate profile active. Online payment collection is currently under configuration by the finance committee.'}
                 </p>
                 {!isPaid && (
                   <button className="crx-btn gold" style={{ justifyContent: 'center' }}
@@ -382,24 +458,191 @@ export default function DashboardPage({ setPage }) {
               </div>
             </div>
 
-            {/* Registered Events Section */}
-            <div style={{
-              padding: '28px',
-              borderRadius: 16,
-              border: '1px solid rgba(220,38,38,0.25)',
-              background: 'linear-gradient(160deg, #150606 0%, #080303 100%)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+            {/* SEPARATE DATABASE 1: Basic Registration (BR) Concert Pass */}
+            <div
+              style={{
+                padding: '24px 28px',
+                borderRadius: 16,
+                border: basicReg ? '1px solid rgba(0, 240, 255, 0.4)' : '1px dashed rgba(0, 240, 255, 0.3)',
+                background: 'linear-gradient(160deg, #09171C 0%, #050B0E 100%)',
+                boxShadow: basicReg ? '0 8px 32px rgba(0,0,0,0.5), 0 0 30px rgba(0, 240, 255, 0.1)' : '0 8px 32px rgba(0,0,0,0.3)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Ticket size={18} color="#00F0FF" />
+                    <h3 className="crx-display" style={{ fontSize: 19, color: '#fff', margin: 0 }}>
+                      BASIC REGISTRATION (BR) — CONCERT &amp; PRONITES
+                    </h3>
+                  </div>
+                  <p style={{ color: 'var(--muted)', fontSize: 12.5, margin: '0 0 6px', maxWidth: 620, lineHeight: 1.5 }}>
+                    Concert pass database entry. Grants full admission to celebrity musical concerts and star pronites without entering any competitive events.
+                  </p>
+                  <span style={{ fontSize: 11, color: '#00F0FF', fontWeight: 600 }}>
+                    Table: <code style={{ color: '#fff' }}>public.basic_registrations</code> &bull; Ref ID: {candidateId}
+                  </span>
+                </div>
+
+                {basicReg ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#22c55e',
+                        background: 'rgba(34, 197, 94, 0.15)',
+                        border: '1px solid rgba(34, 197, 94, 0.35)',
+                        padding: '6px 14px',
+                        borderRadius: 20,
+                        letterSpacing: 0.8,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <CheckCircle2 size={13} /> CONCERT PASS ACTIVE
+                    </span>
+                    <button
+                      onClick={() => setShowBRModal(true)}
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: 8,
+                        padding: '6px 12px',
+                        color: 'var(--cream)',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                      }}
+                    >
+                      Update Details
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowBRModal(true)}
+                    className="crx-btn cyan"
+                    style={{ fontSize: 11.5, gap: 6, padding: '10px 18px' }}
+                  >
+                    <Ticket size={14} /> CLAIM BASIC REGISTRATION (₹800)
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* SEPARATE DATABASE 2: Sports Registrations */}
+            <div
+              style={{
+                padding: '24px 28px',
+                borderRadius: 16,
+                border: '1px solid rgba(234, 88, 12, 0.3)',
+                background: 'linear-gradient(160deg, #180C05 0%, #0B0502 100%)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <Calendar size={16} color="#DC2626" />
+                    <Trophy size={17} color="#ea580c" />
                     <h3 className="crx-display" style={{ fontSize: 18, color: 'var(--cream)', margin: 0 }}>
-                      CLAIMED EVENTS ({registeredEvents.length})
+                      SPORTS REGISTRATIONS ({sportsList.length})
                     </h3>
                   </div>
                   <p style={{ color: 'var(--muted)', fontSize: 12, margin: 0 }}>
-                    Events registered under your candidate profile.
+                    Stored in <code style={{ color: '#ea580c' }}>public.sports_registrations</code> &bull; Ref ID: {candidateId}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setPage && setPage('events')}
+                  className="crx-btn"
+                  style={{
+                    background: 'rgba(234, 88, 12, 0.12)',
+                    border: '1px solid rgba(234, 88, 12, 0.35)',
+                    color: '#fb923c',
+                    fontSize: 11,
+                    gap: 6,
+                  }}
+                >
+                  <PlusCircle size={13} /> ADD SPORTS EVENT
+                </button>
+              </div>
+
+              {sportsList.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                  {sportsList.map((item) => (
+                    <div
+                      key={item.id || item.event_name}
+                      style={{
+                        padding: '14px 16px',
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(234, 88, 12, 0.25)',
+                        borderRadius: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'block' }}>
+                          {item.event_name}
+                        </span>
+                        <span style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>
+                          Sports Arena
+                        </span>
+                      </div>
+                      <span style={{
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: '#fb923c',
+                        background: 'rgba(234, 88, 12, 0.15)',
+                        padding: '3px 8px',
+                        borderRadius: 12,
+                        letterSpacing: 0.8,
+                        flexShrink: 0,
+                      }}>
+                        CONFIRMED
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '20px 16px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <p style={{ color: 'var(--muted)', fontSize: 12.5, margin: '0 0 10px' }}>
+                    No sports entries registered under this ID yet.
+                  </p>
+                  <button
+                    onClick={() => setPage && setPage('events')}
+                    className="crx-btn gold"
+                    style={{ fontSize: 11, margin: '0 auto', gap: 6 }}
+                  >
+                    BROWSE SPORTS EVENTS <ArrowRight size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* SEPARATE DATABASE 3: Cultural & Stage Registrations */}
+            <div
+              style={{
+                padding: '24px 28px',
+                borderRadius: 16,
+                border: '1px solid rgba(220, 38, 38, 0.3)',
+                background: 'linear-gradient(160deg, #180608 0%, #0A0204 100%)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Music size={17} color="#DC2626" />
+                    <h3 className="crx-display" style={{ fontSize: 18, color: 'var(--cream)', margin: 0 }}>
+                      CULTURAL &amp; STAGE REGISTRATIONS ({culturalList.length})
+                    </h3>
+                  </div>
+                  <p style={{ color: 'var(--muted)', fontSize: 12, margin: 0 }}>
+                    Stored in <code style={{ color: '#DC2626' }}>public.cultural_registrations</code> &bull; Ref ID: {candidateId}
                   </p>
                 </div>
 
@@ -414,19 +657,19 @@ export default function DashboardPage({ setPage }) {
                     gap: 6,
                   }}
                 >
-                  <PlusCircle size={13} /> ADD MORE EVENTS
+                  <PlusCircle size={13} /> ADD CULTURAL EVENT
                 </button>
               </div>
 
-              {registeredEvents.length > 0 ? (
+              {culturalList.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-                  {registeredEvents.map((eventName) => (
+                  {culturalList.map((item) => (
                     <div
-                      key={eventName}
+                      key={item.id || item.event_name}
                       style={{
                         padding: '14px 16px',
-                        background: 'rgba(0,0,0,0.45)',
-                        border: '1px solid rgba(34,197,94,0.3)',
+                        background: 'rgba(0,0,0,0.5)',
+                        border: '1px solid rgba(220,38,38,0.25)',
                         borderRadius: 10,
                         display: 'flex',
                         alignItems: 'center',
@@ -434,14 +677,19 @@ export default function DashboardPage({ setPage }) {
                         gap: 10,
                       }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
-                        {eventName}
-                      </span>
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'block' }}>
+                          {item.event_name}
+                        </span>
+                        <span style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase' }}>
+                          {item.category || 'Cultural'}
+                        </span>
+                      </div>
                       <span style={{
                         fontSize: 9.5,
                         fontWeight: 700,
-                        color: '#86efac',
-                        background: 'rgba(34,197,94,0.12)',
+                        color: '#fca5a5',
+                        background: 'rgba(220,38,38,0.15)',
                         padding: '3px 8px',
                         borderRadius: 12,
                         letterSpacing: 0.8,
@@ -453,16 +701,16 @@ export default function DashboardPage({ setPage }) {
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: '24px 16px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                  <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 12 }}>
-                    You haven't claimed any specific events yet.
+                <div style={{ padding: '20px 16px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 10 }}>
+                  <p style={{ color: 'var(--muted)', fontSize: 12.5, margin: '0 0 10px' }}>
+                    No cultural entries registered under this ID yet.
                   </p>
                   <button
                     onClick={() => setPage && setPage('events')}
                     className="crx-btn gold"
                     style={{ fontSize: 11, margin: '0 auto', gap: 6 }}
                   >
-                    CHOOSE YOUR CASES <ArrowRight size={12} />
+                    BROWSE CULTURAL EVENTS <ArrowRight size={12} />
                   </button>
                 </div>
               )}
@@ -473,15 +721,24 @@ export default function DashboardPage({ setPage }) {
             <ShieldCheck size={40} color="rgba(220,38,38,0.3)" style={{ margin: '0 auto 16px' }} />
             <h3 style={{ color: 'var(--cream)', fontSize: 18, marginBottom: 8 }}>No Registration Found</h3>
             <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>
-              You haven't registered your details yet. Head to the Events page to pick your events and complete registration.
+              You haven't registered your details yet. You can complete Basic Registration for the concert or browse 70+ competitive events.
             </p>
-            <button
-              onClick={() => setPage && setPage('events')}
-              className="crx-btn gold"
-              style={{ fontSize: 12, margin: '0 auto', gap: 8 }}
-            >
-              BROWSE EVENTS <ArrowRight size={14} />
-            </button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowBRModal(true)}
+                className="crx-btn cyan"
+                style={{ fontSize: 12, gap: 8 }}
+              >
+                <Ticket size={14} /> BASIC REGISTRATION (BR)
+              </button>
+              <button
+                onClick={() => setPage && setPage('events')}
+                className="crx-btn gold"
+                style={{ fontSize: 12, gap: 8 }}
+              >
+                BROWSE EVENTS <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
         )}
       </section>

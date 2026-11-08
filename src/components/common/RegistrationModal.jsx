@@ -106,9 +106,9 @@ export default function RegistrationModal({
         college_state: trimmed.state_of_college,
       });
 
-      // 2. If an event is selected, register user for this event
+      // 2. If an event is selected, register user for this event (routed to sports_registrations vs cultural_registrations)
       if (eventName) {
-        await addRegisteredEvent(user.id, eventName, user.user_metadata);
+        await addRegisteredEvent(user.id, eventName, user.user_metadata, eventCat);
       }
 
       if (onSuccess) onSuccess(savedProfile, eventName);

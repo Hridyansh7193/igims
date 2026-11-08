@@ -4,11 +4,12 @@ import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
 import RegistrationModal from '../components/common/RegistrationModal';
 import QuickRegisterModal from '../components/common/QuickRegisterModal';
+import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
 import { CATEGORIES, TOTAL_EVENTS } from '../constants/eventsData';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 import { useAuth } from '../context/AuthContext';
 import { fetchParticipantProfile, getRegisteredEvents, addRegisteredEvent } from '../lib/eventsService';
-import { CheckCircle2, Check, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, Check, ArrowRight, Sparkles, Ticket } from 'lucide-react';
 
 export default function EventsPage({ setPage }) {
   const [activeCat, setActiveCat] = useState('all');
@@ -23,6 +24,7 @@ export default function EventsPage({ setPage }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showQuickModal, setShowQuickModal] = useState(false);
   const [showFullModal, setShowFullModal] = useState(false);
+  const [showBRModal, setShowBRModal] = useState(false);
 
   // Notification Toast
   const [toast, setToast] = useState(null);
@@ -98,7 +100,7 @@ export default function EventsPage({ setPage }) {
   // 1-Click registration confirmation
   const handleQuickRegisterConfirm = async (eventName) => {
     try {
-      const updated = await addRegisteredEvent(user.id, eventName, user.user_metadata);
+      const updated = await addRegisteredEvent(user.id, eventName, user.user_metadata, selectedEvent?.key);
       setRegisteredEvents(updated);
       setShowQuickModal(false);
       showToast(
@@ -179,6 +181,23 @@ export default function EventsPage({ setPage }) {
             setSelectedEvent(null);
           }}
           onSuccess={handleFullModalSuccess}
+        />
+      )}
+
+      {/* Basic Registration (Concert Pass Only) Modal */}
+      {showBRModal && (
+        <BasicRegistrationModal
+          initialProfile={profile}
+          onClose={() => setShowBRModal(false)}
+          onSuccess={(savedProfile) => {
+            setProfile(savedProfile);
+            setShowBRModal(false);
+            showToast(
+              'Basic Registration Confirmed!',
+              'You are registered for the Concert & Pronites. Your single candidate ID is active.',
+              'success'
+            );
+          }}
         />
       )}
 
@@ -299,6 +318,31 @@ export default function EventsPage({ setPage }) {
               }}
             >
               All Cases
+            </button>
+            <button
+              onClick={() => {
+                if (!user) {
+                  if (setPage) setPage('dashboard');
+                  return;
+                }
+                setShowBRModal(true);
+              }}
+              className='crx-btn'
+              style={{
+                background: 'rgba(0, 240, 255, 0.12)',
+                border: '1px solid rgba(0, 240, 255, 0.5)',
+                color: '#00F0FF',
+                padding: '9px 18px',
+                fontSize: 11.5,
+                boxShadow: '0 0 16px rgba(0, 240, 255, 0.25)',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 700,
+              }}
+            >
+              <Ticket size={13} /> Basic Registration (BR)
             </button>
             {CATEGORIES.map((c) => (
               <button

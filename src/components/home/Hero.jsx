@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import GlitchText from '../common/GlitchText';
 import Sticker from '../common/Sticker';
+import BasicRegistrationModal from '../common/BasicRegistrationModal';
+import { useAuth } from '../../context/AuthContext';
+import { Ticket, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 // Persists across Hero remounts (e.g. switching tabs and back to Home) so the
 // glitch reveal only ever plays once, instead of re-triggering (and sometimes
@@ -9,6 +13,29 @@ let heroTitleRevealedOnce = false;
 
 export default function Hero({ setPage, revealTitle = true }) {
   const [titleSettled, setTitleSettled] = useState(heroTitleRevealedOnce);
+  const [showBRModal, setShowBRModal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const { user } = useAuth();
+
+  const handleBRClick = () => {
+    if (!user) {
+      if (setPage) setPage('dashboard');
+      return;
+    }
+    setShowBRModal(true);
+  };
+
+  const handleBRSuccess = (savedProfile, brRecord) => {
+    setShowBRModal(false);
+    setToast({
+      title: 'Basic Registration Confirmed!',
+      text: 'Concert & Pronites pass secured. You are registered under your single candidate ID.',
+    });
+    setTimeout(() => setToast(null), 4500);
+    if (setPage) {
+      setTimeout(() => setPage('dashboard'), 1200);
+    }
+  };
   return (
     <>
       <section
@@ -266,23 +293,155 @@ export default function Hero({ setPage, revealTitle = true }) {
             </p>
           </div>
 
-          {/* Action Buttons — primary (gold) + secondary (cyan), same classes used everywhere else */}
+          {/* Action Columns — Explore Events & Basic Registration (BR) */}
           <div
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: 16,
-              justifyContent: 'center',
-              alignItems: 'center',
               width: '100%',
+              maxWidth: 680,
               margin: '0 auto',
-              flexWrap: 'wrap',
+              boxSizing: 'border-box',
             }}
           >
-            <button className="crx-btn gold" onClick={() => setPage('events')}>
-              Explore Events
-            </button>
+            {/* Column 1: Explore Events */}
+            <div
+              style={{
+                background: 'rgba(25, 7, 10, 0.75)',
+                border: '1px solid rgba(176, 141, 87, 0.4)',
+                borderRadius: 16,
+                padding: '20px',
+                backdropFilter: 'blur(14px)',
+                boxShadow: '0 10px 32px rgba(0,0,0,0.6)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 12,
+                textAlign: 'left',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
+                    70+ COMPETITIONS
+                  </span>
+                  <span style={{ fontSize: 9.5, background: 'rgba(176,141,87,0.18)', color: 'var(--gold)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
+                    All Courts
+                  </span>
+                </div>
+                <h3 className="crx-display" style={{ fontSize: 20, color: '#fff', margin: '0 0 5px' }}>
+                  EXPLORE EVENTS
+                </h3>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Compete across Sports, Cultural, Dance, Music, Literary &amp; Fine Arts arenas.
+                </p>
+              </div>
+              <button
+                className="crx-btn gold"
+                onClick={() => setPage('events')}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Explore Events &rarr;
+              </button>
+            </div>
+
+            {/* Column 2: Basic Registration (BR) */}
+            <div
+              style={{
+                background: 'rgba(5, 15, 25, 0.75)',
+                border: '1px solid rgba(0, 240, 255, 0.4)',
+                borderRadius: 16,
+                padding: '20px',
+                backdropFilter: 'blur(14px)',
+                boxShadow: '0 10px 32px rgba(0,0,0,0.6), 0 0 25px rgba(0, 240, 255, 0.12)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 12,
+                textAlign: 'left',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase', color: '#00F0FF', fontWeight: 700 }}>
+                    CONCERT PASS ONLY
+                  </span>
+                  <span style={{ fontSize: 9.5, background: 'rgba(0, 240, 255, 0.18)', color: '#00F0FF', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
+                    ₹800 Fee
+                  </span>
+                </div>
+                <h3 className="crx-display" style={{ fontSize: 20, color: '#fff', margin: '0 0 5px' }}>
+                  BASIC REGISTRATION (BR)
+                </h3>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Concert pass only. Pay &amp; register for pronites without entering any competitive event.
+                </p>
+              </div>
+              <button
+                className="crx-btn cyan"
+                onClick={handleBRClick}
+                style={{ width: '100%', justifyContent: 'center', boxShadow: '0 0 16px rgba(0, 240, 255, 0.25)' }}
+              >
+                Basic Registration (BR) &rarr;
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Basic Registration Modal */}
+        {showBRModal && (
+          <BasicRegistrationModal
+            onClose={() => setShowBRModal(false)}
+            onSuccess={handleBRSuccess}
+          />
+        )}
+
+        {/* Toast Notification */}
+        {toast && typeof document !== 'undefined' && createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 28,
+              right: 28,
+              zIndex: 999999,
+              maxWidth: 380,
+              background: 'linear-gradient(135deg, #09171C 0%, #050E12 100%)',
+              border: '1px solid #00F0FF',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.25)',
+              borderRadius: 14,
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              animation: 'fadeInUp 0.3s ease-out',
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: 'rgba(0, 240, 255, 0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <CheckCircle2 size={16} color="#00F0FF" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                {toast.title}
+              </p>
+              <p style={{ margin: 0, fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.4 }}>
+                {toast.text}
+              </p>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Bottom "S C R O L L" Indicator */}
         <div
