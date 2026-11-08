@@ -264,11 +264,11 @@ export default function DashboardPage({ setPage }) {
                   Delegate Fee
                 </span>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#fca5a5' }}>
-                  {basicReg ? 'Basic Registration (Concert Pass)' : 'Festival delegate pass'}
+                  {basicReg ? 'Basic Registration (BR)' : 'Festival delegate registration'}
                 </p>
               </div>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#fff' }}>
-                ₹800
+                ₹2000
               </span>
             </div>
 
@@ -458,7 +458,7 @@ export default function DashboardPage({ setPage }) {
               </div>
             </div>
 
-            {/* SEPARATE DATABASE 1: Basic Registration (BR) Concert Pass */}
+            {/* SEPARATE DATABASE 1: Basic Registration (BR) */}
             <div
               style={{
                 padding: '24px 28px',
@@ -477,7 +477,7 @@ export default function DashboardPage({ setPage }) {
                     </h3>
                   </div>
                   <p style={{ color: 'var(--muted)', fontSize: 12.5, margin: '0 0 6px', maxWidth: 620, lineHeight: 1.5 }}>
-                    Concert pass database entry. Grants full admission to celebrity musical concerts and star pronites without entering any competitive events.
+                    Concert registration database entry. Grants full admission to celebrity musical concerts and star pronites without entering any competitive events.
                   </p>
                   <span style={{ fontSize: 11, color: '#00F0FF', fontWeight: 600 }}>
                     Table: <code style={{ color: '#fff' }}>public.basic_registrations</code> &bull; Ref ID: {candidateId}
@@ -501,7 +501,7 @@ export default function DashboardPage({ setPage }) {
                         gap: 6,
                       }}
                     >
-                      <CheckCircle2 size={13} /> CONCERT PASS ACTIVE
+                      <CheckCircle2 size={13} /> BR ACTIVE
                     </span>
                     <button
                       onClick={() => setShowBRModal(true)}
@@ -524,7 +524,7 @@ export default function DashboardPage({ setPage }) {
                     className="crx-btn cyan"
                     style={{ fontSize: 11.5, gap: 6, padding: '10px 18px' }}
                   >
-                    <Ticket size={14} /> CLAIM BASIC REGISTRATION (₹800)
+                    <Ticket size={14} /> CLAIM BASIC REGISTRATION (BR) — ₹2000
                   </button>
                 )}
               </div>

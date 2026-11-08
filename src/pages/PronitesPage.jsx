@@ -172,7 +172,7 @@ export default function PronitesPage() {
             PRONITES
           </h1>
           <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 46, maxWidth: 560, lineHeight: 1.7 }}>
-            Three nights, one growing crescendo. Included with every Three-Day Delegate Pass — final lineup drops
+            Three nights, one growing crescendo. Included with Basic Registration (BR) — final lineup drops
             closer to December.
           </p>
         </Reveal>

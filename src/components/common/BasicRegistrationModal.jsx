@@ -107,7 +107,7 @@ export default function BasicRegistrationModal({
     setError(null);
 
     try {
-      // Registers basic concert pass and ensures a single profile entry in `participants`
+      // Registers BR and ensures a single profile entry in `participants`
       const result = await saveBasicRegistration(user.id, user.email, {
         first_name   : trimmed.first_name,
         last_name    : trimmed.surname,
@@ -252,7 +252,7 @@ export default function BasicRegistrationModal({
             }}
           >
             <Music size={12} />
-            CONCERT &amp; PRONITES PASS ONLY
+            CONCERT &amp; PRONITES (BR)
           </div>
 
           <h2
@@ -273,7 +273,7 @@ export default function BasicRegistrationModal({
           </p>
         </div>
 
-        {/* Concert Pass Highlight Card */}
+        {/* BR Highlight Card */}
         <div
           style={{
             background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%)',
@@ -291,7 +291,7 @@ export default function BasicRegistrationModal({
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <Ticket size={15} color="#00F0FF" />
               <span style={{ fontSize: 11, fontWeight: 700, color: '#00F0FF', textTransform: 'uppercase', letterSpacing: 1 }}>
-                Official Concert Delegate Pass
+                Official Concert Registration (BR)
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 11.5, color: 'var(--paper)', lineHeight: 1.4 }}>
@@ -303,7 +303,7 @@ export default function BasicRegistrationModal({
               Fee
             </span>
             <span style={{ fontSize: 24, fontWeight: 900, color: '#fff', fontFamily: "'Anton', sans-serif" }}>
-              ₹800
+              ₹2000
             </span>
           </div>
         </div>
@@ -429,12 +429,12 @@ export default function BasicRegistrationModal({
               {loading ? (
                 <>
                   <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                  REGISTERING CONCERT PASS...
+                  PROCESSING BR REGISTRATION...
                 </>
               ) : existingBR ? (
                 'UPDATE CONCERT DETAILS'
               ) : (
-                'CONFIRM BASIC REGISTRATION (₹800)'
+                'CONFIRM BASIC REGISTRATION (BR) — ₹2000'
               )}
             </button>
           </div>
@@ -444,3 +444,4 @@ export default function BasicRegistrationModal({
     document.body
   );
 }
+

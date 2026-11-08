@@ -184,7 +184,7 @@ export default function EventsPage({ setPage }) {
         />
       )}
 
-      {/* Basic Registration (Concert Pass Only) Modal */}
+      {/* Basic Registration (BR) Modal */}
       {showBRModal && (
         <BasicRegistrationModal
           initialProfile={profile}

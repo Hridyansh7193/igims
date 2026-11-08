@@ -11,13 +11,13 @@ BEGIN
   END IF;
 END $$;
 
--- 2. Basic Registrations Table (Concert / Pronite Pass Only)
+-- 2. Basic Registrations Table (Concert / Pronite BR Only)
 CREATE TABLE IF NOT EXISTS public.basic_registrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   participant_id UUID REFERENCES public.participants(id) ON DELETE CASCADE,
   pass_type TEXT NOT NULL DEFAULT 'CONCERT_PRONITES',
-  fee_amount NUMERIC NOT NULL DEFAULT 800,
+  fee_amount NUMERIC NOT NULL DEFAULT 2000,
   payment_status TEXT NOT NULL DEFAULT 'PENDING',
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
@@ -97,3 +97,4 @@ CREATE POLICY "Users can insert own cultural registrations" ON public.cultural_r
 DROP POLICY IF EXISTS "Users can delete own cultural registrations" ON public.cultural_registrations;
 CREATE POLICY "Users can delete own cultural registrations" ON public.cultural_registrations
   FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
+

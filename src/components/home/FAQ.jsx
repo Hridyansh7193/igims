@@ -10,11 +10,11 @@ const FAQS = [
   },
   {
     q: 'How can I register?',
-    a: 'Sign in with Google, complete your CEREBREXIA profile, confirm the participant mobile number, then build your registration with a Three-Day Delegate Pass, individual events, or both.',
+    a: 'Sign in with Google, complete your CEREBREXIA profile, confirm the participant mobile number, then build your registration with Basic Registration (BR), individual events, or both.',
   },
   {
     q: 'Is there a participation fee?',
-    a: 'The optional Three-Day Delegate Pass costs ₹1,199. Individual competitions or workshops cost ₹199 or ₹299 per participant as shown, and may be selected with or without the Delegate Pass.',
+    a: 'Basic Registration (BR) costs ₹2,000. Individual competitions or workshops may be selected alongside or with Basic Registration (BR).',
   },
   {
     q: 'Can participants enter multiple events?',
@@ -33,8 +33,8 @@ const FAQS = [
     a: 'A confirmed Delegate Registration makes the user eligible to apply for accommodation. Accommodation is separately charged, subject to availability and not guaranteed.',
   },
   {
-    q: 'Are Pronites included with Delegate Registration?',
-    a: 'Opening Night, Star Night and Pro Night are included with the Three-Day Delegate Pass. Event-only registration covers only the selected competitions or workshops and does not automatically include Pronite admission. Entry requires an active personal QR pass and valid identity card and remains subject to security checks and venue capacity.',
+    q: 'Are Pronites included with Basic Registration (BR)?',
+    a: 'Opening Night, Star Night and Pro Night are included with Basic Registration (BR). Event-only registration covers only the selected competitions or workshops and does not automatically include Pronite admission. Entry requires an active personal QR credential and valid identity card and remains subject to security checks and venue capacity.',
   },
 ];
 

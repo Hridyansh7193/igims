@@ -29,7 +29,7 @@ export default function Hero({ setPage, revealTitle = true }) {
     setShowBRModal(false);
     setToast({
       title: 'Basic Registration Confirmed!',
-      text: 'Concert & Pronites pass secured. You are registered under your single candidate ID.',
+      text: 'Concert & Pronites registration (BR) secured. You are registered under your single candidate ID.',
     });
     setTimeout(() => setToast(null), 4500);
     if (setPage) {
@@ -112,7 +112,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             }}
           />
 
-          {/* Light multiply pass */}
+          {/* Light multiply blend */}
           <div
             style={{
               position: 'absolute',
@@ -365,17 +365,17 @@ export default function Hero({ setPage, revealTitle = true }) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase', color: '#00F0FF', fontWeight: 700 }}>
-                    CONCERT PASS ONLY
+                    CONCERT &amp; PRONITES ONLY
                   </span>
                   <span style={{ fontSize: 9.5, background: 'rgba(0, 240, 255, 0.18)', color: '#00F0FF', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
-                    ₹800 Fee
+                    ₹2000 Fee
                   </span>
                 </div>
                 <h3 className="crx-display" style={{ fontSize: 20, color: '#fff', margin: '0 0 5px' }}>
                   BASIC REGISTRATION (BR)
                 </h3>
                 <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  Concert pass only. Pay &amp; register for pronites without entering any competitive event.
+                  Concert &amp; pronites only. Pay &amp; register for pronites without entering any competitive event.
                 </p>
               </div>
               <button

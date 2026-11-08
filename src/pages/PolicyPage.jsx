@@ -8,7 +8,7 @@ export const POLICIES = [
   { id: 'terms', title: 'Terms & Conditions', icon: FileText, tag: 'Legal Agreement' },
   { id: 'privacy', title: 'Privacy Policy', icon: Lock, tag: 'Data Protection' },
   { id: 'refunds', title: 'Refund & Cancellation', icon: RefreshCw, tag: 'Payments & Refunds' },
-  { id: 'pricing', title: 'Pricing & Delivery', icon: CreditCard, tag: 'Pass Fulfillment' },
+  { id: 'pricing', title: 'Pricing & Delivery', icon: CreditCard, tag: 'Registration Fulfillment' },
 ];
 
 export default function PolicyPage({ initialTab = 'terms', setPage }) {
@@ -190,7 +190,7 @@ function TermsContent() {
       <section style={{ marginBottom: 24 }}>
         <h3 style={{ color: 'var(--cream)', fontSize: 16, margin: '0 0 8px' }}>1. Introduction &amp; Scope</h3>
         <p>
-          Welcome to the official web portal of <strong>Cerebrexia '26</strong>, the annual inter-collegiate festival of the Indira Gandhi Institute of Medical Sciences (IGIMS), Patna. These Terms and Conditions govern your registration, participation, festival pass issuance, payment processing, and presence on the IGIMS campus during the festival dates.
+          Welcome to the official web portal of <strong>Cerebrexia '26</strong>, the annual inter-collegiate festival of the Indira Gandhi Institute of Medical Sciences (IGIMS), Patna. These Terms and Conditions govern your registration, participation, festival credential issuance, payment processing, and presence on the IGIMS campus during the festival dates.
         </p>
         <p>
           By creating an account, registering for events, or making payment on this portal, you agree to comply with and be bound by these terms. If you disagree with any part of these terms, please do not use this portal or register for the festival.
@@ -207,9 +207,9 @@ function TermsContent() {
       </section>
 
       <section style={{ marginBottom: 24 }}>
-        <h3 style={{ color: 'var(--cream)', fontSize: 16, margin: '0 0 8px' }}>3. Festival Passes &amp; Access Rights</h3>
+        <h3 style={{ color: 'var(--cream)', fontSize: 16, margin: '0 0 8px' }}>3. Basic Registration (BR) &amp; Access Rights</h3>
         <p>
-          Basic Festival Registration (₹800) confers a personal, non-transferable licence to enter the festival grounds, compete in registered events, and attend scheduled celebrity nights (Pronites). An issued digital QR pass is unique to the registrant and cannot be transferred, resold, or exchanged.
+          Basic Registration (BR) (₹2,000) confers a personal, non-transferable licence to enter the festival grounds and attend scheduled celebrity nights (Pronites). An issued digital QR credential is unique to the registrant and cannot be transferred, resold, or exchanged.
         </p>
         <p>
           Physical wristbands or badges issued at the campus registration desk must remain intact for the festival's duration. Tampered or duplicate wristbands will be revoked immediately without entitlement to re-issuance.
@@ -310,7 +310,7 @@ function PrivacyContent() {
         <h3 style={{ color: 'var(--cream)', fontSize: 16, margin: '0 0 8px' }}>4. How We Use Your Information</h3>
         <p>Collected information is strictly utilized for legitimate festival administration purposes:</p>
         <ul style={{ paddingLeft: 20, margin: '8px 0' }}>
-          <li>Generating personalized digital QR festival passes and participant ID credentials.</li>
+          <li>Generating personalized digital QR festival credentials and participant ID credentials.</li>
           <li>Enrolling and seeding participants in specific tournament brackets and competitive events.</li>
           <li>Communicating schedule adjustments, emergency alerts, or winner notifications.</li>
           <li>Transmitting transactional receipts and automated reminder notices via Resend.</li>
@@ -379,7 +379,7 @@ function RefundContent() {
           Cerebrexia '26 is a student-organized medical festival with finite venue capacity, pre-booked stage artist engagements, fixed logistical arrangements, and pre-allocated competitive event slots.
         </p>
         <ul style={{ paddingLeft: 20, margin: '8px 0' }}>
-          <li><strong>Basic Registration Fee (₹800):</strong> Strictly non-refundable and non-transferable under any personal circumstances (including voluntary cancellation, travel changes, academic scheduling conflicts, or examination dates).</li>
+          <li><strong>Basic Registration (BR) Fee (₹2,000):</strong> Strictly non-refundable and non-transferable under any personal circumstances (including voluntary cancellation, travel changes, academic scheduling conflicts, or examination dates).</li>
           <li><strong>Accommodation Fee (₹150):</strong> Non-refundable once room inventory has been reserved in the boys' hostel or girls' lodgings.</li>
         </ul>
       </section>
@@ -455,13 +455,13 @@ function PricingContent() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, margin: '18px 0' }}>
           <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 12, padding: '20px' }}>
             <span style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700, letterSpacing: 1 }}>
-              Official Delegate Pass
+              Basic Registration (BR)
             </span>
             <div style={{ fontSize: 32, fontWeight: 800, color: '#fff', margin: '6px 0 8px' }}>
-              ₹800
+              ₹2,000
             </div>
             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-              Includes all-access entry to 70+ academic, cultural, sports &amp; fine arts events, star celebrity Pronites, and festival credential kit.
+              Official Basic Registration (BR) entry for Cerebrexia '26. Confers admission to star celebrity Pronites and festival credential kit.
             </p>
           </div>
 
@@ -490,7 +490,7 @@ function PricingContent() {
           Cerebrexia '26 provides electronic service delivery. We do not dispatch tangible physical parcels through postal or courier services.
         </p>
         <ul style={{ paddingLeft: 20, margin: '8px 0' }}>
-          <li><strong>Immediate Credential Issuance:</strong> Immediately upon successful transaction confirmation through the Razorpay gateway, your digital delegate pass containing your verification QR code is generated and unlocked on your <strong>Participant Dashboard</strong>.</li>
+          <li><strong>Immediate Credential Issuance:</strong> Immediately upon successful transaction confirmation through the Razorpay gateway, your digital delegate credential containing your verification QR code is generated and unlocked on your <strong>Participant Dashboard</strong>.</li>
           <li><strong>Email Confirmation:</strong> A transactional confirmation receipt and entry confirmation are dispatched directly to your registered email address within minutes of payment authorization.</li>
         </ul>
       </section>
@@ -498,14 +498,14 @@ function PricingContent() {
       <section style={{ marginBottom: 24 }}>
         <h3 style={{ color: 'var(--cream)', fontSize: 16, margin: '0 0 8px' }}>3. Physical Wristband &amp; Badge Collection</h3>
         <p>
-          While the festival pass is delivered digitally, security wristbands and event badges must be physically collected upon your arrival at the campus:
+          While festival credentials are delivered digitally, security wristbands and event badges must be physically collected upon your arrival at the campus:
         </p>
         <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 18px', margin: '12px 0' }}>
           <p style={{ margin: '0 0 6px', color: 'var(--cream)', fontWeight: 600 }}>Collection Counter Details:</p>
           <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
             Location: Central Registration Counter, Administrative Block, IGIMS Campus, Sheikhpura, Patna.<br />
             Operating Timings: 8:30 AM &ndash; 7:00 PM throughout the festival days (27 &ndash; 30 Nov).<br />
-            Requirement: Present your digital pass QR on your mobile screen along with your college identity card.
+            Requirement: Present your digital QR credential on your mobile screen along with your college identity card.
           </p>
         </div>
       </section>

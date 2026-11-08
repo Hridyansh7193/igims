@@ -96,7 +96,7 @@ export default async function handler(req, res) {
               <img src="https://igims-sand.vercel.app/logo.jpg" alt="Cerebrexia" style="width:80px;border-radius:12px;margin-bottom:16px;" />
               <h1 style="font-size:22px;color:#f5f0e8;margin:0 0 8px;">Hey ${safeName}! 👋</h1>
               <p style="font-size:14px;color:#b0a898;line-height:1.6;margin:0 0 20px;">
-                You registered for <strong style="color:#f5f0e8;">Cerebrexia '26</strong> at IGIMS — but your <strong style="color:#DC2626;">₹800 registration fee</strong> is still pending.
+                You registered for <strong style="color:#f5f0e8;">Cerebrexia '26</strong> at IGIMS — but your <strong style="color:#DC2626;">₹2,000 Basic Registration (BR) fee</strong> is still pending.
               </p>
               <p style="font-size:14px;color:#b0a898;line-height:1.6;margin:0 0 24px;">
                 Complete your payment to lock in your spot for all events, pronites, and exclusive festival perks.

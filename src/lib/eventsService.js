@@ -149,7 +149,7 @@ export async function saveParticipantProfile(userId, email, formData) {
 }
 
 /**
- * Fetch Basic Registration (Concert / Pronite pass) for a user.
+ * Fetch Basic Registration (BR) for a user.
  */
 export async function fetchBasicRegistration(userId) {
   if (!userId) return null;
@@ -178,7 +178,7 @@ export async function fetchBasicRegistration(userId) {
 }
 
 /**
- * Register user for Basic Registration (Concert & Pronites pass only).
+ * Register user for Basic Registration (BR - Concert & Pronites only).
  * Ensures single participant record in `participants` and creates an entry in `basic_registrations`.
  * Does NOT register for any events.
  */
@@ -193,7 +193,7 @@ export async function saveBasicRegistration(userId, email, formData) {
     user_id       : userId,
     participant_id: participantId,
     pass_type     : 'CONCERT_PRONITES',
-    fee_amount    : 800,
+    fee_amount    : 2000,
     payment_status: 'PENDING',
     updated_at    : new Date().toISOString(),
   };
