@@ -418,12 +418,11 @@ export default function BasicRegistrationModal({
             <button
               type="submit"
               disabled={loading || checkingExisting}
-              className="crx-btn cyan"
+              className="crx-btn gold"
               style={{
                 flex: 2,
                 justifyContent: 'center',
                 gap: 8,
-                boxShadow: '0 0 20px rgba(0,240,255,0.3)',
               }}
             >
               {loading ? (

@@ -521,7 +521,7 @@ export default function DashboardPage({ setPage }) {
                 ) : (
                   <button
                     onClick={() => setShowBRModal(true)}
-                    className="crx-btn cyan"
+                    className="crx-btn gold"
                     style={{ fontSize: 11.5, gap: 6, padding: '10px 18px' }}
                   >
                     <Ticket size={14} /> CLAIM BASIC REGISTRATION (BR) — ₹2000

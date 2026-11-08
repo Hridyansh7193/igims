@@ -167,9 +167,9 @@ export default function RegistrationOptionsSection({ setPage }) {
                   </p>
                 </div>
                 <button
-                  className="crx-btn cyan"
+                  className="crx-btn gold"
                   onClick={handleBRClick}
-                  style={{ width: '100%', justifyContent: 'center', boxShadow: '0 0 18px rgba(0, 240, 255, 0.25)', padding: '12px 20px', fontSize: 13 }}
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px 20px', fontSize: 13 }}
                 >
                   BASIC REGISTRATION (BR) &rarr;
                 </button>
