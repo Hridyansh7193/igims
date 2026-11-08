@@ -5,10 +5,9 @@ import MascotSection from '../components/home/MascotSection';
 import StatsSection from '../components/home/StatsSection';
 import SplitPanelSection from '../components/home/SplitPanelSection';
 import GallerySection from '../components/home/GallerySection';
-import ClosingHero from '../components/home/ClosingHero';
-
-// Missing components from the competitor site
+import RegistrationOptionsSection from '../components/home/RegistrationOptionsSection';
 import FAQ from '../components/home/FAQ';
+import ClosingHero from '../components/home/ClosingHero';
 
 export default function HomePage({ setPage, revealHeroTitle }) {
   return (
@@ -23,7 +22,10 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       <SplitPanelSection setPage={setPage} />
       <GallerySection />
 
-      {/* Final competitor additions */}
+      {/* Registration Options: Placed right before QnA / FAQ */}
+      <RegistrationOptionsSection setPage={setPage} />
+
+      {/* QnA / FAQ */}
       <FAQ />
 
       {/* Original Closing */}
