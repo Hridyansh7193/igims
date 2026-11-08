@@ -46,7 +46,7 @@ export default function RegistrationOptionsSection({ setPage }) {
         <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <Reveal>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <Sticker tone="cyan" rotate={-1} style={{ marginBottom: 16 }}>
+              <Sticker tone="gold" rotate={-1} style={{ marginBottom: 16 }}>
                 Official Registration
               </Sticker>
               <h2
@@ -135,12 +135,12 @@ export default function RegistrationOptionsSection({ setPage }) {
             <Reveal delay={0.1}>
               <div
                 style={{
-                  background: 'rgba(5, 15, 25, 0.85)',
-                  border: '1px solid rgba(0, 240, 255, 0.4)',
+                  background: 'rgba(25, 7, 10, 0.85)',
+                  border: '1px solid rgba(176, 141, 87, 0.4)',
                   borderRadius: 18,
                   padding: '24px',
                   backdropFilter: 'blur(16px)',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 28px rgba(0, 240, 255, 0.12)',
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -152,10 +152,10 @@ export default function RegistrationOptionsSection({ setPage }) {
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: '#00F0FF', fontWeight: 700 }}>
+                    <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
                       CONCERT &amp; PRONITES ONLY
                     </span>
-                    <span style={{ fontSize: 10, background: 'rgba(0, 240, 255, 0.18)', color: '#00F0FF', padding: '3px 10px', borderRadius: 10, fontWeight: 700 }}>
+                    <span style={{ fontSize: 10, background: 'rgba(176,141,87,0.18)', color: 'var(--gold)', padding: '3px 10px', borderRadius: 10, fontWeight: 700 }}>
                       ₹2000 Fee
                     </span>
                   </div>
