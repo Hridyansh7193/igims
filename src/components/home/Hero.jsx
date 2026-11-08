@@ -266,22 +266,6 @@ export default function Hero({ setPage, revealTitle = true }) {
             </p>
           </div>
 
-          {/* Action Button */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 16,
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: '100%',
-              margin: '0 auto',
-              flexWrap: 'wrap',
-            }}
-          >
-            <button className="crx-btn gold" onClick={() => setPage('events')}>
-              Explore Events
-            </button>
-          </div>
         </div>
 
         {/* Bottom "S C R O L L" Indicator */}
