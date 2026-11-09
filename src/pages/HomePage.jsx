@@ -16,14 +16,15 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       <Hero setPage={setPage} revealTitle={revealHeroTitle} />
       <LoreSection />
       <MascotSection />
+
+      {/* Official Registration: Placed before Unleashing The Fire Within */}
+      <RegistrationOptionsSection setPage={setPage} />
+
       <StatsSection />
       
       {/* Continuing original sections */}
       <SplitPanelSection setPage={setPage} />
       <GallerySection />
-
-      {/* Registration Options: Placed right before QnA / FAQ */}
-      <RegistrationOptionsSection setPage={setPage} />
 
       {/* QnA / FAQ */}
       <FAQ />
