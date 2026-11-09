@@ -103,22 +103,24 @@ export default function Hero({ setPage, revealTitle = true }) {
             justifyContent: 'center',
           }}
         >
-          {/* Tagline Accreditation Tag */}
+          {/* Tagline Sticker Badge */}
           <Sticker
             tone="gold"
             rotate={0}
             style={{
-              marginBottom: 16,
-              fontSize: '11px',
-              letterSpacing: '0.04em',
+              marginBottom: 18,
+              fontSize: 'clamp(11px, 2.4vw, 13px)',
+              letterSpacing: '1px',
+              padding: '8px 20px',
               maxWidth: '92vw',
-              lineHeight: 1.4,
+              lineHeight: 1.45,
+              whiteSpace: 'normal',
               textAlign: 'center',
               boxSizing: 'border-box',
               display: 'inline-block',
             }}
           >
-            India's Largest Medical College Cultural & Sports Festival
+            India's Biggest Medical College <br className="crx-mobile-break" />Cultural &amp; Sports Festival
           </Sticker>
 
           {/* Giant Centerpiece Title */}
@@ -126,17 +128,17 @@ export default function Hero({ setPage, revealTitle = true }) {
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: 1000,
+              maxWidth: 1200,
               boxSizing: 'border-box',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: '8px auto 20px',
+              margin: '8px auto 24px',
             }}
           >
             <div
               style={{
-                padding: '4px 8px',
+                padding: '6px 12px',
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
@@ -150,18 +152,18 @@ export default function Hero({ setPage, revealTitle = true }) {
                 {titleSettled ? (
                   <span
                     style={{
-                      color: 'var(--crx-text-primary)',
-                      fontFamily: "'Anton', sans-serif",
-                      fontSize: 'clamp(36px, 10vw, 112px)',
-                      fontWeight: 400,
+                      color: 'var(--cream)',
+                      fontFamily: "'Anton', 'Impact', sans-serif",
+                      fontSize: 'clamp(46px, 13.5vw, 148px)',
+                      fontWeight: 900,
                       lineHeight: 1,
-                      letterSpacing: '1px',
+                      letterSpacing: '2px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
                       textAlign: 'center',
                       display: 'inline-block',
-                      textShadow: '0 2px 20px rgba(0, 0, 0, 0.85)',
+                      textShadow: '0 4px 24px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   >
                     CEREBREXIA'26
@@ -170,24 +172,24 @@ export default function Hero({ setPage, revealTitle = true }) {
                   <GlitchText
                     text="CEREBREXIA'26"
                     start={revealTitle}
-                    duration={600}
+                    duration={900}
                     onDone={() => {
                       heroTitleRevealedOnce = true;
                       setTitleSettled(true);
                     }}
                     style={{
-                      color: 'var(--crx-text-primary)',
-                      fontFamily: "'Anton', sans-serif",
-                      fontSize: 'clamp(36px, 10vw, 112px)',
-                      fontWeight: 400,
+                      color: 'var(--cream)',
+                      fontFamily: "'Anton', 'Impact', sans-serif",
+                      fontSize: 'clamp(46px, 13.5vw, 148px)',
+                      fontWeight: 900,
                       lineHeight: 1,
-                      letterSpacing: '1px',
+                      letterSpacing: '2px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
                       textAlign: 'center',
                       display: 'inline-block',
-                      textShadow: '0 2px 20px rgba(0, 0, 0, 0.85)',
+                      textShadow: '0 4px 24px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9)',
                     }}
                   />
                 )}
@@ -202,10 +204,10 @@ export default function Hero({ setPage, revealTitle = true }) {
               alignItems: 'center',
               justifyContent: 'center',
               width: '100%',
-              maxWidth: 580,
+              maxWidth: 640,
               boxSizing: 'border-box',
               textAlign: 'center',
-              margin: '0 auto 28px',
+              margin: '0 auto 34px',
               padding: '0 16px',
             }}
           >
@@ -215,16 +217,16 @@ export default function Hero({ setPage, revealTitle = true }) {
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
-                fontSize: 'clamp(14px, 1.8vw, 16px)',
-                lineHeight: 1.6,
-                color: 'var(--crx-text-secondary)',
-                fontWeight: 400,
+                fontSize: 'clamp(14px, 2vw, 17px)',
+                lineHeight: 1.65,
+                color: 'var(--paper)',
+                fontWeight: 500,
                 fontFamily: "'Space Grotesk', sans-serif",
                 wordBreak: 'break-word',
                 textAlign: 'center',
               }}
             >
-              Four days. Six competition arenas. Star celebrity pronites at IGIMS Patna.
+              Four days. Hundreds of stages. One incredible story, and you're in it. The 51st edition returns louder than ever.
             </p>
           </div>
 

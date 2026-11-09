@@ -3,59 +3,71 @@ import React from 'react';
 export default function GlobalStyle() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@400;500;600&display=swap');
       
       /* ==========================================================================
-         CEREBREXIA '26 - REFINED DESIGN SYSTEM (UNSLOP)
-         Warm Neutral Ramp · Festival Crimson Accent · Warm Amber Meta
+         CEREBREXIA '26 - NEW LOGO COLOR PALETTE
+         Vermillion Red · Hot Magenta · Sapphire Blue · Royal Gold · Dark Amber
          ========================================================================== */
       :root {
-        /* Deep Neutral Ramp (Warm Charcoal / Maroon tint) */
-        --crx-bg-deep: #080506;
-        --crx-bg: #0C080A;
-        --crx-surface: #140E11;
-        --crx-card: #1A1216;
-        --crx-raised: #241A20;
-
-        /* Hairlines (8% - 12% text opacity) */
-        --crx-hairline: rgba(239, 233, 222, 0.08);
-        --crx-hairline-accent: rgba(212, 175, 106, 0.22);
-        --crx-hairline-crimson: rgba(192, 57, 43, 0.28);
-
-        /* Accents */
-        --crx-accent: #C0392B;
-        --crx-accent-hover: #D44434;
-        --crx-gold: #D4AF6A;
-        --crx-gold-muted: #9E824C;
-
-        /* Text Roles (Warm Ramp) */
-        --crx-text-primary: #F7EDE2;
-        --crx-text-secondary: #AAA398;
-        --crx-text-muted: #8A847A;
-
-        /* Legacy alias mappings for backward compatibility */
-        --navy-void: var(--crx-bg-deep);
-        --navy-deep: var(--crx-bg);
-        --navy-surface: var(--crx-surface);
-        --navy-card: var(--crx-card);
-        --indigo-nebula: var(--crx-raised);
-        --cyan: var(--crx-accent);
-        --cyan-glow: var(--crx-accent);
+        /* Deep Dark Backgrounds — near-black with warm maroon undertone */
+        --navy-void: #080406;
+        --navy-deep: #0C0508;
+        --navy-surface: #140A0C;
+        --navy-card: #1A0C0F;
+        --indigo-nebula: #220D12;
+        
+        /* PRIMARY — Vermillion / Crimson Red (dominant logo color) */
+        --cyan: #C0392B;
+        --cyan-glow: #E74C3C;
         --cyan-dark: #7B1A14;
-        --azure-deep: var(--crx-surface);
-        --crx-red: var(--crx-accent);
-        --crx-red-bright: #D44434;
-        --gold: var(--crx-gold);
-        --gold-glow: var(--crx-gold);
-        --cream: var(--crx-text-primary);
-        --paper: var(--crx-text-secondary);
-        --ink: var(--crx-bg-deep);
-        --muted: var(--crx-text-muted);
-        --hair: var(--crx-hairline);
-        --hair-gold: var(--crx-hairline-accent);
-        --crx-border: var(--crx-hairline);
-        --crx-text-main: var(--crx-text-primary);
-        --font-sans: 'Space Grotesk', sans-serif;
+        --azure-deep: #220D12;
+        --crx-red: #C0392B;
+        --crx-red-bright: #E74C3C;
+        --crx-red-deep: #7B1A14;
+        
+        /* ACCENT — Saffron Orange / Warm Amber (crown gems glow) */
+        --crx-orange: #D4500A;
+        --crx-orange-bright: #F06A1A;
+
+        /* ACCENT — Hot Magenta / Dark Pink (crown gemstone highlights) */
+        --crx-magenta: #C0185A;
+        --crx-magenta-bright: #E91E8C;
+        --crx-magenta-deep: #7A0F38;
+
+        /* ACCENT — Sapphire Blue (single blue gem — contrast pop) */
+        --crx-blue: #1565C0;
+        --crx-blue-bright: #2196F3;
+
+        /* Royal Gold (crown metal & diadem) */
+        --gold: #C9973A;
+        --gold-glow: #E8B84B;
+        --gold-amber: #9A7228;
+        --gold-dark: #5C4218;
+
+        /* Text & Neutrals */
+        --cream: #F7EDE2;
+        --paper: #B8A898;
+        --ink: #080406;
+        --muted: #9A8A7A;
+        --muted-blue: #7A6A5A;
+        
+        /* Borders & Glows */
+        --hair: rgba(192, 57, 43, 0.25);
+        --hair-gold: rgba(201, 151, 58, 0.35);
+        --glow-cyan: 0 0 25px rgba(192, 57, 43, 0.45);
+        --glow-gold: 0 0 25px rgba(201, 151, 58, 0.45);
+        --glow-magenta: 0 0 25px rgba(192, 24, 90, 0.45);
+        --glow-blue: 0 0 25px rgba(21, 101, 192, 0.5);
+
+        /* Shared CRX Design System */
+        --crx-gold: #E8B84B;
+        --crx-bg: #080406;
+        --crx-border: rgba(255, 255, 255, 0.08);
+        --crx-text-main: #F7EDE2;
+        --crx-text-muted: #9A8A7A;
+        --font-serif: 'Playfair Display', serif;
+        --font-sans: 'Inter', sans-serif;
       }
 
       *, *::before, *::after {
@@ -136,30 +148,30 @@ export default function GlobalStyle() {
         background: radial-gradient(ellipse at 50% 0%, rgba(192, 24, 90, 0.09), transparent 60%);
       }
 
-      /* Quiet Festival Accreditation Tags */
+      /* Angled Festival Sticker Badges */
       .crx-sticker {
         display: inline-block;
         font-family: 'Space Grotesk', sans-serif;
-        font-weight: 500;
+        font-weight: 600;
         font-size: 11px;
-        letter-spacing: 0.04em;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
-        padding: 5px 12px;
+        padding: 7px 14px;
         border-radius: 6px;
         white-space: nowrap;
-        background: rgba(212, 175, 106, 0.08);
-        border: 1px solid rgba(212, 175, 106, 0.24);
+        background: rgba(212, 175, 85, 0.06);
+        border: 1px solid rgba(212, 175, 85, 0.3);
         color: #E5C07B;
         box-shadow: none;
         max-width: 100%;
       }
 
-      /* Unified tag variants */
+      /* All tones render identically now — one unified design system, no solid fills */
       .crx-sticker.gold,
       .crx-sticker.orange,
       .crx-sticker.cyan {
-        background: rgba(212, 175, 106, 0.08);
-        border: 1px solid rgba(212, 175, 106, 0.24);
+        background: rgba(212, 175, 85, 0.06);
+        border: 1px solid rgba(212, 175, 85, 0.3);
         color: #E5C07B;
         box-shadow: none;
       }
@@ -168,74 +180,64 @@ export default function GlobalStyle() {
       .crx-stat-badge {
         display: inline-block;
         font-family: 'Space Grotesk', sans-serif;
-        font-weight: 500;
-        font-size: 11px;
-        letter-spacing: 0.03em;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        padding: 4px 10px;
+        padding: 6px 12px;
         border-radius: 6px;
         white-space: nowrap;
-        background: rgba(239, 233, 222, 0.04);
-        border: 1px solid rgba(239, 233, 222, 0.08);
-        color: var(--crx-text-secondary);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #A1A1AA;
       }
 
-      /* Refined Action Buttons (Nested 8-10px radius, solid depth, no neon glows) */
+      /* Buttons with Cosmic Glows */
       .crx-btn {
         position: relative;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: 8px;
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 13px;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.75px;
         text-transform: uppercase;
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 13px 26px;
+        border-radius: 10px;
         border: none;
         cursor: pointer;
-        transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
       }
 
       .crx-btn:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        filter: brightness(1.1);
       }
 
       .crx-btn:active {
-        transform: translateY(0) scale(0.98);
+        transform: translateY(0);
       }
 
-      /* Primary Button: Solid festival crimson with subtle top highlight */
       .crx-btn.gold {
-        background: var(--crx-accent);
+        background: linear-gradient(135deg, #C0392B 0%, #D4500A 100%);
         color: #FFFFFF;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 4px 20px rgba(192, 57, 43, 0.45);
       }
 
-      .crx-btn.gold:hover {
-        background: var(--crx-accent-hover);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.45);
-      }
-
-      /* Secondary Button: Raised surface with hairline border */
       .crx-btn.orange,
       .crx-btn.cyan {
-        background: var(--crx-surface);
-        border: 1px solid var(--crx-hairline-accent);
-        color: var(--crx-text-primary);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 6px rgba(0, 0, 0, 0.25);
+        background: rgba(201, 151, 58, 0.08);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(201, 151, 58, 0.4);
+        color: #F7EDE2;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
       }
 
       .crx-btn.orange:hover,
       .crx-btn.cyan:hover {
-        background: var(--crx-raised);
-        border-color: rgba(212, 175, 106, 0.4);
-        color: #FFFFFF;
+        background: rgba(201, 151, 58, 0.16);
+        border-color: rgba(201, 151, 58, 0.7);
       }
 
       /* Continuous Marquee Tickers */
@@ -270,77 +272,133 @@ export default function GlobalStyle() {
         color: var(--cyan);
       }
 
-      /* Quiet Card Surface & Hover (Standard Unslop Tokens) */
+      /* Cosmic Card Hover Effects */
       .crx-card {
-        transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
       }
 
       .crx-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(212, 175, 106, 0.28) !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        transform: translateY(-4px);
+        border-color: rgba(220, 38, 38, 0.5) !important;
+        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
       }
 
       .crx-idcard {
-        transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
-                    box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
       }
 
       .crx-idcard:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+        transform: translateY(-5px) rotate(0.6deg);
+        box-shadow: 0 20px 35px -10px rgba(179, 18, 58, 0.25);
       }
 
       .crx-social {
-        transition: color 160ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 0.2s ease, color 0.2s ease;
       }
 
       .crx-social:hover {
-        color: var(--crx-accent) !important;
+        transform: translateY(-3px);
+        color: var(--cyan) !important;
       }
 
       .crx-burger span {
         display: block;
-        width: 20px;
+        width: 22px;
         height: 2px;
         background: var(--paper);
-        margin: 4px 0;
-        transition: transform 160ms ease, opacity 160ms ease;
+        margin: 5px 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
       }
 
-      /* Clean Neutral Scrollbar */
+      /* Custom Cyan/Gold Scrollbar */
       .crx-scrollbar::-webkit-scrollbar {
         height: 6px;
-        width: 6px;
       }
       .crx-scrollbar::-webkit-scrollbar-thumb {
-        background: #241A20;
+        background: linear-gradient(90deg, var(--cyan), var(--gold));
         border-radius: 3px;
-      }
-      .crx-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #34262E;
       }
 
       input, textarea {
         font-family: 'Space Grotesk', sans-serif;
       }
       input:focus, textarea:focus {
-        border-color: var(--crx-gold) !important;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(212, 175, 106, 0.25) !important;
+        border-color: var(--cyan) !important;
+        box-shadow: 0 0 0 3px rgba(179, 18, 58, 0.25) !important;
       }
 
-      /* Single purposeful fade-in entrance */
-      @keyframes crx-fade-up {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+      /* Floating Ambient Keyframe Animations */
+      @keyframes crx-float {
+        0% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-20px) scale(1.05); }
+        100% { transform: translateY(10px) scale(0.98); }
+      }
+
+      @keyframes crx-pulse-glow {
+        0%   { filter: drop-shadow(0 0 10px rgba(192, 57, 43, 0.5)); }
+        33%  { filter: drop-shadow(0 0 20px rgba(192, 24, 90, 0.5)); }
+        66%  { filter: drop-shadow(0 0 25px rgba(201, 151, 58, 0.6)); }
+        100% { filter: drop-shadow(0 0 10px rgba(192, 57, 43, 0.5)); }
+      }
+
+      /* Glitch title reveal — tiny jitter while resolving */
+      @keyframes crx-glitch-jitter {
+        0%   { transform: translate(0, 0); }
+        25%  { transform: translate(-1.5px, 1px); }
+        50%  { transform: translate(1.5px, -1px); }
+        75%  { transform: translate(-1px, -1px); }
+        100% { transform: translate(0, 0); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        [style*="crx-glitch-jitter"] { animation: none !important; }
+      }
+
+      /* ==========================================================================
+         MASCOT HALO FX — rotating rays, spinning ring, pulsing light beam
+         ========================================================================== */
+      @keyframes crx-rays-spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to   { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      @keyframes crx-ring-spin {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to   { transform: translate(-50%, -50%) rotate(-360deg); }
+      }
+
+      @keyframes crx-beam-pulse {
+        0%, 100% { opacity: 0.35; transform: translateX(-50%) scaleY(0.92); }
+        50%      { opacity: 0.9;  transform: translateX(-50%) scaleY(1.05); }
+      }
+
+      @keyframes crx-halo-breathe {
+        0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+        50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.08); }
+      }
+
+      .crx-mascot-rays {
+        animation: crx-rays-spin 18s linear infinite;
+      }
+
+      .crx-mascot-ring {
+        animation: crx-ring-spin 26s linear infinite;
+      }
+
+      .crx-mascot-beam {
+        animation: crx-beam-pulse 3.2s ease-in-out infinite;
+      }
+
+      .crx-mascot-halo {
+        animation: crx-halo-breathe 3.2s ease-in-out infinite;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .crx-mascot-rays,
+        .crx-mascot-ring,
+        .crx-mascot-beam,
+        .crx-mascot-halo {
+          animation: none !important;
         }
       }
       @keyframes spin {
@@ -349,7 +407,7 @@ export default function GlobalStyle() {
       }
 
       /* ====================================================================
-         NAVBAR GLASSMORPHISM & SCROLL BEHAVIOR
+         NAVBAR GLASSMORPHISM & SCROLL BEHAVIOR (Seamless, no scroll outline)
          ==================================================================== */
       header.crx-nav-header {
         position: fixed;
@@ -358,16 +416,21 @@ export default function GlobalStyle() {
         right: 0;
         z-index: 50;
         padding: 20px 32px;
-        transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
+        background: transparent;
+        border-bottom: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transition: padding 0.25s ease;
       }
 
       header.crx-nav-header.scrolled {
-        background: rgba(10, 5, 5, 0.92);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(179, 18, 58, 0.22);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-        padding: 14px 32px;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 16px 32px;
       }
 
       .crx-mobile-break {
@@ -393,18 +456,21 @@ export default function GlobalStyle() {
         }
 
         header.crx-nav-header {
-          padding: 10px 16px !important;
-          background: rgba(10, 5, 5, 0.88);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-bottom: 1px solid rgba(179, 18, 58, 0.2);
+          padding: 12px 16px !important;
+          background: transparent !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          border-bottom: none !important;
+          box-shadow: none !important;
         }
 
         header.crx-nav-header.scrolled {
-          padding: 10px 16px !important;
-          background: rgba(10, 5, 5, 0.97);
-          border-bottom: 1px solid rgba(179, 18, 58, 0.35);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+          padding: 12px 16px !important;
+          background: transparent !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          border-bottom: none !important;
+          box-shadow: none !important;
         }
 
         .crx-logo-badge {

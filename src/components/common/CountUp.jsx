@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function CountUp({ to, suffix = '', duration = 1400 }) {
+export default function CountUp({ to, suffix = '', duration = 1500 }) {
   const ref = useRef(null);
   const [val, setVal] = useState(0);
   const [started, setStarted] = useState(false);
@@ -17,7 +17,7 @@ export default function CountUp({ to, suffix = '', duration = 1400 }) {
           }
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.05 }
     );
     obs.observe(el);
     return () => obs.disconnect();

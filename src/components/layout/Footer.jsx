@@ -10,9 +10,9 @@ export default function Footer({ setPage }) {
   return (
     <footer
       style={{
-        borderTop: '1px solid var(--crx-hairline)',
-        background: 'var(--crx-bg-deep)',
-        padding: '64px 24px 32px',
+        borderTop: '1px solid rgba(179, 18, 58, 0.25)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(10, 5, 5, 0.9) 100%)',
+        padding: '60px 24px 40px',
         position: 'relative',
         zIndex: 2,
         width: '100%',
@@ -23,27 +23,27 @@ export default function Footer({ setPage }) {
     >
       <div
         style={{
-          maxWidth: 1040,
+          maxWidth: 1100,
           margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: narrow ? '1fr' : '1.3fr 1fr 1.2fr 1fr',
-          gap: 32,
+          gap: 30,
         }}
       >
         <div>
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+          <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 14 }}>
             Cerebrexia '26
           </Sticker>
-          <p style={{ fontSize: 13, color: 'var(--crx-text-secondary)', lineHeight: 1.6, maxWidth: 320, margin: '0 0 14px' }}>
-            The annual medical-college festival of IGIMS. Compete, perform, belong.
+          <p style={{ fontSize: 13.5, color: 'var(--paper)', lineHeight: 1.7, maxWidth: 320, margin: '0 0 16px' }}>
+            The annual medical-college fest of IGIMS. Compete, perform, belong.
           </p>
-          <p style={{ fontSize: 12, color: 'var(--crx-text-muted)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 11.5, color: 'var(--muted)', margin: 0, lineHeight: 1.6 }}>
             Indira Gandhi Institute of Medical Sciences<br />
             Sheikhpura, Patna &ndash; 800014, Bihar
           </p>
         </div>
         <div>
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+          <Sticker tone="gold" rotate={2} style={{ marginBottom: 14 }}>
             Explore
           </Sticker>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -54,16 +54,15 @@ export default function Footer({ setPage }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--crx-text-muted)',
+                  color: 'var(--muted)',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  fontSize: 13,
+                  fontSize: 13.5,
                   padding: 0,
-                  transition: 'color 160ms ease',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  transition: 'color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--crx-text-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--crx-text-muted)')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--cyan)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
               >
                 {p}
               </button>
@@ -71,7 +70,7 @@ export default function Footer({ setPage }) {
           </div>
         </div>
         <div>
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+          <Sticker tone="gold" rotate={-1} style={{ marginBottom: 14 }}>
             Compliance
           </Sticker>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -87,16 +86,15 @@ export default function Footer({ setPage }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--crx-text-muted)',
+                  color: 'var(--muted)',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  fontSize: 13,
+                  fontSize: 13.5,
                   padding: 0,
-                  transition: 'color 160ms ease',
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  transition: 'color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--crx-text-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--crx-text-muted)')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
               >
                 {item.label}
               </button>
@@ -104,26 +102,26 @@ export default function Footer({ setPage }) {
           </div>
         </div>
         <div>
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+          <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 14 }}>
             Connect
           </Sticker>
           <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
             {socials.map((Icon, i) => (
-              <a key={i} href="#" className="crx-social" style={{ color: 'var(--crx-text-secondary)' }}>
-                <Icon size={16} />
+              <a key={i} href="#" className="crx-social" style={{ color: 'var(--paper)' }}>
+                <Icon size={17} />
               </a>
             ))}
           </div>
-          <p style={{ fontSize: 13, color: 'var(--crx-text-muted)', margin: '0 0 12px' }}>cerebrexia@igims.edu</p>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(239,233,222,0.04)', border: '1px solid var(--crx-hairline)', borderRadius: 6, padding: '4px 8px' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cc38a' }} />
-            <span style={{ fontSize: 10, color: 'var(--crx-text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Razorpay Secured</span>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 12px' }}>cerebrexia@igims.edu</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '4px 8px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
+            <span style={{ fontSize: 10, color: 'var(--muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Razorpay Secured</span>
           </div>
         </div>
       </div>
-      <div style={{ maxWidth: 1040, margin: '36px auto 0', paddingTop: 16, borderTop: '1px solid var(--crx-hairline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontSize: 11.5, color: 'var(--crx-text-muted)' }}>
+      <div style={{ maxWidth: 1100, margin: '40px auto 0', paddingTop: 20, borderTop: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontSize: 11.5, color: 'var(--muted)' }}>
         <p style={{ margin: 0 }}>
-          &copy; 2026 Cerebrexia &middot; IGIMS Patna
+          &copy; 2026 Cerebrexia &middot; IGIMS Patna &middot; The Crowned Diagnosis
         </p>
         <div style={{ display: 'flex', gap: 14 }}>
           <button onClick={() => setPage('terms')} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11.5, padding: 0 }}>Terms</button>

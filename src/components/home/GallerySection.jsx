@@ -59,13 +59,13 @@ function MarqueeRow({ images, reverse, duration }) {
           <div
             key={i}
             style={{
-              width: 260,
-              height: 170,
-              borderRadius: 14,
+              width: 340,
+              height: 220,
+              borderRadius: 16,
               overflow: 'hidden',
               flexShrink: 0,
-              border: '1px solid var(--crx-border)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+              border: '1px solid rgba(212, 175, 106, 0.35)',
+              boxShadow: '0 10px 28px rgba(0,0,0,0.6)',
             }}
           >
             <img
@@ -83,7 +83,7 @@ function MarqueeRow({ images, reverse, duration }) {
 
 export default function GallerySection() {
   return (
-    <section style={{ padding: '30px 0 100px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
+    <section style={{ padding: '40px 0 110px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <style>
         {`
           @keyframes crx-gallery-scroll {
@@ -92,14 +92,23 @@ export default function GallerySection() {
           }
         `}
       </style>
-      <div style={{ maxWidth: 1100, margin: '0 auto 40px', textAlign: 'center', padding: '0 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto 44px', textAlign: 'center', padding: '0 24px' }}>
         <Reveal>
-          <Sticker tone="gold" rotate={0} style={{ marginBottom: 16 }}>
+          <Sticker
+            tone="gold"
+            rotate={-2}
+            style={{
+              marginBottom: 18,
+              fontSize: 'clamp(12px, 2.2vw, 14.5px)',
+              padding: '8px 22px',
+              letterSpacing: '1.2px',
+            }}
+          >
             Moments Worth Reliving
           </Sticker>
           <h2
             className="crx-display"
-            style={{ fontSize: 'clamp(28px,4.5vw,42px)', color: 'var(--cream)', margin: 0 }}
+            style={{ fontSize: 'clamp(36px, 6vw, 60px)', color: 'var(--cream)', margin: 0, letterSpacing: '1px' }}
           >
             GALLERY
           </h2>

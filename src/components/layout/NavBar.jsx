@@ -45,7 +45,7 @@ export default function NavBar({ page, setPage }) {
           justifyContent: 'space-between',
         }}
       >
-        {/* Top-Left: Logo badge with quiet hairline */}
+        {/* Top-Left: Logo badge */}
         <button
           onClick={() => go('Home')}
           style={{
@@ -59,18 +59,24 @@ export default function NavBar({ page, setPage }) {
           <div
             className="crx-logo-badge"
             style={{
-              width: 44,
-              height: 44,
-              background: 'var(--crx-surface)',
-              border: '1px solid var(--crx-hairline-accent)',
-              borderRadius: 10,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+              width: 54,
+              height: 54,
+              background: '#0C0508',
+              border: '2px solid rgba(212, 175, 106, 0.65)',
+              borderRadius: 14,
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
               padding: 2,
-              transition: 'transform 160ms ease',
+              transition: 'transform 180ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.04)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             <img
@@ -79,25 +85,31 @@ export default function NavBar({ page, setPage }) {
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: 8,
+                borderRadius: 10,
                 objectFit: 'cover',
               }}
             />
           </div>
         </button>
 
-        {/* Center: Quiet Floating Navigation Pill */}
+        {/* Center: Floating Navigation Capsule Pill */}
         <nav
           style={{
             display: narrow ? 'none' : 'flex',
             alignItems: 'center',
             gap: 4,
-            background: 'rgba(20, 14, 17, 0.88)',
-            border: '1px solid var(--crx-hairline)',
-            borderRadius: 32,
-            padding: '4px 10px',
-            backdropFilter: 'blur(16px)',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+            background: scrolled ? 'rgba(18, 9, 14, 0.88)' : 'rgba(20, 10, 14, 0.72)',
+            border: scrolled
+              ? '1px solid rgba(212, 175, 106, 0.55)'
+              : '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 40,
+            padding: '6px 14px',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: scrolled
+              ? '0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 22px rgba(212, 175, 106, 0.28), 0 12px 36px rgba(0, 0, 0, 0.8)'
+              : '0 8px 30px rgba(0, 0, 0, 0.45)',
+            transition: 'border 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           {NAV.map((p) => {
@@ -107,24 +119,24 @@ export default function NavBar({ page, setPage }) {
                 key={p}
                 onClick={() => go(p)}
                 style={{
-                  background: active ? 'rgba(239, 233, 222, 0.08)' : 'transparent',
-                  color: active ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
-                  border: 'none',
-                  borderRadius: 20,
-                  padding: '6px 14px',
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  letterSpacing: '0.03em',
+                  background: active ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                  border: active ? '1px solid rgba(255, 255, 255, 0.16)' : '1px solid transparent',
+                  color: active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.72)',
+                  borderRadius: 24,
+                  padding: '7px 18px',
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
                   fontFamily: "'Space Grotesk', sans-serif",
-                  transition: 'color 160ms ease, background-color 160ms ease',
+                  transition: 'color 160ms ease, background-color 160ms ease, border-color 160ms ease',
                 }}
                 onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.color = 'var(--crx-text-primary)';
+                  if (!active) e.currentTarget.style.color = '#FFFFFF';
                 }}
                 onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.color = 'var(--crx-text-secondary)';
+                  if (!active) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.72)';
                 }}
               >
                 {p}
@@ -139,40 +151,40 @@ export default function NavBar({ page, setPage }) {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 4,
-                background: NAV_MORE.some((p) => page === p.toLowerCase()) ? 'rgba(239, 233, 222, 0.08)' : 'transparent',
-                color: NAV_MORE.some((p) => page === p.toLowerCase()) ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
-                border: 'none',
-                borderRadius: 20,
-                padding: '6px 12px',
-                fontSize: 12.5,
-                fontWeight: 500,
-                letterSpacing: '0.03em',
+                gap: 5,
+                background: NAV_MORE.some((p) => page === p.toLowerCase()) ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                border: NAV_MORE.some((p) => page === p.toLowerCase()) ? '1px solid rgba(255, 255, 255, 0.16)' : '1px solid transparent',
+                color: NAV_MORE.some((p) => page === p.toLowerCase()) ? '#FFFFFF' : 'rgba(255, 255, 255, 0.72)',
+                borderRadius: 24,
+                padding: '7px 16px',
+                fontSize: 13.5,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
                 fontFamily: "'Space Grotesk', sans-serif",
                 transition: 'color 160ms ease',
               }}
             >
-              More <ChevronDown size={13} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }} />
+              More <ChevronDown size={14} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }} />
             </button>
             {moreOpen && (
               <div
                 style={{
                   position: 'absolute',
-                  top: 'calc(100% + 10px)',
+                  top: 'calc(100% + 12px)',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: 'var(--crx-card)',
-                  border: '1px solid var(--crx-hairline-accent)',
-                  borderRadius: 12,
-                  padding: 6,
-                  minWidth: 150,
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+                  background: 'rgba(16, 9, 14, 0.98)',
+                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                  borderRadius: 16,
+                  padding: 8,
+                  minWidth: 160,
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.7)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 2,
+                  gap: 3,
                 }}
               >
                 {NAV_MORE.map((p) => (
@@ -181,12 +193,12 @@ export default function NavBar({ page, setPage }) {
                     onClick={() => go(p)}
                     style={{
                       background: 'transparent',
-                      color: page === p.toLowerCase() ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
+                      color: page === p.toLowerCase() ? '#FFFFFF' : 'rgba(255, 255, 255, 0.75)',
                       border: 'none',
-                      borderRadius: 8,
-                      padding: '8px 12px',
-                      fontSize: 12,
-                      fontWeight: 500,
+                      borderRadius: 10,
+                      padding: '9px 14px',
+                      fontSize: 13,
+                      fontWeight: 600,
                       letterSpacing: '0.03em',
                       textTransform: 'uppercase',
                       textAlign: 'left',
@@ -202,34 +214,34 @@ export default function NavBar({ page, setPage }) {
           </div>
         </nav>
 
-        {/* Top-Right: Solid Crimson Button */}
+        {/* Top-Right: DASHBOARD Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => go('Dashboard')}
             style={{
-              background: 'var(--crx-accent)',
+              background: 'linear-gradient(135deg, #C0392B 0%, #D4500A 100%)',
               color: '#FFFFFF',
               border: 'none',
-              borderRadius: 8,
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.35)',
-              padding: '8px 18px',
-              fontWeight: 600,
-              fontSize: 12.5,
-              letterSpacing: '0.03em',
+              borderRadius: 12,
+              boxShadow: '0 4px 20px rgba(192, 57, 43, 0.45)',
+              padding: '11px 24px',
+              fontWeight: 800,
+              fontSize: 13.5,
+              letterSpacing: '0.04em',
               textTransform: 'uppercase',
               cursor: 'pointer',
               display: narrow ? 'none' : 'inline-flex',
               alignItems: 'center',
               fontFamily: "'Space Grotesk', sans-serif",
-              transition: 'background-color 160ms ease, transform 160ms ease',
+              transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--crx-accent-hover)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.filter = 'brightness(1.1)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--crx-accent)';
               e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.filter = 'brightness(1)';
             }}
           >
             {user ? 'Dashboard' : 'Sign In'}
@@ -241,11 +253,11 @@ export default function NavBar({ page, setPage }) {
             aria-label="Menu"
             className="crx-hamburger-btn"
             style={{
-              background: 'var(--crx-surface)',
-              border: '1px solid var(--crx-hairline)',
-              borderRadius: 8,
-              width: 38,
-              height: 38,
+              background: 'linear-gradient(135deg, #C0392B 0%, #D4500A 100%)',
+              border: 'none',
+              borderRadius: 12,
+              width: 44,
+              height: 44,
               cursor: 'pointer',
               display: narrow ? 'flex' : 'none',
               alignItems: 'center',
