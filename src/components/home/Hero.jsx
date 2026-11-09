@@ -73,53 +73,16 @@ export default function Hero({ setPage, revealTitle = true }) {
             <source src="/events-bg.mp4" type="video/mp4" />
           </video>
 
-          {/* Red Color-Tint Layer */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(190, 20, 35, 0.12)',
-              mixBlendMode: 'color',
-              zIndex: 0,
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Light multiply blend */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(20, 4, 6, 0.1)',
-              mixBlendMode: 'multiply',
-              zIndex: 0,
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Cosmic Vignette Overlay */}
+          {/* Authentic Concert Atmosphere Vignette (Clean edge transitions, no artificial scanlines) */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
               background: `
-                radial-gradient(ellipse at 50% 0%, rgba(179, 18, 58, 0.1), transparent 55%),
-                radial-gradient(ellipse at 50% 50%, rgba(10, 5, 5, 0.2) 0%, rgba(10, 5, 5, 0.42) 65%, rgba(10, 5, 5, 0.72) 100%),
-                linear-gradient(180deg, rgba(10, 5, 5, 0.45) 0%, rgba(10, 5, 5, 0.1) 25%, rgba(10, 5, 5, 0.1) 75%, rgba(10, 5, 5, 0.78) 100%)
+                radial-gradient(ellipse at 50% 50%, rgba(12, 8, 10, 0.25) 0%, rgba(12, 8, 10, 0.7) 85%, #0C080A 100%),
+                linear-gradient(180deg, rgba(8, 5, 6, 0.65) 0%, transparent 20%, transparent 75%, #0C080A 100%)
               `,
               zIndex: 1,
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Subtle Film Grain / Scanline Texture */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
-              opacity: 0.35,
-              zIndex: 2,
               pointerEvents: 'none',
             }}
           />
@@ -131,7 +94,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             position: 'relative',
             zIndex: 10,
             width: '100%',
-            maxWidth: 1180,
+            maxWidth: 1120,
             boxSizing: 'border-box',
             margin: '0 auto',
             display: 'flex',
@@ -140,23 +103,22 @@ export default function Hero({ setPage, revealTitle = true }) {
             justifyContent: 'center',
           }}
         >
-          {/* Tagline Sticker Badge */}
+          {/* Tagline Accreditation Tag */}
           <Sticker
             tone="gold"
             rotate={0}
             style={{
-              marginBottom: 22,
-              fontSize: 'clamp(9.5px, 2.6vw, 11.5px)',
-              letterSpacing: '1px',
+              marginBottom: 16,
+              fontSize: '11px',
+              letterSpacing: '0.04em',
               maxWidth: '92vw',
-              lineHeight: 1.45,
-              whiteSpace: 'normal',
+              lineHeight: 1.4,
               textAlign: 'center',
               boxSizing: 'border-box',
               display: 'inline-block',
             }}
           >
-            India's Biggest Medical College <br className="crx-mobile-break" />Cultural Festival
+            India's Largest Medical College Cultural & Sports Festival
           </Sticker>
 
           {/* Giant Centerpiece Title */}
@@ -164,17 +126,17 @@ export default function Hero({ setPage, revealTitle = true }) {
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: 1100,
+              maxWidth: 1000,
               boxSizing: 'border-box',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: '10px auto 24px',
+              margin: '8px auto 20px',
             }}
           >
             <div
               style={{
-                padding: '10px 14px',
+                padding: '4px 8px',
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
@@ -188,18 +150,18 @@ export default function Hero({ setPage, revealTitle = true }) {
                 {titleSettled ? (
                   <span
                     style={{
-                      color: 'var(--cream)',
-                      fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(28px, 9.5vw, 120px)',
-                      fontWeight: 900,
+                      color: 'var(--crx-text-primary)',
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: 'clamp(36px, 10vw, 112px)',
+                      fontWeight: 400,
                       lineHeight: 1,
-                      letterSpacing: '2px',
+                      letterSpacing: '1px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
                       textAlign: 'center',
                       display: 'inline-block',
-                      textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                      textShadow: '0 2px 20px rgba(0, 0, 0, 0.85)',
                     }}
                   >
                     CEREBREXIA'26
@@ -208,24 +170,24 @@ export default function Hero({ setPage, revealTitle = true }) {
                   <GlitchText
                     text="CEREBREXIA'26"
                     start={revealTitle}
-                    duration={950}
+                    duration={600}
                     onDone={() => {
                       heroTitleRevealedOnce = true;
                       setTitleSettled(true);
                     }}
                     style={{
-                      color: 'var(--cream)',
-                      fontFamily: "'Anton', 'Impact', sans-serif",
-                      fontSize: 'clamp(28px, 9.5vw, 120px)',
-                      fontWeight: 900,
+                      color: 'var(--crx-text-primary)',
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: 'clamp(36px, 10vw, 112px)',
+                      fontWeight: 400,
                       lineHeight: 1,
-                      letterSpacing: '2px',
+                      letterSpacing: '1px',
                       textTransform: 'uppercase',
                       whiteSpace: 'normal',
                       wordBreak: 'break-word',
                       textAlign: 'center',
                       display: 'inline-block',
-                      textShadow: '0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.9)',
+                      textShadow: '0 2px 20px rgba(0, 0, 0, 0.85)',
                     }}
                   />
                 )}
@@ -240,10 +202,10 @@ export default function Hero({ setPage, revealTitle = true }) {
               alignItems: 'center',
               justifyContent: 'center',
               width: '100%',
-              maxWidth: 600,
+              maxWidth: 580,
               boxSizing: 'border-box',
               textAlign: 'center',
-              margin: '0 auto 34px',
+              margin: '0 auto 28px',
               padding: '0 16px',
             }}
           >
@@ -253,16 +215,16 @@ export default function Hero({ setPage, revealTitle = true }) {
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
-                fontSize: 'clamp(13px, 1.8vw, 15.5px)',
-                lineHeight: 1.65,
-                color: 'var(--paper)',
-                fontWeight: 500,
+                fontSize: 'clamp(14px, 1.8vw, 16px)',
+                lineHeight: 1.6,
+                color: 'var(--crx-text-secondary)',
+                fontWeight: 400,
                 fontFamily: "'Space Grotesk', sans-serif",
                 wordBreak: 'break-word',
                 textAlign: 'center',
               }}
             >
-              Four days. Hundreds of stages. One incredible story, and you're in it. The 51st edition returns louder than ever.
+              Four days. Six competition arenas. Star celebrity pronites at IGIMS Patna.
             </p>
           </div>
 

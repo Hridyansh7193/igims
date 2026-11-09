@@ -45,7 +45,7 @@ export default function NavBar({ page, setPage }) {
           justifyContent: 'space-between',
         }}
       >
-        {/* Top-Left: Yellow/Gold rounded badge with dark offset shadow */}
+        {/* Top-Left: Logo badge with quiet hairline */}
         <button
           onClick={() => go('Home')}
           style={{
@@ -59,26 +59,18 @@ export default function NavBar({ page, setPage }) {
           <div
             className="crx-logo-badge"
             style={{
-              width: 50,
-              height: 50,
-              background: '#020101',
-              border: '2px solid #DC2626',
-              borderRadius: 14,
-              boxShadow: '3px 3px 0 #170707, 0 0 14px rgba(179, 18, 58, 0.35)',
+              width: 44,
+              height: 44,
+              background: 'var(--crx-surface)',
+              border: '1px solid var(--crx-hairline-accent)',
+              borderRadius: 10,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              padding: 3,
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translate(1px, 1px)';
-              e.currentTarget.style.boxShadow = '2px 2px 0 #170707, 0 0 18px rgba(179, 18, 58, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translate(0, 0)';
-              e.currentTarget.style.boxShadow = '3px 3px 0 #170707, 0 0 14px rgba(179, 18, 58, 0.35)';
+              padding: 2,
+              transition: 'transform 160ms ease',
             }}
           >
             <img
@@ -87,39 +79,27 @@ export default function NavBar({ page, setPage }) {
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: 10,
+                borderRadius: 8,
                 objectFit: 'cover',
               }}
             />
           </div>
         </button>
 
-        {/* Center: Capsule Pill Navigation [ ○ [HOME] EVENTS TEAM ○ ] */}
+        {/* Center: Quiet Floating Navigation Pill */}
         <nav
           style={{
             display: narrow ? 'none' : 'flex',
             alignItems: 'center',
-            gap: 6,
-            background: 'rgba(16, 9, 14, 0.88)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            borderRadius: 40,
-            padding: '6px 14px',
+            gap: 4,
+            background: 'rgba(20, 14, 17, 0.88)',
+            border: '1px solid var(--crx-hairline)',
+            borderRadius: 32,
+            padding: '4px 10px',
             backdropFilter: 'blur(16px)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
           }}
         >
-          {/* Left Hollow Ring Indicator */}
-          <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              border: '1.5px solid rgba(255, 255, 255, 0.4)',
-              marginRight: 8,
-              display: 'inline-block',
-            }}
-          />
-
           {NAV.map((p) => {
             const active = page === p.toLowerCase();
             return (
@@ -127,25 +107,24 @@ export default function NavBar({ page, setPage }) {
                 key={p}
                 onClick={() => go(p)}
                 style={{
-                  background: 'transparent',
-                  color: active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+                  background: active ? 'rgba(239, 233, 222, 0.08)' : 'transparent',
+                  color: active ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
                   border: 'none',
-                  borderBottom: active ? '2px solid #DC2626' : '2px solid transparent',
-                  borderRadius: 24,
-                  padding: '7px 18px',
+                  borderRadius: 20,
+                  padding: '6px 14px',
                   fontSize: 12.5,
-                  fontWeight: 700,
-                  letterSpacing: 1,
+                  fontWeight: 500,
+                  letterSpacing: '0.03em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: active ? '0 4px 10px -2px rgba(220, 38, 38, 0.45)' : 'none',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  transition: 'color 160ms ease, background-color 160ms ease',
                 }}
                 onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.color = '#FFFFFF';
+                  if (!active) e.currentTarget.style.color = 'var(--crx-text-primary)';
                 }}
                 onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                  if (!active) e.currentTarget.style.color = 'var(--crx-text-secondary)';
                 }}
               >
                 {p}
@@ -161,36 +140,36 @@ export default function NavBar({ page, setPage }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 4,
-                background: 'transparent',
-                color: NAV_MORE.some((p) => page === p.toLowerCase()) ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+                background: NAV_MORE.some((p) => page === p.toLowerCase()) ? 'rgba(239, 233, 222, 0.08)' : 'transparent',
+                color: NAV_MORE.some((p) => page === p.toLowerCase()) ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
                 border: 'none',
-                borderBottom: NAV_MORE.some((p) => page === p.toLowerCase()) ? '2px solid #DC2626' : '2px solid transparent',
-                borderRadius: 24,
-                padding: '7px 14px',
+                borderRadius: 20,
+                padding: '6px 12px',
                 fontSize: 12.5,
-                fontWeight: 700,
-                letterSpacing: 1,
+                fontWeight: 500,
+                letterSpacing: '0.03em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                fontFamily: "'Space Grotesk', sans-serif",
+                transition: 'color 160ms ease',
               }}
             >
-              More <ChevronDown size={13} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              More <ChevronDown size={13} style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }} />
             </button>
             {moreOpen && (
               <div
                 style={{
                   position: 'absolute',
-                  top: 'calc(100% + 12px)',
+                  top: 'calc(100% + 10px)',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: 'rgba(16, 9, 14, 0.96)',
-                  border: '1px solid rgba(255, 255, 255, 0.14)',
-                  borderRadius: 16,
-                  padding: 8,
+                  background: 'var(--crx-card)',
+                  border: '1px solid var(--crx-hairline-accent)',
+                  borderRadius: 12,
+                  padding: 6,
                   minWidth: 150,
                   backdropFilter: 'blur(16px)',
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 2,
@@ -202,16 +181,17 @@ export default function NavBar({ page, setPage }) {
                     onClick={() => go(p)}
                     style={{
                       background: 'transparent',
-                      color: page === p.toLowerCase() ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)',
+                      color: page === p.toLowerCase() ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
                       border: 'none',
-                      borderRadius: 10,
-                      padding: '9px 14px',
-                      fontSize: 12.5,
-                      fontWeight: 700,
-                      letterSpacing: 1,
+                      borderRadius: 8,
+                      padding: '8px 12px',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      letterSpacing: '0.03em',
                       textTransform: 'uppercase',
                       textAlign: 'left',
                       cursor: 'pointer',
+                      fontFamily: "'Space Grotesk', sans-serif",
                     }}
                   >
                     {p}
@@ -220,50 +200,39 @@ export default function NavBar({ page, setPage }) {
               </div>
             )}
           </div>
-
-          {/* Right Hollow Ring Indicator */}
-          <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              border: '1.5px solid rgba(255, 255, 255, 0.4)',
-              marginLeft: 8,
-              display: 'inline-block',
-            }}
-          />
         </nav>
 
-        {/* Top-Right: Yellow "SIGN IN" button with black border and offset shadow */}
+        {/* Top-Right: Solid Crimson Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => go('Dashboard')}
             style={{
-              background: '#DC2626',
-              color: '#170707',
-              border: '2px solid #170707',
-              borderRadius: 14,
-              boxShadow: '0 4px 20px rgba(220, 38, 38, 0.35), 3px 3px 0 #170707',
-              padding: '10px 22px',
-              fontWeight: 800,
-              fontSize: 13,
-              letterSpacing: 0.5,
+              background: 'var(--crx-accent)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 8,
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.35)',
+              padding: '8px 18px',
+              fontWeight: 600,
+              fontSize: 12.5,
+              letterSpacing: '0.03em',
               textTransform: 'uppercase',
               cursor: 'pointer',
               display: narrow ? 'none' : 'inline-flex',
               alignItems: 'center',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              fontFamily: "'Space Grotesk', sans-serif",
+              transition: 'background-color 160ms ease, transform 160ms ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translate(1px, 1px)';
-              e.currentTarget.style.boxShadow = '2px 2px 0 #170707';
+              e.currentTarget.style.backgroundColor = 'var(--crx-accent-hover)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translate(0, 0)';
-              e.currentTarget.style.boxShadow = '3px 3px 0 #170707';
+              e.currentTarget.style.backgroundColor = 'var(--crx-accent)';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            {user ? 'DASHBOARD' : 'SIGN IN'}
+            {user ? 'Dashboard' : 'Sign In'}
           </button>
 
           {/* Mobile Hamburger Toggle */}
@@ -272,12 +241,11 @@ export default function NavBar({ page, setPage }) {
             aria-label="Menu"
             className="crx-hamburger-btn"
             style={{
-              background: '#DC2626',
-              border: '2px solid #170707',
-              boxShadow: '2px 2px 0 #170707',
-              borderRadius: 12,
-              width: 44,
-              height: 44,
+              background: 'var(--crx-surface)',
+              border: '1px solid var(--crx-hairline)',
+              borderRadius: 8,
+              width: 38,
+              height: 38,
               cursor: 'pointer',
               display: narrow ? 'flex' : 'none',
               alignItems: 'center',
@@ -285,12 +253,12 @@ export default function NavBar({ page, setPage }) {
             }}
           >
             {open ? (
-              <X size={20} color="#170707" />
+              <X size={18} color="var(--crx-text-primary)" />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ width: 18, height: 2, background: '#170707' }} />
-                <span style={{ width: 18, height: 2, background: '#170707' }} />
-                <span style={{ width: 18, height: 2, background: '#170707' }} />
+                <span style={{ width: 16, height: 1.5, background: 'var(--crx-text-primary)' }} />
+                <span style={{ width: 16, height: 1.5, background: 'var(--crx-text-primary)' }} />
+                <span style={{ width: 16, height: 1.5, background: 'var(--crx-text-primary)' }} />
               </div>
             )}
           </button>
@@ -301,16 +269,16 @@ export default function NavBar({ page, setPage }) {
       {open && (
         <div
           style={{
-            marginTop: 14,
-            background: 'rgba(16, 9, 14, 0.96)',
-            border: '2px solid #170707',
-            borderRadius: 18,
-            padding: 16,
+            marginTop: 12,
+            background: 'var(--crx-card)',
+            border: '1px solid var(--crx-hairline-accent)',
+            borderRadius: 14,
+            padding: 14,
             display: 'flex',
             flexDirection: 'column',
-            gap: 6,
+            gap: 4,
             backdropFilter: 'blur(20px)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.8)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.7)',
           }}
         >
           {[...NAV, ...NAV_MORE].map((p) => (
@@ -319,17 +287,17 @@ export default function NavBar({ page, setPage }) {
               onClick={() => go(p)}
               style={{
                 background: 'transparent',
-                color: page === p.toLowerCase() ? '#fff' : 'rgba(255,255,255,0.7)',
+                color: page === p.toLowerCase() ? 'var(--crx-text-primary)' : 'var(--crx-text-secondary)',
                 border: 'none',
-                borderLeft: page === p.toLowerCase() ? '2px solid #DC2626' : '2px solid transparent',
-                borderRadius: 12,
-                padding: '12px 16px',
+                borderRadius: 8,
+                padding: '10px 14px',
                 textAlign: 'left',
-                fontWeight: 700,
-                fontSize: 14,
-                letterSpacing: 0.5,
+                fontWeight: 500,
+                fontSize: 13,
+                letterSpacing: '0.03em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
+                fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
               {p}
@@ -338,19 +306,20 @@ export default function NavBar({ page, setPage }) {
           <button
             onClick={() => go('Dashboard')}
             style={{
-              background: '#DC2626',
-              color: '#170707',
-              border: '2px solid #170707',
-              borderRadius: 12,
-              padding: '12px',
-              fontWeight: 800,
-              fontSize: 13,
+              background: 'var(--crx-accent)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px',
+              fontWeight: 600,
+              fontSize: 12.5,
               textTransform: 'uppercase',
               cursor: 'pointer',
               marginTop: 6,
+              fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
-            {user ? 'DASHBOARD' : 'SIGN IN'}
+            {user ? 'Dashboard' : 'Sign In'}
           </button>
         </div>
       )}

@@ -6,18 +6,23 @@ import GhostText from '../common/GhostText';
 
 export default function SplitPanelSection({ setPage }) {
   return (
-    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
-      <GhostText>CHOOSE</GhostText>
-      <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+    <section style={{ padding: '64px 24px 80px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
+      <div style={{ maxWidth: 1040, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <Reveal>
-          <Sticker tone="orange" rotate={-2} style={{ marginBottom: 16 }}>
-            Pick Your Court
+          <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+            Pick Your Arena
           </Sticker>
           <h2
             className="crx-display"
-            style={{ fontSize: 'clamp(30px,5.5vw,54px)', color: 'var(--cream)', margin: '0 0 40px' }}
+            style={{
+              fontSize: 'clamp(28px, 5vw, 42px)',
+              color: 'var(--crx-text-primary)',
+              margin: '0 0 32px',
+              fontWeight: 400,
+              letterSpacing: '0.5px',
+            }}
           >
-            ONE FEST. SIX COURTS.
+            ONE FEST. SIX ARENAS.
           </h2>
         </Reveal>
         <div
@@ -37,13 +42,14 @@ export default function SplitPanelSection({ setPage }) {
                 cursor: 'pointer',
                 display: 'block',
                 width: '100%',
-                height: 340,
-                borderRadius: 20,
+                height: 320,
+                borderRadius: 16,
                 position: 'relative',
                 overflow: 'hidden',
-                background: 'linear-gradient(160deg, #2B0A0A 0%, #150707 100%)',
-                border: '1px solid rgba(179, 18, 58, 0.3)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                background: 'var(--crx-card)',
+                border: '1px solid var(--crx-hairline-accent)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                boxSizing: 'border-box',
               }}
             >
               <video
@@ -57,7 +63,7 @@ export default function SplitPanelSection({ setPage }) {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  opacity: 0.85,
+                  opacity: 0.8,
                   zIndex: 0,
                 }}
               >
@@ -67,20 +73,11 @@ export default function SplitPanelSection({ setPage }) {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'rgba(190,20,40,0.08)',
-                  mixBlendMode: 'color',
+                  background: 'linear-gradient(0deg, rgba(12, 8, 10, 0.95) 0%, rgba(12, 8, 10, 0.3) 60%, rgba(12, 8, 10, 0.6) 100%)',
                   zIndex: 0,
                 }}
               />
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(160deg, rgba(10,5,5,0.05) 0%, rgba(6,3,3,0.65) 100%)',
-                  zIndex: 0,
-                }}
-              />
-              <Sticker tone="gold" rotate={-3} style={{ position: 'absolute', top: 18, left: 18, zIndex: 1 }}>
+              <Sticker tone="gold" rotate={0} style={{ position: 'absolute', top: 20, left: 20, zIndex: 1 }}>
                 70+ Events
               </Sticker>
               <div
@@ -89,28 +86,28 @@ export default function SplitPanelSection({ setPage }) {
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  padding: '24px',
-                  background: 'linear-gradient(0deg, rgba(10, 5, 5, 0.92) 0%, transparent 100%)',
+                  padding: 24,
                   zIndex: 1,
                 }}
               >
-                <h3 className="crx-display" style={{ fontSize: 'clamp(30px,4vw,44px)', color: '#fff', margin: '0 0 8px' }}>
-                  EVENTS
+                <h3 className="crx-display" style={{ fontSize: 'clamp(26px, 3.5vw, 36px)', color: 'var(--crx-text-primary)', margin: '0 0 6px', fontWeight: 400 }}>
+                  COMPETITIVE ARENAS
                 </h3>
-                <p style={{ fontSize: 13.5, color: 'var(--paper)', margin: '0 0 10px', maxWidth: 320 }}>
-                  Academic, literary, cultural, art, sports and informal — the main arena awaits.
+                <p style={{ fontSize: 13, color: 'var(--crx-text-secondary)', margin: '0 0 12px', maxWidth: 360, lineHeight: 1.5 }}>
+                  Sports, cultural, literary, music, dance and fine arts — view guidelines and register.
                 </p>
                 <span
                   style={{
-                    color: 'var(--cyan)',
-                    fontWeight: 700,
+                    color: 'var(--crx-gold)',
+                    fontWeight: 600,
                     fontSize: 13,
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
+                    fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  ENTER THE ARENA <ArrowRight size={14} />
+                  Enter The Arena <ArrowRight size={14} />
                 </span>
               </div>
             </button>

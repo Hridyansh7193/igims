@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import Reveal from '../common/Reveal';
+import Sticker from '../common/Sticker';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 const FAQS = [
@@ -45,28 +46,35 @@ function FaqCard({ index, faq, narrow }) {
   return (
     <div
       style={{
-        background: 'var(--navy-card)',
-        border: '1px solid var(--crx-border)',
-        borderRadius: 14,
-        padding: narrow ? '18px 18px' : '20px 24px',
+        background: 'var(--crx-card)',
+        border: '1px solid var(--crx-hairline)',
+        borderRadius: 12,
+        padding: narrow ? '16px' : '20px',
         position: 'relative',
+        boxSizing: 'border-box',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
           <span
-            className="crx-display"
-            style={{ color: 'var(--gold)', fontSize: 14, letterSpacing: '0.05em', flexShrink: 0 }}
+            style={{
+              color: 'var(--crx-gold)',
+              fontSize: 13,
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontVariantNumeric: 'tabular-nums',
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
           >
             {num}
           </span>
           <h3
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              color: 'var(--cyan-glow)',
-              fontSize: narrow ? 15 : 16.5,
-              lineHeight: 1.35,
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 600,
+              color: 'var(--crx-text-primary)',
+              fontSize: narrow ? 14.5 : 15.5,
+              lineHeight: 1.4,
               margin: 0,
             }}
           >
@@ -77,22 +85,22 @@ function FaqCard({ index, faq, narrow }) {
           onClick={() => setClosed((c) => !c)}
           aria-label={closed ? 'Expand answer' : 'Collapse answer'}
           style={{
-            width: 30,
-            height: 30,
+            width: 28,
+            height: 28,
             borderRadius: '50%',
-            border: '1px solid var(--cyan)',
-            background: 'transparent',
-            color: 'var(--cyan-glow)',
+            border: '1px solid var(--crx-hairline)',
+            background: 'var(--crx-surface)',
+            color: 'var(--crx-text-secondary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             flexShrink: 0,
             transform: closed ? 'rotate(45deg)' : 'none',
-            transition: 'transform 0.25s ease',
+            transition: 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
-          <X size={14} />
+          <X size={13} />
         </button>
       </div>
 
@@ -101,11 +109,11 @@ function FaqCard({ index, faq, narrow }) {
           maxHeight: closed ? 0 : 260,
           opacity: closed ? 0 : 1,
           overflow: 'hidden',
-          transition: 'all 0.3s ease',
+          transition: 'all 200ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
-        <div style={{ borderTop: '1px solid var(--crx-border)', margin: '14px 0 12px' }} />
-        <p style={{ color: 'var(--crx-text-muted)', fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>
+        <div style={{ borderTop: '1px solid var(--crx-hairline)', margin: '12px 0 10px' }} />
+        <p style={{ color: 'var(--crx-text-secondary)', fontSize: 13, lineHeight: 1.6, margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
           {faq.a}
         </p>
       </div>
@@ -119,7 +127,7 @@ export default function FAQ() {
   return (
     <section
       style={{
-        padding: '50px 20px 100px',
+        padding: '64px 24px 80px',
         position: 'relative',
         overflow: 'hidden',
         width: '100%',
@@ -127,21 +135,27 @@ export default function FAQ() {
         contain: 'paint',
       }}
     >
-      <div className="section-container" style={{ maxWidth: 1180, margin: '0 auto' }}>
-
+      <div className="section-container" style={{ maxWidth: 1040, margin: '0 auto' }}>
         <Reveal>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <p style={{ color: 'var(--crx-gold)', fontSize: 12, letterSpacing: '0.2em', fontWeight: 600, marginBottom: 16 }}>
-              FAQ
-            </p>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
+              Frequently Asked Questions
+            </Sticker>
             <h2
               className="crx-display"
-              style={{ fontSize: 'clamp(32px, 5vw, 48px)', color: '#fff', lineHeight: 1.15, margin: '0 0 16px' }}
+              style={{
+                fontSize: 'clamp(28px, 5vw, 42px)',
+                color: 'var(--crx-text-primary)',
+                lineHeight: 1.15,
+                margin: '0 0 12px',
+                fontWeight: 400,
+                letterSpacing: '0.5px',
+              }}
             >
-              GOT QUESTIONS?<br />WE HAVE ANSWERS.
+              GOT QUESTIONS? WE HAVE ANSWERS.
             </h2>
-            <p style={{ color: 'var(--crx-text-muted)', fontSize: 15, margin: 0 }}>
-              Clear answers for planning your arrival, participation and three-day experience.
+            <p style={{ color: 'var(--crx-text-secondary)', fontSize: 14, margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+              Answers for planning your arrival, credentials, and competition schedule.
             </p>
           </div>
         </Reveal>
@@ -154,12 +168,11 @@ export default function FAQ() {
           }}
         >
           {FAQS.map((faq, i) => (
-            <Reveal key={faq.q} delay={Math.min(i, 4) * 0.05}>
+            <Reveal key={faq.q} delay={Math.min(i, 4) * 0.04}>
               <FaqCard index={i} faq={faq} narrow={narrow} />
             </Reveal>
           ))}
         </div>
-
       </div>
     </section>
   );

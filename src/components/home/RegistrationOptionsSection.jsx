@@ -35,7 +35,7 @@ export default function RegistrationOptionsSection({ setPage }) {
     <>
       <section
         style={{
-          padding: '60px 24px 80px',
+          padding: '64px 24px 80px',
           position: 'relative',
           overflow: 'hidden',
           width: '100%',
@@ -43,19 +43,20 @@ export default function RegistrationOptionsSection({ setPage }) {
           contain: 'paint',
         }}
       >
-        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 1040, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <Reveal>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <Sticker tone="gold" rotate={-1} style={{ marginBottom: 16 }}>
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <Sticker tone="gold" rotate={0} style={{ marginBottom: 12 }}>
                 Official Registration
               </Sticker>
               <h2
                 className="crx-display"
                 style={{
-                  fontSize: 'clamp(28px, 5.5vw, 48px)',
-                  color: 'var(--cream)',
-                  margin: '0 0 14px',
-                  letterSpacing: 0.5,
+                  fontSize: 'clamp(28px, 5vw, 44px)',
+                  color: 'var(--crx-text-primary)',
+                  margin: '0 0 12px',
+                  letterSpacing: '0.5px',
+                  fontWeight: 400,
                 }}
               >
                 CHOOSE YOUR ACCESS
@@ -63,13 +64,14 @@ export default function RegistrationOptionsSection({ setPage }) {
               <p
                 style={{
                   fontSize: 14,
-                  color: 'var(--paper)',
-                  lineHeight: 1.7,
-                  maxWidth: 620,
+                  color: 'var(--crx-text-secondary)',
+                  lineHeight: 1.6,
+                  maxWidth: 580,
                   margin: '0 auto',
+                  fontFamily: "'Space Grotesk', sans-serif",
                 }}
               >
-                Step into the arena to compete across 70+ sports and cultural events, or claim your exclusive star celebrity pronites entry with Basic Registration (BR).
+                Compete across 70+ sports and cultural events, or secure access to the headline concert and pronites with Basic Registration (BR).
               </p>
             </div>
           </Reveal>
@@ -78,24 +80,24 @@ export default function RegistrationOptionsSection({ setPage }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 22,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 20,
               width: '100%',
-              maxWidth: 820,
+              maxWidth: 780,
               margin: '0 auto',
               boxSizing: 'border-box',
             }}
           >
             {/* Column 1: Explore Events */}
-            <Reveal delay={0.05}>
+            <Reveal delay={0.04}>
               <div
+                className="crx-card"
                 style={{
-                  background: 'rgba(25, 7, 10, 0.85)',
-                  border: '1px solid rgba(176, 141, 87, 0.4)',
-                  borderRadius: 18,
-                  padding: '24px',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                  background: 'var(--crx-card)',
+                  border: '1px solid var(--crx-hairline-accent)',
+                  borderRadius: 16,
+                  padding: 24,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -106,41 +108,41 @@ export default function RegistrationOptionsSection({ setPage }) {
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
-                      70+ COMPETITIONS
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{ fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--crx-gold)', fontWeight: 600 }}>
+                      70+ Competitions
                     </span>
-                    <span style={{ fontSize: 10, background: 'rgba(176,141,87,0.18)', color: 'var(--gold)', padding: '3px 10px', borderRadius: 10, fontWeight: 700 }}>
-                      All Courts
+                    <span style={{ fontSize: 11, background: 'rgba(212,175,106,0.1)', color: 'var(--crx-gold)', padding: '2px 8px', borderRadius: 6, fontWeight: 500 }}>
+                      All courts
                     </span>
                   </div>
-                  <h3 className="crx-display" style={{ fontSize: 24, color: '#fff', margin: '0 0 8px' }}>
+                  <h3 className="crx-display" style={{ fontSize: 24, color: 'var(--crx-text-primary)', margin: '0 0 8px', fontWeight: 400 }}>
                     EXPLORE EVENTS
                   </h3>
-                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
-                    Compete across Sports, Cultural, Dance, Music, Literary &amp; Fine Arts arenas.
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--crx-text-secondary)', lineHeight: 1.55 }}>
+                    Compete across Sports, Cultural, Dance, Music, Literary and Fine Arts arenas.
                   </p>
                 </div>
                 <button
                   className="crx-btn gold"
                   onClick={() => setPage('events')}
-                  style={{ width: '100%', justifyContent: 'center', padding: '12px 20px', fontSize: 13 }}
+                  style={{ width: '100%', justifyContent: 'center', minHeight: 44 }}
                 >
-                  EXPLORE EVENTS &rarr;
+                  Explore Events &rarr;
                 </button>
               </div>
             </Reveal>
 
             {/* Column 2: Basic Registration (BR) */}
-            <Reveal delay={0.1}>
+            <Reveal delay={0.08}>
               <div
+                className="crx-card"
                 style={{
-                  background: 'rgba(25, 7, 10, 0.85)',
-                  border: '1px solid rgba(176, 141, 87, 0.4)',
-                  borderRadius: 18,
-                  padding: '24px',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+                  background: 'var(--crx-card)',
+                  border: '1px solid var(--crx-hairline-accent)',
+                  borderRadius: 16,
+                  padding: 24,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -151,27 +153,27 @@ export default function RegistrationOptionsSection({ setPage }) {
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 700 }}>
-                      CONCERT &amp; PRONITES ONLY
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{ fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--crx-gold)', fontWeight: 600 }}>
+                      Concert &amp; Pronites Only
                     </span>
-                    <span style={{ fontSize: 10, background: 'rgba(176,141,87,0.18)', color: 'var(--gold)', padding: '3px 10px', borderRadius: 10, fontWeight: 700 }}>
-                      ₹2000 Fee
+                    <span style={{ fontSize: 11, background: 'rgba(212,175,106,0.1)', color: 'var(--crx-gold)', padding: '2px 8px', borderRadius: 6, fontWeight: 500 }}>
+                      ₹2,000 fee
                     </span>
                   </div>
-                  <h3 className="crx-display" style={{ fontSize: 24, color: '#fff', margin: '0 0 8px' }}>
+                  <h3 className="crx-display" style={{ fontSize: 24, color: 'var(--crx-text-primary)', margin: '0 0 8px', fontWeight: 400 }}>
                     BASIC REGISTRATION (BR)
                   </h3>
-                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--crx-text-secondary)', lineHeight: 1.55 }}>
                     Concert &amp; pronites only. Pay &amp; register for pronites without entering any competitive event.
                   </p>
                 </div>
                 <button
                   className="crx-btn gold"
                   onClick={handleBRClick}
-                  style={{ width: '100%', justifyContent: 'center', padding: '12px 20px', fontSize: 13 }}
+                  style={{ width: '100%', justifyContent: 'center', minHeight: 44 }}
                 >
-                  BASIC REGISTRATION (BR) &rarr;
+                  Basic Registration (BR) &rarr;
                 </button>
               </div>
             </Reveal>
@@ -192,40 +194,39 @@ export default function RegistrationOptionsSection({ setPage }) {
         <div
           style={{
             position: 'fixed',
-            bottom: 28,
-            right: 28,
+            bottom: 24,
+            right: 24,
             zIndex: 999999,
-            maxWidth: 380,
-            background: 'linear-gradient(135deg, #09171C 0%, #050E12 100%)',
-            border: '1px solid #00F0FF',
-            boxShadow: '0 16px 40px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.25)',
-            borderRadius: 14,
-            padding: '16px 20px',
+            maxWidth: 360,
+            background: 'var(--crx-card)',
+            border: '1px solid var(--crx-hairline-accent)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+            borderRadius: 12,
+            padding: '14px 18px',
             display: 'flex',
             alignItems: 'flex-start',
             gap: 12,
-            animation: 'fadeInUp 0.3s ease-out',
           }}
         >
           <div
             style={{
-              width: 28,
-              height: 28,
+              width: 24,
+              height: 24,
               borderRadius: '50%',
-              background: 'rgba(0, 240, 255, 0.18)',
+              background: 'rgba(212, 175, 106, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <CheckCircle2 size={16} color="#00F0FF" />
+            <CheckCircle2 size={15} color="var(--crx-gold)" />
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+            <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 600, color: 'var(--crx-text-primary)' }}>
               {toast.title}
             </p>
-            <p style={{ margin: 0, fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--crx-text-secondary)', lineHeight: 1.4 }}>
               {toast.text}
             </p>
           </div>
