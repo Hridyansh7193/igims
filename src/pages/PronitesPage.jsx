@@ -58,6 +58,28 @@ function NightCard({ n, i }) {
           {n.title}
         </h3>
         <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.7, margin: '0 0 16px' }}>{n.text}</p>
+        {n.lineup && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 16px' }}>
+            {n.lineup.map((item) => (
+              <span
+                key={item}
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  letterSpacing: 0.8,
+                  textTransform: 'uppercase',
+                  color: 'var(--paper)',
+                  background: 'rgba(220,38,38,0.10)',
+                  border: '1px solid rgba(220,38,38,0.35)',
+                  borderRadius: 999,
+                  padding: '5px 11px',
+                }}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--paper)' }}>
           <Calendar size={13} color="#DC2626" /> {n.date}
         </div>
@@ -172,8 +194,8 @@ export default function PronitesPage() {
             PRONITES
           </h1>
           <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 46, maxWidth: 560, lineHeight: 1.7 }}>
-            Three nights, one growing crescendo. Included with Basic Registration (BR) — final lineup drops
-            closer to December.
+            Three nights, one growing crescendo. Included with Basic Registration (BR) — artist names to be
+            announced.
           </p>
         </Reveal>
 

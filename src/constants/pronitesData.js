@@ -4,21 +4,24 @@ export const NIGHTS = [
     tag: 'Opening Night',
     date: 'December 18, 2026',
     title: 'The Gates Open',
-    text: 'The fest begins the way every good story should — loud. Cultural performances, a live band, and the first roar of the crowd.',
+    text: 'The fest begins the way every good story should — loud. A Bollywood singer takes the stage, and a DJ keeps the crowd going.',
+    lineup: ['Bollywood Singer', 'DJ'],
   },
   {
     key: 'star',
     tag: 'Star Night',
     date: 'December 19, 2026',
     title: 'The Marquee Evening',
-    text: 'The headline act of the fest. Playback, live music and the night the whole campus turns up for.',
+    text: 'The biggest evening of the fest. A Bollywood singer, a fashion show and a DJ set — the night the whole campus turns up for.',
+    lineup: ['Bollywood Singer', 'Fashion Show', 'DJ'],
   },
   {
     key: 'pro',
     tag: 'Pro Night',
     date: 'December 20, 2026',
     title: 'The Final Stretch',
-    text: 'Comedy, a DJ-led close, and the last few hours before Cerebrexia becomes next year\'s memory.',
+    text: 'One last Bollywood singer performance and a DJ-led close, before Cerebrexia becomes next year\'s memory.',
+    lineup: ['Bollywood Singer', 'DJ'],
   },
 ];
 
