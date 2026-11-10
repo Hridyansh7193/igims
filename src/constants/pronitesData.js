@@ -1,72 +1,43 @@
 export const NIGHTS = [
   {
-    key: 'opening',
-    tag: 'Opening Night',
+    key: 'day1',
+    day: '01',
+    tag: 'Day 1',
     date: 'December 18, 2026',
     title: 'The Gates Open',
-    text: 'The fest begins the way every good story should — loud. A Bollywood singer takes the stage, and a DJ keeps the crowd going.',
-    lineup: ['Bollywood Singer', 'DJ'],
+    badge: 'Opening Evening',
+    text: 'The fest begins the way every good story should — loud. A Bollywood singer sets the tone for Cerebrexia, and a DJ keeps the crowd moving long after the last song.',
+    lineup: [
+      { type: 'singer', label: 'Bollywood Singer', note: 'Live performance to open the fest' },
+      { type: 'dj', label: 'DJ', note: 'High-energy set to keep the night going' },
+    ],
   },
   {
-    key: 'star',
-    tag: 'Star Night',
+    key: 'day2',
+    day: '02',
+    tag: 'Day 2',
     date: 'December 19, 2026',
     title: 'The Marquee Evening',
-    text: 'The biggest evening of the fest. A Bollywood singer, a fashion show and a DJ set — the night the whole campus turns up for.',
-    lineup: ['Bollywood Singer', 'Fashion Show', 'DJ'],
+    badge: 'Biggest Night',
+    featured: true,
+    text: 'The biggest evening of the fest. A Bollywood singer, a fashion show and a DJ set — all in one night. This is the evening the whole campus turns up for.',
+    lineup: [
+      { type: 'singer', label: 'Bollywood Singer', note: 'Live performance, the crowd favourite' },
+      { type: 'fashion', label: 'Fashion Show', note: 'Runway showcase, only on Day 2' },
+      { type: 'dj', label: 'DJ', note: 'A DJ set to take the night home' },
+    ],
   },
   {
-    key: 'pro',
-    tag: 'Pro Night',
+    key: 'day3',
+    day: '03',
+    tag: 'Day 3',
     date: 'December 20, 2026',
     title: 'The Final Stretch',
-    text: 'One last Bollywood singer performance and a DJ-led close, before Cerebrexia becomes next year\'s memory.',
-    lineup: ['Bollywood Singer', 'DJ'],
+    badge: 'Closing Evening',
+    text: 'One last Bollywood singer performance and a DJ-led close, before Cerebrexia becomes next year\'s memory. Make the final night count.',
+    lineup: [
+      { type: 'singer', label: 'Bollywood Singer', note: 'The final live performance of the fest' },
+      { type: 'dj', label: 'DJ', note: 'The closing set of Cerebrexia \'26' },
+    ],
   },
 ];
-
-export const REWIND_ARTISTS = [
-  {
-    no: '01',
-    tag: 'Final-Night Headliner',
-    name: 'Headliner — TBA',
-    role: 'Playback Artist',
-    text: 'The marquee voice of Cerebrexia\'s final night — lineup to be confirmed closer to the date.',
-    img: 'concert',
-  },
-  {
-    no: '02',
-    tag: 'Live Music',
-    name: 'Live Act — TBA',
-    role: 'Playback Artist',
-    text: 'A playback-led set to extend the programme\'s run of live music and shared sing-along moments.',
-    img: 'bands',
-  },
-  {
-    no: '03',
-    tag: 'Comedy Stage',
-    name: 'Comedy Act — TBA',
-    role: 'Stand-Up Comedy',
-    text: 'A stand-up set to give the festival a sharper, lighter rhythm between its headline music nights.',
-    img: 'dance',
-  },
-  {
-    no: '04',
-    tag: 'Band Showcase',
-    name: 'Band — TBA',
-    role: 'Live Band',
-    text: 'A full-band performance to carry live-stage energy through the 2026 lineup.',
-    img: 'sports',
-  },
-  {
-    no: '05',
-    tag: 'After-Dark Set',
-    name: 'DJ — TBA',
-    role: 'DJ Set',
-    text: 'A DJ-led close built for the after-dark crowd and the final stretch of the celebration.',
-    img: 'concert',
-  },
-];
-
-// Note: last year's archive (photo count, confirmed acts) is not yet available —
-// the Rewind section below is shown as a sample layout, not verified history.
