@@ -59,6 +59,152 @@ export const EVENT_GUIDELINES = {
     ],
   },
 
+  'Paraclinical Quiz': {
+    blocks: [
+      { type: 'h', text: 'Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'Students of 2021, 2022 and 2023 batches are eligible to participate.',
+          'Follow @igimsfest and @medminds.hub on Instagram to be eligible to participate.',
+          'Each team can have a maximum of 2 members (intra/inter batch).',
+          'Lone wolves are also welcome.',
+          'No limit on no. of teams from any college.',
+        ],
+      },
+      { type: 'h', text: 'Registration Fee' },
+      { type: 'p', text: '50 rupees' },
+      { type: 'h', text: 'Pattern of Questions' },
+      {
+        type: 'p',
+        text: 'A variety of questions which will test your thinking, memory & understanding:',
+      },
+      {
+        type: 'ul',
+        items: ['MCQ', 'Connect Questions', 'Fill in the blanks', 'Image based', 'Match the following'],
+      },
+      { type: 'h', text: 'Prizes' },
+      { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
+      {
+        type: 'ul',
+        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+      },
+    ],
+  },
+
+  'Agora (Debate)': {
+    blocks: [
+      { type: 'h', text: 'Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'Students of 2024 and 2025 batches are eligible to participate.',
+          'Follow @igimsfest and @medminds.hub on Instagram to be eligible to participate.',
+          'Each team can have a maximum of 2 members (intra/inter batch).',
+          'Lone wolves are also welcome.',
+          'No limit on no. of teams from any college.',
+        ],
+      },
+      { type: 'h', text: 'Registration Fee' },
+      { type: 'p', text: '50 rupees' },
+      { type: 'h', text: 'Pattern of Questions' },
+      {
+        type: 'p',
+        text: 'A variety of questions which will test your thinking, memory & understanding:',
+      },
+      {
+        type: 'ul',
+        items: ['MCQ', 'Connect Questions', 'Fill in the blanks', 'Image based', 'Match the following'],
+      },
+      { type: 'h', text: 'Prizes' },
+      { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
+      {
+        type: 'ul',
+        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+      },
+    ],
+  },
+
+  'Spell Bee': {
+    blocks: [
+      { type: 'h', text: 'Registration' },
+      {
+        type: 'ul',
+        items: [
+          'Participants must register through the website or the QR code available on the Instagram handle @hridaya_cerebrexia. Registration dates will be announced soon.',
+          'Registration fee: \u20B950 per participant.',
+        ],
+      },
+      { type: 'h', text: 'Pronunciation & Clarity' },
+      {
+        type: 'ul',
+        items: ['Each participant must pronounce every letter of the given word clearly and audibly.'],
+      },
+      { type: 'h', text: 'Spelling Convention' },
+      {
+        type: 'ul',
+        items: [
+          'Only UK English spelling conventions will be accepted. Words spelt according to US English conventions will be considered incorrect.',
+        ],
+      },
+      { type: 'h', text: 'Double Letters' },
+      {
+        type: 'ul',
+        items: ['Consecutive identical letters in a word must be spelt separately and distinctly.'],
+      },
+      { type: 'h', text: 'Assistance from the Spell Master' },
+      {
+        type: 'ul',
+        items: ['Participants may request the Spell Master to repeat the word if needed.'],
+      },
+      { type: 'h', text: 'Additional Enquiries' },
+      {
+        type: 'ul',
+        items: [
+          'Participants may ask about the word\u2019s meaning, language of origin, part of speech, alternative pronunciations, and usage in a sentence.',
+        ],
+      },
+      { type: 'h', text: 'Time Limit' },
+      {
+        type: 'ul',
+        items: [
+          'After making all enquiries, participants will be given 30 seconds to spell the word.',
+          'Once spelling has begun, no restarts or self-corrections will be allowed.',
+        ],
+      },
+      { type: 'h', text: 'Competition Format' },
+      { type: 'ul', items: ['The competition will comprise a single offline round.'] },
+      { type: 'h', text: 'Decision Authority' },
+      {
+        type: 'ul',
+        items: ['In case of any dispute or ambiguity, the decision of the judges shall be final.'],
+      },
+      { type: 'h', text: 'The Grand Finale' },
+      {
+        type: 'ul',
+        items: [
+          'The Grand Finale of SpellBee will be held at the IGIMS campus.',
+          'Venue: To be announced',
+          'Date: To be announced',
+        ],
+      },
+      { type: 'h', text: 'Prizes' },
+      { type: 'p', text: 'Winners will receive medals & certificates! Along with these:' },
+      {
+        type: 'ul',
+        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+      },
+      {
+        type: 'p',
+        text: 'Follow us on Instagram at @igimsfest and @hridaya_cerebrexia to be eligible to participate.',
+      },
+      {
+        type: 'tag',
+        text: 'Don\u2019t miss the opportunity to become the SpellBee prodigy! Register now and get ready to shine!',
+      },
+    ],
+  },
+
   // Guidelines supplied as "TRAUMA CODE (BLS)" – shown on the Basic Life Support Workshop card.
   'Basic Life Support Workshop': {
     blocks: [

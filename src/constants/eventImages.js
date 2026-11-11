@@ -9,14 +9,22 @@ import preclinicalImg from '../assets/eventcards/preclinical-quiz.png';
 import paraclinicalImg from '../assets/eventcards/paraclinical-quiz.png';
 import clinicalImg from '../assets/eventcards/clinical-quiz.png';
 import caseImg from '../assets/eventcards/case-presentation.png';
+import agoraImg from '../assets/eventcards/agora.jpeg';
+import hridayaImg from '../assets/eventcards/hridaya.jpeg';
+import spellBeeImg from '../assets/eventcards/spell-bee.jpeg';
+import generalQuizImg from '../assets/eventcards/general-quiz.png';
 
 export const EVENT_IMAGES = {
-  'Basic Life Support Workshop': { src: blsImg, pos: 'center' },
-  'Suture Workshop': { src: sutureImg, pos: 'center' },
-  'Preclinical Quiz': { src: preclinicalImg, pos: 'center' },
-  'Paraclinical Quiz': { src: paraclinicalImg, pos: 'center' },
-  'Clinical Quiz': { src: clinicalImg, pos: 'center' },
-  'Case Presentation': { src: caseImg, pos: '30% center' },
+  'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
+  'Suture Workshop': { src: sutureImg, pos: '50% 50%' },
+  'Preclinical Quiz': { src: preclinicalImg, pos: '50% 50%' },
+  'Paraclinical Quiz': { src: paraclinicalImg, pos: '50% 50%' },
+  'Clinical Quiz': { src: clinicalImg, pos: '50% 50%' },
+  'Case Presentation': { src: caseImg, pos: '30% 50%' },
+  'Agora (Debate)': { src: agoraImg, pos: '50% 50%' },
+  'Hridaya (Poetry, Shayari & Elocution)': { src: hridayaImg, pos: '52% 50%' },
+  'Spell Bee': { src: spellBeeImg, pos: '50% 50%' },
+  'General Quiz': { src: generalQuizImg, pos: '50% 50%' },
 };
 
 const normalize = (name = '') =>
