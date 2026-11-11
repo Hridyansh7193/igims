@@ -5,11 +5,13 @@ import Sticker from '../components/common/Sticker';
 import RegistrationModal from '../components/common/RegistrationModal';
 import QuickRegisterModal from '../components/common/QuickRegisterModal';
 import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
+import GuidelinesModal from '../components/common/GuidelinesModal';
 import { CATEGORIES, TOTAL_EVENTS } from '../constants/eventsData';
+import { getEventGuidelines } from '../constants/eventGuidelines';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 import { useAuth } from '../context/AuthContext';
 import { fetchParticipantProfile, getRegisteredEvents, addRegisteredEvent } from '../lib/eventsService';
-import { CheckCircle2, Check, ArrowRight, Sparkles, Ticket } from 'lucide-react';
+import { CheckCircle2, Check, ArrowRight, Sparkles, Ticket, ScrollText } from 'lucide-react';
 
 export default function EventsPage({ setPage }) {
   const [activeCat, setActiveCat] = useState('all');
@@ -25,6 +27,7 @@ export default function EventsPage({ setPage }) {
   const [showQuickModal, setShowQuickModal] = useState(false);
   const [showFullModal, setShowFullModal] = useState(false);
   const [showBRModal, setShowBRModal] = useState(false);
+  const [guidelinesEvent, setGuidelinesEvent] = useState(null);
 
   // Notification Toast
   const [toast, setToast] = useState(null);
@@ -201,6 +204,16 @@ export default function EventsPage({ setPage }) {
         />
       )}
 
+      {/* Event Guidelines Modal */}
+      {guidelinesEvent && (
+        <GuidelinesModal
+          eventName={guidelinesEvent.name}
+          eventCat={guidelinesEvent.cat}
+          guidelines={getEventGuidelines(guidelinesEvent.name)}
+          onClose={() => setGuidelinesEvent(null)}
+        />
+      )}
+
       {/* Toast Notification */}
       {toast && typeof document !== 'undefined' && createPortal(
         <div
@@ -364,7 +377,7 @@ export default function EventsPage({ setPage }) {
           </div>
 
           {/* Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2,1fr)' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2,1fr)' : 'repeat(auto-fill,minmax(250px,1fr))', gap: 16 }}>
             {cards.map((ev, i) => {
               const isRegistered = registeredEvents.includes(ev.name);
 
@@ -373,7 +386,7 @@ export default function EventsPage({ setPage }) {
                   <div
                     className='crx-card'
                     style={{
-                      position: 'relative', height: 260, borderRadius: 14, overflow: 'hidden',
+                      position: 'relative', height: 300, borderRadius: 14, overflow: 'hidden',
                       background: cardGradients[i % cardGradients.length],
                       border: isRegistered ? '1px solid rgba(34,197,94,0.35)' : '1px solid rgba(255,255,255,0.08)',
                       boxShadow: isRegistered ? '0 8px 24px rgba(34,197,94,0.1)' : '0 8px 24px rgba(0,0,0,0.4)',
@@ -395,12 +408,35 @@ export default function EventsPage({ setPage }) {
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', background: 'linear-gradient(0deg, rgba(10,5,5,0.98) 0%, rgba(10,5,5,0.7) 60%, transparent 100%)' }}>
                       <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{ev.name}</p>
 
+                      <div style={{ display: 'flex', flexDirection: narrow ? 'column' : 'row', flexWrap: 'wrap', gap: 6 }}>
+                      <button
+                        onClick={() => setGuidelinesEvent(ev)}
+                        className='crx-btn'
+                        aria-label={`View guidelines for ${ev.name}`}
+                        style={{
+                          flex: narrow ? '1 1 auto' : '0 0 auto',
+                          justifyContent: 'center',
+                          fontSize: 10,
+                          padding: '8px 10px',
+                          gap: 4,
+                          letterSpacing: 0.5,
+                          whiteSpace: 'nowrap',
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.18)',
+                          color: 'var(--cream)',
+                        }}
+                      >
+                        <ScrollText size={12} /> GUIDELINES
+                      </button>
+
                       <button
                         onClick={() => handleCardClick(ev)}
                         disabled={loadingInitial}
                         className='crx-btn'
                         style={{
-                          width: '100%',
+                          flex: '1 1 130px',
+                          minWidth: 0,
+                          whiteSpace: 'nowrap',
                           justifyContent: 'center',
                           fontSize: 10.5,
                           padding: '8px 12px',
@@ -437,6 +473,7 @@ export default function EventsPage({ setPage }) {
                           'REGISTER'
                         )}
                       </button>
+                      </div>
                     </div>
                   </div>
                 </Reveal>

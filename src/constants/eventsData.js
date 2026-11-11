@@ -4,6 +4,7 @@ export const CATEGORIES = [
     label: 'Academic',
     events: [
       '🩺 Basic Life Support Workshop',
+      '🪡 Suture Workshop',
       '🧠 Cine-Seminar (Psychiatry Workshop)',
       '💬 Doc-Talk',
       '📝 Preclinical Quiz',
