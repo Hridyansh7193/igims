@@ -8,6 +8,7 @@ import BasicRegistrationModal from '../components/common/BasicRegistrationModal'
 import GuidelinesModal from '../components/common/GuidelinesModal';
 import { CATEGORIES, TOTAL_EVENTS } from '../constants/eventsData';
 import { getEventGuidelines } from '../constants/eventGuidelines';
+import { getEventImage } from '../constants/eventImages';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 import { useAuth } from '../context/AuthContext';
 import { fetchParticipantProfile, getRegisteredEvents, addRegisteredEvent } from '../lib/eventsService';
@@ -393,6 +394,16 @@ export default function EventsPage({ setPage }) {
                       display: 'flex', flexDirection: 'column',
                     }}
                   >
+                    {getEventImage(ev.name) && (
+                      <img
+                        src={getEventImage(ev.name).src}
+                        alt={ev.name}
+                        loading='lazy'
+                        decoding='async'
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: getEventImage(ev.name).pos }}
+                      />
+                    )}
+
                     <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 9, color: 'var(--muted)', fontFamily: 'monospace', letterSpacing: 1 }}>
                       N&ordm; {String(i + 1).padStart(2, '0')}/{cards.length}
                     </span>
