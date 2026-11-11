@@ -509,8 +509,8 @@ export const EVENT_GUIDELINES = {
     ],
   },
 
-  // Guidelines supplied as "NAZARIYA" \u2013 shown on the Lensanity (Photography) card.
-  'Lensanity (Photography)': {
+  // Guidelines supplied as "NAZARIYA" \u2013 shown on the Nazariya (Photography) card.
+  'Nazariya (Photography)': {
     blocks: [
       { type: 'h', text: 'Nazariya' },
       {

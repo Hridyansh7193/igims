@@ -429,6 +429,7 @@ export default function EventsPage({ setPage }) {
                         <ScrollText size={12} /> GUIDELINES
                       </button>
 
+                      {ev.key !== 'informal' && (
                       <button
                         onClick={() => handleCardClick(ev)}
                         disabled={loadingInitial}
@@ -473,6 +474,7 @@ export default function EventsPage({ setPage }) {
                           'REGISTER'
                         )}
                       </button>
+                      )}
                       </div>
                     </div>
                   </div>
