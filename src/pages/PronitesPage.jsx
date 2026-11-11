@@ -2,9 +2,15 @@ import React from 'react';
 import { Music, Mic2, Disc3, Calendar } from 'lucide-react';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
-import { NIGHTS } from '../constants/pronitesData';
+import { NIGHTS, REWIND_ARTISTS } from '../constants/pronitesData';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 
+import bandsImg from '../assets/events/bands.jpg';
+import concertImg from '../assets/events/concert.jpg';
+import danceImg from '../assets/events/dance.jpg';
+import sportsImg from '../assets/events/sports.jpg';
+
+const IMG_MAP = { bands: bandsImg, concert: concertImg, dance: danceImg, sports: sportsImg };
 const NIGHT_ICONS = { opening: Music, star: Mic2, pro: Disc3 };
 
 function NightCard({ n, i }) {
@@ -82,6 +88,98 @@ function NightCard({ n, i }) {
   );
 }
 
+function ArtistSpotlight({ a, i, narrow }) {
+  const reverse = i % 2 === 1;
+  return (
+    <Reveal delay={0.05}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: narrow ? '1fr' : reverse ? '1fr 1.1fr' : '1.1fr 1fr',
+          gap: 0,
+          alignItems: 'stretch',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          marginBottom: 20,
+          background: '#0A0505',
+        }}
+      >
+        <div
+          style={{
+            order: narrow ? 0 : reverse ? 2 : 1,
+            minHeight: 260,
+            backgroundImage: `url(${IMG_MAP[a.img]})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(10,5,5,0.15) 0%, rgba(10,5,5,0.55) 100%)',
+            }}
+          />
+        </div>
+        <div
+          style={{
+            order: narrow ? 1 : reverse ? 1 : 2,
+            padding: '32px 28px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <span
+            aria-hidden="true"
+            className="crx-display"
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 20,
+              fontSize: 64,
+              color: 'rgba(255,255,255,0.04)',
+              lineHeight: 1,
+            }}
+          >
+            {a.no}
+          </span>
+          <p
+            style={{
+              fontSize: 10.5,
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              fontWeight: 700,
+              margin: '0 0 8px',
+            }}
+          >
+            {a.tag}
+          </p>
+          <h3 className="crx-display" style={{ fontSize: 'clamp(24px,3vw,34px)', color: 'var(--cream)', margin: '0 0 4px' }}>
+            {a.name}
+          </h3>
+          <p
+            style={{
+              fontSize: 10.5,
+              letterSpacing: 1,
+              textTransform: 'uppercase',
+              color: 'var(--muted)',
+              margin: '0 0 14px',
+            }}
+          >
+            {a.role}
+          </p>
+          <p style={{ fontSize: 13.5, color: 'var(--paper)', lineHeight: 1.75, margin: 0, maxWidth: 420 }}>{a.text}</p>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
 export default function PronitesPage() {
   const narrow = useIsNarrow(760);
 
@@ -113,6 +211,25 @@ export default function PronitesPage() {
             <NightCard key={n.key} n={n} i={i} />
           ))}
         </div>
+
+        <Reveal>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 50, marginBottom: 36 }}>
+            <Sticker tone="gold" rotate={2} style={{ marginBottom: 16 }}>
+              Last Year at IGIMS
+            </Sticker>
+            <h2 className="crx-display" style={{ fontSize: 'clamp(28px,5vw,48px)', color: 'var(--cream)', margin: '0 0 10px' }}>
+              CEREBREXIA REWIND
+            </h2>
+            <p style={{ color: 'var(--muted)', fontSize: 13.5, marginBottom: 40, maxWidth: 620, lineHeight: 1.7 }}>
+              Sample layout for the previous edition's highlight reel — real archive photos and a confirmed lineup
+              will replace these placeholders once available.
+            </p>
+          </div>
+        </Reveal>
+
+        {REWIND_ARTISTS.map((a, i) => (
+          <ArtistSpotlight key={a.no} a={a} i={i} narrow={narrow} />
+        ))}
       </div>
     </section>
   );
