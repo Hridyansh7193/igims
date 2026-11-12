@@ -54,7 +54,7 @@ igims/
         ├── EventsPage.jsx           # Filterable category cards (Academic, Cultural, Sports, etc.)
         ├── TeamPage.jsx             # ID-badge style team cards
         ├── ContactPage.jsx          # Referral desk & contact form
-        └── DashboardPage.jsx        # Participant dashboard & QR pass
+        └── DashboardPage.jsx        # Participant dashboard & QR Basic Registration (BR)
 ```
 
 ## Running Locally

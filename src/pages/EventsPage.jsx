@@ -198,7 +198,7 @@ export default function EventsPage({ setPage }) {
             setShowBRModal(false);
             showToast(
               'Basic Registration Confirmed!',
-              'You are registered for the Concert & Pronites. Your single candidate ID is active.',
+              'You are registered for Pronites with Basic Registration (BR). Your single candidate ID is active.',
               'success'
             );
           }}

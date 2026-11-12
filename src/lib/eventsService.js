@@ -178,24 +178,45 @@ export async function fetchBasicRegistration(userId) {
 }
 
 /**
- * Register user for Basic Registration (BR - Concert & Pronites only).
+ * Register user for Basic Registration (BR - Pronites only).
+ * Supports Single & Group Registrations, Promo Codes, and Razorpay Checkout Metadata.
  * Ensures single participant record in `participants` and creates an entry in `basic_registrations`.
- * Does NOT register for any events.
  */
-export async function saveBasicRegistration(userId, email, formData) {
+export async function saveBasicRegistration(userId, email, formData, checkoutMeta = {}) {
   if (!userId) throw new Error('User authentication required.');
 
   // 1. First ensure single candidate profile in `participants` table
   const profile = await saveParticipantProfile(userId, email, formData);
   const participantId = profile?.id || null;
 
+  const registrationType  = checkoutMeta.registration_type || 'SINGLE';
+  const groupSize         = Number(checkoutMeta.group_size) || (registrationType === 'GROUP' ? (checkoutMeta.group_members?.length || 2) : 1);
+  const groupMembers      = checkoutMeta.group_members || [];
+  const promoCode         = checkoutMeta.promo_code || null;
+  const discountAmount    = Number(checkoutMeta.discount_amount) || 0;
+  const calculatedSubtotal= groupSize * 2000;
+  const finalAmount       = typeof checkoutMeta.final_amount === 'number'
+    ? checkoutMeta.final_amount
+    : Math.max(0, calculatedSubtotal - discountAmount);
+  const paymentStatus     = checkoutMeta.payment_status || 'PENDING';
+  const razorpayPaymentId = checkoutMeta.razorpay_payment_id || null;
+  const razorpayOrderId   = checkoutMeta.razorpay_order_id || null;
+
   const brRecord = {
-    user_id       : userId,
-    participant_id: participantId,
-    pass_type     : 'CONCERT_PRONITES',
-    fee_amount    : 2000,
-    payment_status: 'PENDING',
-    updated_at    : new Date().toISOString(),
+    user_id            : userId,
+    participant_id     : participantId,
+    pass_type          : 'CONCERT_PRONITES',
+    fee_amount         : finalAmount,
+    payment_status     : paymentStatus,
+    registration_type  : registrationType,
+    group_size         : groupSize,
+    group_members      : groupMembers,
+    promo_code         : promoCode,
+    discount_amount    : discountAmount,
+    final_amount       : finalAmount,
+    razorpay_payment_id: razorpayPaymentId,
+    razorpay_order_id  : razorpayOrderId,
+    updated_at         : new Date().toISOString(),
   };
 
   // Local storage cache
@@ -203,7 +224,7 @@ export async function saveBasicRegistration(userId, email, formData) {
     localStorage.setItem('crx_basic_reg_' + userId, JSON.stringify(brRecord));
   } catch (_) {}
 
-  // Update user_metadata
+  // Update user_metadata with rich registration record
   try {
     await supabase.auth.updateUser({
       data: { basic_registration: brRecord },
@@ -214,6 +235,7 @@ export async function saveBasicRegistration(userId, email, formData) {
 
   // Insert or update in `basic_registrations` table
   try {
+    // Attempt upsert with extended columns
     const { data, error } = await supabase
       .from('basic_registrations')
       .upsert(brRecord, { onConflict: 'user_id' })
@@ -226,6 +248,31 @@ export async function saveBasicRegistration(userId, email, formData) {
       }
       return { profile, basicRegistration: data };
     }
+
+    if (error) {
+      console.warn('[eventsService] Extended columns upsert notice, trying core columns fallback:', error.message);
+      // Fallback for database schema with core columns only
+      const coreRecord = {
+        user_id       : userId,
+        participant_id: participantId,
+        pass_type     : 'CONCERT_PRONITES',
+        fee_amount    : finalAmount,
+        payment_status: paymentStatus,
+        updated_at    : new Date().toISOString(),
+      };
+      const { data: coreData } = await supabase
+        .from('basic_registrations')
+        .upsert(coreRecord, { onConflict: 'user_id' })
+        .select()
+        .maybeSingle();
+
+      if (coreData) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: { ...brRecord, ...coreData } } }));
+        }
+        return { profile, basicRegistration: { ...brRecord, ...coreData } };
+      }
+    }
   } catch (err) {
     console.warn('[eventsService] saveBasicRegistration db error:', err);
   }
@@ -235,6 +282,48 @@ export async function saveBasicRegistration(userId, email, formData) {
   }
 
   return { profile, basicRegistration: brRecord };
+}
+
+/**
+ * Updates payment status to PAID for Basic Registration after successful checkout
+ */
+export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
+  if (!userId) return null;
+  const paymentId = paymentDetails.razorpay_payment_id || `pay_${Date.now()}`;
+  const orderId = paymentDetails.razorpay_order_id || null;
+
+  try {
+    const local = localStorage.getItem('crx_basic_reg_' + userId);
+    if (local) {
+      const parsed = JSON.parse(local);
+      parsed.payment_status = 'PAID';
+      parsed.razorpay_payment_id = paymentId;
+      if (orderId) parsed.razorpay_order_id = orderId;
+      localStorage.setItem('crx_basic_reg_' + userId, JSON.stringify(parsed));
+    }
+  } catch (_) {}
+
+  try {
+    await supabase.from('basic_registrations')
+      .update({
+        payment_status: 'PAID',
+        razorpay_payment_id: paymentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+  } catch (err) {
+    console.warn('[eventsService] markBasicRegistrationPaid db notice:', err);
+  }
+
+  try {
+    await supabase.from('participants')
+      .update({ payment_status: 'PAID', updated_at: new Date().toISOString() })
+      .eq('user_id', userId);
+  } catch (_) {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { paid: true, paymentId } }));
+  }
 }
 
 /**

@@ -32,7 +32,7 @@ export const DAY_LINEUP = [
     name: 'Bollywood Singer + DJ',
     role: 'December 18, 2026',
     text: 'The fest opens with a Bollywood singer live on stage, followed by a DJ set that keeps the crowd moving long into the night.',
-    img: 'concert',
+    img: 'pronite',
   },
   {
     no: '02',

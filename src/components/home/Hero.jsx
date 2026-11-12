@@ -73,7 +73,7 @@ export default function Hero({ setPage, revealTitle = true }) {
             <source src="/events-bg.mp4" type="video/mp4" />
           </video>
 
-          {/* Authentic Concert Atmosphere Vignette (Clean edge transitions, no artificial scanlines) */}
+          {/* Authentic Pronite Atmosphere Vignette (Clean edge transitions, no artificial scanlines) */}
           <div
             style={{
               position: 'absolute',

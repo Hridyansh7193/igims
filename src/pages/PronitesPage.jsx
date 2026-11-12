@@ -9,7 +9,7 @@ import bandsImg from '../assets/events/bands.jpg';
 import concertImg from '../assets/events/concert.jpg';
 import danceImg from '../assets/events/dance.jpg';
 
-const IMG_MAP = { bands: bandsImg, concert: concertImg, dance: danceImg };
+const IMG_MAP = { bands: bandsImg, pronite: concertImg, dance: danceImg };
 const NIGHT_ICONS = { opening: Music, star: Mic2, pro: Disc3 };
 
 function NightCard({ n, i }) {
