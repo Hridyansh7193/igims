@@ -33,7 +33,7 @@ import {
   fetchParticipantProfile,
   markBasicRegistrationPaid,
 } from '../../lib/eventsService';
-import { validatePromoCode } from '../../constants/promoCodes';
+import { validatePromoCode, DEFAULT_PROMO_CODE, calculateGroupTierDiscount } from '../../constants/promoCodes';
 import { openRazorpayCheckout } from '../../lib/razorpay';
 
 const REG_PRICE_PER_PERSON = 2000;
@@ -83,6 +83,7 @@ export default function BasicRegistrationModal({
   // Promo Code State
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoManuallyRemoved, setPromoManuallyRemoved] = useState(false);
   const [promoMessage, setPromoMessage] = useState(null);
   const [promoError, setPromoError] = useState(null);
 
@@ -137,11 +138,24 @@ export default function BasicRegistrationModal({
     }
   }, [groupSize, activeMemberTab]);
 
-  // Re-validate applied promo if groupSize changes
+  // Auto-apply or re-validate promo code when groupSize or regType changes
   useEffect(() => {
+    const count = regType === 'GROUP' ? groupSize : 1;
+    const subtotal = count * REG_PRICE_PER_PERSON;
+
+    // Auto-apply default promo code when a group of 10+ members is active
+    if (regType === 'GROUP' && count >= 10 && !promoManuallyRemoved && !appliedPromo) {
+      const res = validatePromoCode(DEFAULT_PROMO_CODE, { groupSize: count, subtotal });
+      if (res.valid) {
+        setAppliedPromo(res.promo);
+        setPromoMessage(res.message);
+        setPromoError(null);
+        return;
+      }
+    }
+
+    // Re-validate applied promo if already active
     if (appliedPromo) {
-      const count = regType === 'GROUP' ? groupSize : 1;
-      const subtotal = count * REG_PRICE_PER_PERSON;
       const res = validatePromoCode(appliedPromo.code, { groupSize: count, subtotal });
       if (res.valid) {
         setAppliedPromo(res.promo);
@@ -149,10 +163,12 @@ export default function BasicRegistrationModal({
       } else {
         setAppliedPromo(null);
         setPromoMessage(null);
-        setPromoError(res.message);
+        if (promoManuallyRemoved) {
+          setPromoError(res.message);
+        }
       }
     }
-  }, [groupSize, regType]);
+  }, [groupSize, regType, promoManuallyRemoved]);
 
   // Check if user already has an active Basic Registration
   useEffect(() => {
@@ -264,8 +280,13 @@ export default function BasicRegistrationModal({
   const subtotal = memberCount * REG_PRICE_PER_PERSON;
 
   let discountAmount = 0;
+  let freeMembersCount = 0;
   if (appliedPromo) {
-    if (appliedPromo.type === 'percent') {
+    if (appliedPromo.type === 'group_tier') {
+      const tier = calculateGroupTierDiscount(memberCount, REG_PRICE_PER_PERSON);
+      freeMembersCount = tier.freeMembers;
+      discountAmount = tier.discount;
+    } else if (appliedPromo.type === 'percent') {
       discountAmount = Math.round((subtotal * appliedPromo.value) / 100);
     } else if (appliedPromo.type === 'flat') {
       discountAmount = Math.min(subtotal, appliedPromo.value);
@@ -278,17 +299,15 @@ export default function BasicRegistrationModal({
     e.preventDefault();
     setPromoError(null);
     setPromoMessage(null);
+    setPromoManuallyRemoved(false);
 
-    if (!promoInput.trim()) {
-      setPromoError('Please enter a promo code.');
-      return;
-    }
-
-    const res = validatePromoCode(promoInput, { groupSize: memberCount, subtotal });
+    const codeToValidate = promoInput.trim() || DEFAULT_PROMO_CODE;
+    const res = validatePromoCode(codeToValidate, { groupSize: memberCount, subtotal });
     if (res.valid) {
       setAppliedPromo(res.promo);
       setPromoMessage(res.message);
       setPromoError(null);
+      setPromoInput('');
     } else {
       setAppliedPromo(null);
       setPromoError(res.message);
@@ -298,6 +317,7 @@ export default function BasicRegistrationModal({
 
   const handleRemovePromo = () => {
     setAppliedPromo(null);
+    setPromoManuallyRemoved(true);
     setPromoInput('');
     setPromoMessage(null);
     setPromoError(null);
@@ -662,7 +682,7 @@ export default function BasicRegistrationModal({
           </h2>
 
           <p style={{ color: 'var(--crx-text-secondary, #a1a1aa)', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-            Full access to celebrity pronites and EDM nights. Select single or group Basic Registration (BR) (up to 50 people) with rush deal discounts.
+            Full access to celebrity pronites and EDM nights. Select single or group Basic Registration (BR) (up to 50 people) with default group discounts.
           </p>
         </div>
 
@@ -1642,15 +1662,15 @@ export default function BasicRegistrationModal({
               marginBottom: 18,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Tag size={15} color="var(--crx-gold, #D4AF37)" />
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Promo Code / Rush Deal
+                  Promo Code / Group Deal
                 </span>
               </div>
               <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
-                Try: RUSH20, DELEGATION, MEGA50
+                Default Offer: <strong style={{ color: 'var(--crx-gold, #D4AF37)' }}>{DEFAULT_PROMO_CODE}</strong> (10–19: 1 Free • 20+: 2 Free)
               </span>
             </div>
 
@@ -1673,7 +1693,8 @@ export default function BasicRegistrationModal({
                       {appliedPromo.code} Applied
                     </span>
                     <span style={{ fontSize: 11.5, color: '#fff', marginLeft: 8 }}>
-                      (-₹{discountAmount.toLocaleString('en-IN')})
+                      (-₹{discountAmount.toLocaleString('en-IN')}
+                      {freeMembersCount > 0 ? ` • ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''}` : ''})
                     </span>
                   </div>
                 </div>
@@ -1701,7 +1722,7 @@ export default function BasicRegistrationModal({
                     type="text"
                     value={promoInput}
                     onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
-                    placeholder="ENTER PROMO CODE"
+                    placeholder={`ENTER PROMO CODE (e.g. ${DEFAULT_PROMO_CODE})`}
                     style={{
                       ...inp,
                       paddingLeft: 34,
@@ -1759,7 +1780,10 @@ export default function BasicRegistrationModal({
 
             {discountAmount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#22c55e', marginBottom: 6 }}>
-                <span>Promo Discount ({appliedPromo?.code})</span>
+                <span>
+                  Promo Discount ({appliedPromo?.code}
+                  {freeMembersCount > 0 ? ` • ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''}` : ''})
+                </span>
                 <span style={{ fontWeight: 600 }}>-₹{discountAmount.toLocaleString('en-IN')}</span>
               </div>
             )}
@@ -1769,7 +1793,7 @@ export default function BasicRegistrationModal({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--crx-gold, #D4AF37)', display: 'block', fontWeight: 700 }}>
-                  Total Final Amount
+                  Total Final Amount {freeMembersCount > 0 && `(Pay for ${memberCount - freeMembersCount} of ${memberCount})`}
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
                   Includes {memberCount} official wristbands &amp; pronite admission
@@ -1884,7 +1908,8 @@ export default function BasicRegistrationModal({
               </h3>
               <p style={{ fontSize: 12.5, color: 'var(--crx-text-secondary, #a1a1aa)', margin: '0 0 16px', lineHeight: 1.5 }}>
                 Prompting checkout for <strong>{regType === 'GROUP' ? `Group Basic Registration (BR) for ${groupSize} People` : 'Single Basic Registration (BR)'}</strong>.
-                Total amount: <strong style={{ color: '#fff' }}>₹{finalPayable.toLocaleString('en-IN')}</strong>.
+                Total amount: <strong style={{ color: '#fff' }}>₹{finalPayable.toLocaleString('en-IN')}</strong>
+                {freeMembersCount > 0 ? ` (Paying for ${memberCount - freeMembersCount}, ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''})` : ''}.
               </p>
 
               {/* Supported payment badges */}

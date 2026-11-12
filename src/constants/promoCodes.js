@@ -1,118 +1,85 @@
 /**
- * Official Cerebrexia '26 Promo & Rush Deal Codes
- * Configured for Sales, Early Birds, Group Discounts & Flash Deals.
+ * Official Cerebrexia '26 Default Group Promo Code
+ * Group Offer:
+ * - 10 to 19 members: 1 Member Free (pay for N-1)
+ * - 20 to 29 members: 2 Members Free (pay for N-2)
+ * - Scales by 1 free member per 10 people (e.g., 30 = 3 free, 50 = 5 free)
  */
 
+export const DEFAULT_PROMO_CODE = 'CEREBREXIA26';
+export const PRICE_PER_REGISTRATION = 2000;
+
+/**
+ * Calculates free member registrations and discount amount based on group size
+ * @param {number} groupSize - Total number of people in group
+ * @param {number} pricePerPerson - Cost per individual registration (₹2,000)
+ * @returns {{ freeMembers: number, discount: number, payableMembers: number }}
+ */
+export function calculateGroupTierDiscount(groupSize = 1, pricePerPerson = PRICE_PER_REGISTRATION) {
+  const count = Number(groupSize) || 0;
+  if (count < 10) {
+    return { freeMembers: 0, discount: 0, payableMembers: count };
+  }
+
+  // 1 free member for every full group of 10 (10 -> 1 free, 15 -> 1 free, 20 -> 2 free, etc.)
+  const freeMembers = Math.floor(count / 10);
+  const discount = freeMembers * pricePerPerson;
+  const payableMembers = Math.max(0, count - freeMembers);
+
+  return { freeMembers, discount, payableMembers };
+}
+
 export const PROMO_CODES = {
-  RUSH20: {
-    code: 'RUSH20',
-    type: 'percent',
-    value: 20,
-    label: '20% Rush Deal Discount',
-    description: 'Limited-time rush deal discount on total checkout',
-    minMembers: 1,
-  },
-  RUSH30: {
-    code: 'RUSH30',
-    type: 'percent',
-    value: 30,
-    label: '30% Flash Rush Discount',
-    description: 'Exclusive 30% off flash rush deal',
-    minMembers: 1,
-  },
-  RUSH50: {
-    code: 'RUSH50',
-    type: 'percent',
-    value: 50,
-    label: '50% Mega Rush Deal',
-    description: 'Special 50% flash discount',
-    minMembers: 1,
-  },
-  IGIMS50: {
-    code: 'IGIMS50',
-    type: 'percent',
-    value: 50,
-    label: '50% IGIMS Host College Deal',
-    description: 'Special 50% discount for IGIMS students and delegates',
-    minMembers: 1,
-  },
-  EARLYBIRD: {
-    code: 'EARLYBIRD',
-    type: 'percent',
-    value: 15,
-    label: '15% Early Bird Discount',
-    description: 'Early bird registration savings',
-    minMembers: 1,
-  },
-  CEREBREXIA: {
-    code: 'CEREBREXIA',
-    type: 'percent',
-    value: 10,
-    label: '10% Festival Celebration Code',
-    description: 'Official Cerebrexia fest discount',
-    minMembers: 1,
-  },
-  GROUP500: {
-    code: 'GROUP500',
-    type: 'flat',
-    value: 500,
-    label: '₹500 Group Basic Registration (BR) Saver',
-    description: 'Flat ₹500 discount for groups of 2 or more',
-    minMembers: 2,
-  },
-  GROUP1000: {
-    code: 'GROUP1000',
-    type: 'flat',
-    value: 1000,
-    label: '₹1,000 Squad Rush Discount',
-    description: 'Flat ₹1,000 off for squads of 4 or more',
-    minMembers: 4,
-  },
-  DELEGATION: {
-    code: 'DELEGATION',
-    type: 'flat',
-    value: 2500,
-    label: '₹2,500 College Delegation Saver',
-    description: 'Special ₹2,500 off for college groups of 10 or more',
+  CEREBREXIA26: {
+    code: 'CEREBREXIA26',
+    type: 'group_tier',
+    label: "Cerebrexia '26 Default Group Offer",
+    description: '10–19 members: 1 Free • 20–29 members: 2 Free • 1 Free per 10 members',
     minMembers: 10,
   },
-  MEGA50: {
-    code: 'MEGA50',
-    type: 'percent',
-    value: 35,
-    label: '35% Mega Delegation Basic Registration (BR)',
-    description: 'Exclusive 35% discount for delegations of 20+ members',
-    minMembers: 20,
+  // Aliases for convenience
+  CEREBREXIA: {
+    code: 'CEREBREXIA26',
+    type: 'group_tier',
+    label: "Cerebrexia '26 Default Group Offer",
+    description: '10–19 members: 1 Free • 20–29 members: 2 Free • 1 Free per 10 members',
+    minMembers: 10,
   },
-  FESTIVAL: {
-    code: 'FESTIVAL',
-    type: 'flat',
-    value: 300,
-    label: '₹300 Fest Voucher',
-    description: 'Flat ₹300 off on total checkout',
-    minMembers: 1,
+  CRX26: {
+    code: 'CEREBREXIA26',
+    type: 'group_tier',
+    label: "Cerebrexia '26 Default Group Offer",
+    description: '10–19 members: 1 Free • 20–29 members: 2 Free • 1 Free per 10 members',
+    minMembers: 10,
   },
-  VIP100: {
-    code: 'VIP100',
-    type: 'percent',
-    value: 100,
-    label: '100% Complimentary VIP Basic Registration (BR)',
-    description: 'Official Organizing Committee / VIP complimentary Basic Registration (BR)',
-    minMembers: 1,
+  GROUPDEAL: {
+    code: 'CEREBREXIA26',
+    type: 'group_tier',
+    label: "Cerebrexia '26 Default Group Offer",
+    description: '10–19 members: 1 Free • 20–29 members: 2 Free • 1 Free per 10 members',
+    minMembers: 10,
+  },
+  DEFAULT: {
+    code: 'CEREBREXIA26',
+    type: 'group_tier',
+    label: "Cerebrexia '26 Default Group Offer",
+    description: '10–19 members: 1 Free • 20–29 members: 2 Free • 1 Free per 10 members',
+    minMembers: 10,
   },
 };
 
 /**
- * Validates a promo code string against current checkout parameters
+ * Validates promo code input against group size and subtotal
  * @param {string} inputCode - Code entered by user
  * @param {object} params - { groupSize, subtotal }
- * @returns {object} { valid: boolean, discount: number, finalTotal: number, message: string, promo: object|null }
+ * @returns {object} { valid: boolean, discount: number, freeMembers: number, finalTotal: number, message: string, promo: object|null }
  */
 export function validatePromoCode(inputCode, { groupSize = 1, subtotal = 2000 }) {
   if (!inputCode || typeof inputCode !== 'string') {
     return {
       valid: false,
       discount: 0,
+      freeMembers: 0,
       finalTotal: subtotal,
       message: 'Please enter a valid promo code.',
       promo: null,
@@ -126,22 +93,39 @@ export function validatePromoCode(inputCode, { groupSize = 1, subtotal = 2000 })
     return {
       valid: false,
       discount: 0,
+      freeMembers: 0,
       finalTotal: subtotal,
-      message: `Code "${clean}" is not recognized or has expired.`,
+      message: `Code "${clean}" is not recognized. Use "${DEFAULT_PROMO_CODE}" for default group savings.`,
       promo: null,
     };
   }
 
-  if (promo.minMembers && groupSize < promo.minMembers) {
+  if (promo.type === 'group_tier') {
+    if (groupSize < 10) {
+      return {
+        valid: false,
+        discount: 0,
+        freeMembers: 0,
+        finalTotal: subtotal,
+        message: `Code "${clean}" requires a minimum of 10 group members (current: ${groupSize}). Add 10+ members to get 1 free registration!`,
+        promo: null,
+      };
+    }
+
+    const { freeMembers, discount, payableMembers } = calculateGroupTierDiscount(groupSize, PRICE_PER_REGISTRATION);
+    const finalTotal = Math.max(0, subtotal - discount);
+
     return {
-      valid: false,
-      discount: 0,
-      finalTotal: subtotal,
-      message: `Code "${clean}" requires a minimum of ${promo.minMembers} group members (current: ${groupSize}).`,
-      promo: null,
+      valid: true,
+      discount,
+      freeMembers,
+      finalTotal,
+      message: `${promo.label} Applied: ${freeMembers} Free Member${freeMembers > 1 ? 's' : ''}! Paying for ${payableMembers} of ${groupSize} members (Saved ₹${discount.toLocaleString('en-IN')}).`,
+      promo,
     };
   }
 
+  // Fallback for percent/flat if ever extended in future
   let discount = 0;
   if (promo.type === 'percent') {
     discount = Math.round((subtotal * promo.value) / 100);
@@ -154,9 +138,9 @@ export function validatePromoCode(inputCode, { groupSize = 1, subtotal = 2000 })
   return {
     valid: true,
     discount,
+    freeMembers: 0,
     finalTotal,
     message: `${promo.label} applied successfully!`,
     promo,
   };
 }
-
