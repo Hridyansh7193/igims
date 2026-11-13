@@ -54,7 +54,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
       {
         type: 'ul',
-        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+        items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'],
       },
     ],
   },
@@ -87,7 +87,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
       {
         type: 'ul',
-        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+        items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'],
       },
     ],
   },
@@ -120,7 +120,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
       {
         type: 'ul',
-        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+        items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'],
       },
     ],
   },
@@ -192,7 +192,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Winners will receive medals & certificates! Along with these:' },
       {
         type: 'ul',
-        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+        items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'],
       },
       {
         type: 'p',
@@ -423,7 +423,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Medals, certificates, and amazing cash prizes for:' },
       { type: 'ul', items: ['Solo: Top 3 performances', 'Group: 1 best performance'] },
       { type: 'p', text: 'Along with these:' },
-      { type: 'ul', items: ['1st Place: One Delegate pass', '2nd Place: 50% off on one Delegate pass'] },
+      { type: 'ul', items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'] },
       { type: 'h', text: 'Important Dates' },
       {
         type: 'ul',
@@ -487,7 +487,7 @@ export const EVENT_GUIDELINES = {
       },
       { type: 'h', text: 'Prizes' },
       { type: 'p', text: 'Medals, certificates and amazing cash prizes for all three winners! Along with these:' },
-      { type: 'ul', items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'] },
+      { type: 'ul', items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'] },
       { type: 'h', text: 'Important Dates' },
       { type: 'ul', items: ['Online Entries Open Till: 10 December', 'Final Round: 17 December'] },
       { type: 'h', text: 'Contact Us' },
@@ -554,7 +554,7 @@ export const EVENT_GUIDELINES = {
       },
       { type: 'h', text: 'Prizes' },
       { type: 'p', text: 'Medals, certificates and amazing cash prizes for all three winners! Along with these:' },
-      { type: 'ul', items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'] },
+      { type: 'ul', items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'] },
       { type: 'h', text: 'Contact' },
       {
         type: 'ul',
@@ -718,7 +718,7 @@ export const EVENT_GUIDELINES = {
       },
       { type: 'h', text: 'Prizes' },
       { type: 'p', text: 'Medals, certificates, and amazing cash prizes for all three winners! Along with these:' },
-      { type: 'ul', items: ['1st Place: One free Delegate Pass', '2nd Place: 50% off on one Delegate Pass'] },
+      { type: 'ul', items: ['1st Place: One free Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'] },
       { type: 'h', text: 'Contact' },
       {
         type: 'ul',
@@ -932,7 +932,7 @@ export const EVENT_GUIDELINES = {
       {
         type: 'ul',
         items: [
-          'Winner: One Delegate Pass for CEREBREXIA 2025.',
+          'Winner: Basic Registration (BR) for CEREBREXIA 2026.',
           'Top 3 Winners: Exciting cash prizes and digital certificates.',
         ],
       },
@@ -1000,7 +1000,7 @@ export const EVENT_GUIDELINES = {
       {
         type: 'ul',
         items: [
-          'A DELEGATE pass for the overall winner.',
+          'Basic Registration (BR) for the overall winner.',
           'Cash prize for the overall winner.',
           'Cash prizes for winners in each category.',
         ],

@@ -74,8 +74,7 @@ export function AuthProvider({ children }) {
   // ── Auth Methods ───────────────────────────────────────────────────────────
 
   const getRedirectUrl = useCallback(() => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isLocalhost ? window.location.origin : 'https://igims-sand.vercel.app';
+    return typeof window !== 'undefined' ? window.location.origin : '';
   }, []);
 
   const signUpWithEmail = useCallback(async (email, password) => {

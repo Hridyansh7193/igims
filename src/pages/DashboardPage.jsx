@@ -473,11 +473,11 @@ export default function DashboardPage({ setPage }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <Ticket size={18} color="#00F0FF" />
                     <h3 className="crx-display" style={{ fontSize: 19, color: '#fff', margin: 0 }}>
-                      BASIC REGISTRATION (BR) — CONCERT &amp; PRONITES
+                      BASIC REGISTRATION (BR) — PRONITES
                     </h3>
                   </div>
                   <p style={{ color: 'var(--muted)', fontSize: 12.5, margin: '0 0 6px', maxWidth: 620, lineHeight: 1.5 }}>
-                    Concert registration database entry. Grants full admission to celebrity musical concerts and star pronites without entering any competitive events.
+                    Pronites registration database entry. Grants full admission to star celebrity pronites and EDM nights without entering any competitive events.
                   </p>
                   <span style={{ fontSize: 11, color: '#00F0FF', fontWeight: 600 }}>
                     Table: <code style={{ color: '#fff' }}>public.basic_registrations</code> &bull; Ref ID: {candidateId}
@@ -501,7 +501,7 @@ export default function DashboardPage({ setPage }) {
                         gap: 6,
                       }}
                     >
-                      <CheckCircle2 size={13} /> BR ACTIVE
+                      <CheckCircle2 size={13} /> {basicReg.registration_type === 'GROUP' ? `BR ACTIVE (${basicReg.group_size || 2} MEMBERS)` : 'BR ACTIVE'}
                     </span>
                     <button
                       onClick={() => setShowBRModal(true)}
@@ -524,7 +524,7 @@ export default function DashboardPage({ setPage }) {
                     className="crx-btn gold"
                     style={{ fontSize: 11.5, gap: 6, padding: '10px 18px' }}
                   >
-                    <Ticket size={14} /> CLAIM BASIC REGISTRATION (BR) — ₹2000
+                    <Ticket size={14} /> CLAIM BASIC REGISTRATION (BR)
                   </button>
                 )}
               </div>
@@ -721,7 +721,7 @@ export default function DashboardPage({ setPage }) {
             <ShieldCheck size={40} color="rgba(220,38,38,0.3)" style={{ margin: '0 auto 16px' }} />
             <h3 style={{ color: 'var(--cream)', fontSize: 18, marginBottom: 8 }}>No Registration Found</h3>
             <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>
-              You haven't registered your details yet. You can complete Basic Registration for the concert or browse 70+ competitive events.
+              You haven't registered your details yet. You can complete Basic Registration (BR) for pronites or browse 70+ competitive events.
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button

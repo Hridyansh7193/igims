@@ -19,11 +19,15 @@ export default function RegistrationOptionsSection({ setPage }) {
     setShowBRModal(true);
   };
 
-  const handleBRSuccess = () => {
+  const handleBRSuccess = (profile, basicReg) => {
     setShowBRModal(false);
+    const isGroup = basicReg?.registration_type === 'GROUP';
+    const count = basicReg?.group_size || 1;
     setToast({
-      title: 'Basic Registration Confirmed!',
-      text: 'Concert & Pronites registration (BR) secured. You are registered under your single candidate ID.',
+      title: 'Registration Confirmed!',
+      text: isGroup
+        ? `Group Basic Registration (BR) for ${count} members secured. All members registered.`
+        : 'Pronites Basic Registration (BR) secured successfully.',
     });
     setTimeout(() => setToast(null), 4500);
     if (setPage) {
@@ -71,7 +75,7 @@ export default function RegistrationOptionsSection({ setPage }) {
                   fontFamily: "'Space Grotesk', sans-serif",
                 }}
               >
-                Compete across 70+ sports and cultural events, or secure access to the headline concert and pronites with Basic Registration (BR).
+                Compete across 70+ sports and cultural events, or secure access to star pronites with Basic Registration (BR).
               </p>
             </div>
           </Reveal>
@@ -155,17 +159,17 @@ export default function RegistrationOptionsSection({ setPage }) {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--crx-gold)', fontWeight: 600 }}>
-                      Concert &amp; Pronites Only
+                      Pronites Only
                     </span>
-                    <span style={{ fontSize: 11, background: 'rgba(212,175,106,0.1)', color: 'var(--crx-gold)', padding: '2px 8px', borderRadius: 6, fontWeight: 500 }}>
-                      ₹2,000 fee
+                    <span style={{ fontSize: 11, background: 'rgba(212,175,106,0.12)', color: 'var(--crx-gold)', padding: '2px 8px', borderRadius: 6, fontWeight: 600, border: '1px solid rgba(212,175,106,0.25)' }}>
+                      Single &amp; Group Basic Registration (BR)
                     </span>
                   </div>
                   <h3 className="crx-display" style={{ fontSize: 24, color: 'var(--crx-text-primary)', margin: '0 0 8px', fontWeight: 400 }}>
                     BASIC REGISTRATION (BR)
                   </h3>
                   <p style={{ margin: 0, fontSize: 13, color: 'var(--crx-text-secondary)', lineHeight: 1.55 }}>
-                    Concert &amp; pronites only. Pay &amp; register for pronites without entering any competitive event.
+                    Pronites only. Register individually or as a group with default 9+1 group savings (1 free per 10 people) at checkout.
                   </p>
                 </div>
                 <button

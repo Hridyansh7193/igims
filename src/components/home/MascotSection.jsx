@@ -124,7 +124,7 @@ export default function MascotSection() {
               THE CROWNED INTELLECT
             </h3>
             <p style={{ fontSize: 'clamp(14px, 2vw, 15.5px)', color: 'var(--paper)', lineHeight: 1.85, margin: 0 }}>
-              Part diagnosis, part decree. The Crowned Intellect presides over Cerebrexia the way a senior clinician reads a chart — missing nothing, rushing nothing. Every category, from the debate floor to the football pitch, passes under its watch. Step into any of the {TOTAL_EVENTS}+ events and you step into its court.
+              Part diagnosis, part decree. The Crowned Intellect presides over Cerebrexia the way a senior clinician reads a chart — missing nothing, rushing nothing. Every category, from the debate floor to the football pitch, unfolds under its watch. Step into any of the {TOTAL_EVENTS}+ events and you step into its court.
             </p>
           </div>
         </Reveal>

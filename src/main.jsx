@@ -2,13 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 
-// Route visitors on Vercel preview deployments to the official production URL
+// Route visitors on Vercel deployments to the official custom domain
 if (
   typeof window !== 'undefined' &&
-  window.location.hostname.endsWith('vercel.app') &&
-  window.location.hostname !== 'igims-sand.vercel.app'
+  window.location.hostname.endsWith('vercel.app')
 ) {
-  window.location.replace(`https://igims-sand.vercel.app${window.location.pathname}${window.location.search}${window.location.hash}`);
+  window.location.replace(`https://www.cerebrexiaigims.com${window.location.pathname}${window.location.search}${window.location.hash}`);
 }
 
 // Always start at the top on page load / refresh

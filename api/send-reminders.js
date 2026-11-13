@@ -93,7 +93,7 @@ export default async function handler(req, res) {
           subject: `⏰ Cerebrexia '26 — Complete Your Registration, ${safeName}!`,
           html: `
             <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0505;color:#f5f0e8;border:1px solid rgba(220,38,38,0.3);border-radius:16px;padding:32px;text-align:center;">
-              <img src="https://igims-sand.vercel.app/logo.jpg" alt="Cerebrexia" style="width:80px;border-radius:12px;margin-bottom:16px;" />
+              <img src="https://www.cerebrexiaigims.com/logo.jpg" alt="Cerebrexia" style="width:80px;border-radius:12px;margin-bottom:16px;" />
               <h1 style="font-size:22px;color:#f5f0e8;margin:0 0 8px;">Hey ${safeName}! 👋</h1>
               <p style="font-size:14px;color:#b0a898;line-height:1.6;margin:0 0 20px;">
                 You registered for <strong style="color:#f5f0e8;">Cerebrexia '26</strong> at IGIMS — but your <strong style="color:#DC2626;">₹2,000 Basic Registration (BR) fee</strong> is still pending.
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
               <p style="font-size:14px;color:#b0a898;line-height:1.6;margin:0 0 24px;">
                 Complete your payment to lock in your spot for all events, pronites, and exclusive festival perks.
               </p>
-              <a href="https://igims-sand.vercel.app/" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#DC2626,#991b1b);color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;letter-spacing:0.5px;">
+              <a href="https://www.cerebrexiaigims.com/" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#DC2626,#991b1b);color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;letter-spacing:0.5px;">
                 LOG IN &amp; PAY NOW &rarr;
               </a>
               <p style="font-size:11px;color:#666;margin:24px 0 0;line-height:1.5;">
