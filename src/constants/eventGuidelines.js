@@ -205,6 +205,139 @@ export const EVENT_GUIDELINES = {
     ],
   },
 
+  'Clinical Quiz': {
+    blocks: [
+      { type: 'h', text: 'Rounds' },
+      {
+        type: 'ul',
+        items: [
+          'Screening round is online on 26th November.',
+          'Final Round is offline at IGIMS, Patna on 9th December from 10:00 a.m.',
+          'Total 5 teams will qualify for the finals.',
+        ],
+      },
+      { type: 'h', text: 'Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'Students of 2021, 2022 and 2023 batches are eligible to participate.',
+          'Follow @igimsfest and @medminds.hub on Instagram to be eligible to participate.',
+          'Each team can have a maximum of 2 members (intra/inter batch).',
+          'Lone wolves are also welcome.',
+          'No limit on no. of teams from any college.',
+        ],
+      },
+      { type: 'h', text: 'Registration Fee' },
+      { type: 'p', text: '50 rupees only' },
+      { type: 'h', text: 'Pattern of Questions' },
+      {
+        type: 'p',
+        text: 'A variety of questions which will test your thinking, memory & understanding:',
+      },
+      {
+        type: 'ul',
+        items: ['MCQ', 'Connect Questions', 'Fill in the blanks', 'Image based', 'Match the following'],
+      },
+      { type: 'h', text: 'Prizes' },
+      { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
+      {
+        type: 'ul',
+        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+      },
+      { type: 'h', text: 'For Further Queries, Contact' },
+      { type: 'ul', items: ['Pranav: 74889 32917', 'Eshna: 75759 52453'] },
+      { type: 'tag', text: 'Register Now. Rise to the Challenge.' },
+    ],
+  },
+
+  'Hridaya (Poetry, Shayari & Elocution)': {
+    blocks: [
+      { type: 'p', text: 'Hridaya \u2014 Premchand: Kalam aur Kalpana. Official Guidelines & Rules.' },
+      { type: 'h', text: 'Thematic Categories' },
+      {
+        type: 'p',
+        text: 'Participants must choose ONE of the following five themes for their Written and Narration entries.',
+      },
+      {
+        type: 'ol',
+        items: [
+          'Love, Companionship & Belonging',
+          'Society, Identity & Empowerment',
+          'Life, Dreams & Imagination',
+          'Childhood & Nostalgia',
+          'Culture, Heritage, Spirituality & Celebrations',
+        ],
+      },
+      { type: 'h', text: 'Written Round \u2014 Online' },
+      { type: 'p', text: 'Registration Fee: \u20B950' },
+      {
+        type: 'ul',
+        items: [
+          'Participants must submit one original written composition based on any ONE of the five prescribed themes.',
+          'All genres of creative writing are welcome, including poetry, prose, short stories and other literary forms.',
+          'Entries must be submitted in written format through the official registration QR code or website.',
+          'The composition must be original. Plagiarism will result in disqualification.',
+          'Winners will be announced on the official Instagram page: @hridaya_cerebrexia.',
+          'There will be NO offline finale for the Written Round.',
+        ],
+      },
+      { type: 'h', text: 'Narration Round \u2014 Online' },
+      { type: 'p', text: 'Registration Fee: \u20B950' },
+      {
+        type: 'ul',
+        items: [
+          'Participants must present any ONE of the five prescribed themes through poetry, shayari and elocution.',
+          'Entries must be submitted as a video through the official registration QR code or website.',
+          'Performances may be in English or Hindi.',
+          'The use of props is permitted.',
+          'Individual performances only; group performances are not allowed.',
+          'Content must be original wherever applicable. Plagiarism will lead to disqualification.',
+          'Inappropriate content may result in disqualification at the discretion of the organizing team.',
+          'Selected participants will qualify for the Offline Finale.',
+          'The list of selected participants will be announced on @hridaya_cerebrexia.',
+        ],
+      },
+      { type: 'h', text: 'Offline Finale \u2014 Narration Round Only' },
+      {
+        type: 'ul',
+        items: [
+          'The Offline Finale will be held at IGIMS Patna.',
+          'Only participants selected through the Online Narration Round will be eligible.',
+          'All five thematic categories will remain applicable.',
+          'Participants must choose a different theme from the one used in their online narration entry.',
+          'Participants must attend the finale in person and follow the instructions issued by the organizing team.',
+          'The venue, date, reporting time and further instructions will be communicated to the selected participants.',
+        ],
+      },
+      { type: 'h', text: 'Evaluation Criteria' },
+      { type: 'p', text: 'For the online evaluation, the following weightage will apply:' },
+      {
+        type: 'ul',
+        items: [
+          'Likes and comments received on the entry post: 40%',
+          'Assessment by the IGIMS Judges Panel: 60%',
+          'Total: 100%',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'The judges\u2019 assessment may consider originality, creativity, content, presentation, delivery and fluency, as applicable to the category.',
+      },
+      { type: 'h', text: 'Registration & Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'Registration fee: \u20B950',
+          'Participants must submit their entries through the official registration QR code or website.',
+          'Participants must follow the official Cerebrexia Instagram account @igimsfest and the event page @hridaya_cerebrexia for updates and entry validation.',
+          'Participants are responsible for submitting their entries in the prescribed format.',
+          'Incomplete, plagiarized or inappropriate entries may be rejected.',
+          'All participants must adhere to the rules and decisions of the JUDGES.',
+        ],
+      },
+    ],
+  },
+
   // Guidelines supplied as "TRAUMA CODE (BLS)" – shown on the Basic Life Support Workshop card.
   'Basic Life Support Workshop': {
     blocks: [

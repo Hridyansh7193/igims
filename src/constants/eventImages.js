@@ -13,6 +13,7 @@ import agoraImg from '../assets/eventcards/agora.jpeg';
 import hridayaImg from '../assets/eventcards/hridaya.jpeg';
 import spellBeeImg from '../assets/eventcards/spell-bee.jpeg';
 import generalQuizImg from '../assets/eventcards/general-quiz.png';
+import crypticImg from '../assets/eventcards/cryptic-crossword.jpeg';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -25,6 +26,7 @@ export const EVENT_IMAGES = {
   'Hridaya (Poetry, Shayari & Elocution)': { src: hridayaImg, pos: '52% 50%' },
   'Spell Bee': { src: spellBeeImg, pos: '50% 50%' },
   'General Quiz': { src: generalQuizImg, pos: '50% 50%' },
+  'Cryptic Crossword': { src: crypticImg, pos: '50% 50%' },
 };
 
 const normalize = (name = '') =>
