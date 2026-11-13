@@ -169,7 +169,7 @@ export default function RegistrationOptionsSection({ setPage }) {
                     BASIC REGISTRATION (BR)
                   </h3>
                   <p style={{ margin: 0, fontSize: 13, color: 'var(--crx-text-secondary)', lineHeight: 1.55 }}>
-                    Pronites only. Register individually or as a group with default group offers (10–19: 1 free, 20+: 2 free) at checkout.
+                    Pronites only. Register individually or as a group with default 9+1 group savings (1 free per 10 people) at checkout.
                   </p>
                 </div>
                 <button

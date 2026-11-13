@@ -33,7 +33,7 @@ import {
   fetchParticipantProfile,
   markBasicRegistrationPaid,
 } from '../../lib/eventsService';
-import { validatePromoCode, DEFAULT_PROMO_CODE, calculateGroupTierDiscount } from '../../constants/promoCodes';
+import { validatePromoCode, calculateDefaultGroupOffer } from '../../constants/promoCodes';
 import { openRazorpayCheckout } from '../../lib/razorpay';
 
 const REG_PRICE_PER_PERSON = 2000;
@@ -80,10 +80,9 @@ export default function BasicRegistrationModal({
     { first_name: '', surname: '', phone_number: '', email: '', college_name: '', city_of_college: '', state_of_college: '' },
   ]);
 
-  // Promo Code State
+  // Promo / Coupon Code State
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
-  const [promoManuallyRemoved, setPromoManuallyRemoved] = useState(false);
   const [promoMessage, setPromoMessage] = useState(null);
   const [promoError, setPromoError] = useState(null);
 
@@ -138,37 +137,26 @@ export default function BasicRegistrationModal({
     }
   }, [groupSize, activeMemberTab]);
 
-  // Auto-apply or re-validate promo code when groupSize or regType changes
+  // Re-validate applied coupon code if groupSize or regType changes
   useEffect(() => {
-    const count = regType === 'GROUP' ? groupSize : 1;
-    const subtotal = count * REG_PRICE_PER_PERSON;
-
-    // Auto-apply default promo code when a group of 10+ members is active
-    if (regType === 'GROUP' && count >= 10 && !promoManuallyRemoved && !appliedPromo) {
-      const res = validatePromoCode(DEFAULT_PROMO_CODE, { groupSize: count, subtotal });
-      if (res.valid) {
-        setAppliedPromo(res.promo);
-        setPromoMessage(res.message);
-        setPromoError(null);
-        return;
-      }
-    }
-
-    // Re-validate applied promo if already active
     if (appliedPromo) {
-      const res = validatePromoCode(appliedPromo.code, { groupSize: count, subtotal });
+      const count = regType === 'GROUP' ? groupSize : 1;
+      const offer = calculateDefaultGroupOffer(count, REG_PRICE_PER_PERSON);
+      const res = validatePromoCode(appliedPromo.code, {
+        payableMembers: offer.payableMembers,
+        payableSubtotal: offer.groupPayable,
+        totalMembers: count,
+      });
       if (res.valid) {
         setAppliedPromo(res.promo);
         setPromoMessage(res.message);
       } else {
         setAppliedPromo(null);
         setPromoMessage(null);
-        if (promoManuallyRemoved) {
-          setPromoError(res.message);
-        }
+        setPromoError(res.message);
       }
     }
-  }, [groupSize, regType, promoManuallyRemoved]);
+  }, [groupSize, regType]);
 
   // Check if user already has an active Basic Registration
   useEffect(() => {
@@ -276,33 +264,55 @@ export default function BasicRegistrationModal({
   };
 
   // Pricing Calculations
-  const memberCount = regType === 'GROUP' ? groupSize : 1;
-  const subtotal = memberCount * REG_PRICE_PER_PERSON;
+  // 1. Default Group Offer (Built-in, zero code required)
+  const isGroup = regType === 'GROUP';
+  const totalMemberCount = isGroup ? groupSize : 1;
+  const groupOffer = calculateDefaultGroupOffer(totalMemberCount, REG_PRICE_PER_PERSON);
+  const {
+    freeMembers,
+    payableMembers,
+    baseTotal,
+    groupDiscount,
+    groupPayable,
+  } = groupOffer;
 
-  let discountAmount = 0;
-  let freeMembersCount = 0;
+  // 2. Coupon Discount Calculation (Applies on each payable BR)
+  let couponDiscount = 0;
+  let couponDiscountPerBR = 0;
   if (appliedPromo) {
-    if (appliedPromo.type === 'group_tier') {
-      const tier = calculateGroupTierDiscount(memberCount, REG_PRICE_PER_PERSON);
-      freeMembersCount = tier.freeMembers;
-      discountAmount = tier.discount;
-    } else if (appliedPromo.type === 'percent') {
-      discountAmount = Math.round((subtotal * appliedPromo.value) / 100);
+    if (appliedPromo.type === 'percent') {
+      couponDiscountPerBR = Math.round((REG_PRICE_PER_PERSON * appliedPromo.value) / 100);
+      couponDiscount = Math.round((groupPayable * appliedPromo.value) / 100);
+    } else if (appliedPromo.type === 'per_br') {
+      couponDiscountPerBR = Math.min(REG_PRICE_PER_PERSON, appliedPromo.value);
+      couponDiscount = couponDiscountPerBR * payableMembers;
     } else if (appliedPromo.type === 'flat') {
-      discountAmount = Math.min(subtotal, appliedPromo.value);
+      couponDiscount = Math.min(groupPayable, appliedPromo.value);
+      couponDiscountPerBR = payableMembers > 0 ? Math.round(couponDiscount / payableMembers) : 0;
     }
   }
-  const finalPayable = Math.max(0, subtotal - discountAmount);
 
-  // Promo Code Validation Handler
+  // 3. Final Checkout Total & Cumulative Savings
+  const finalPayable = Math.max(0, groupPayable - couponDiscount);
+  const totalSavings = groupDiscount + couponDiscount;
+
+  // Coupon Code Validation Handler
   const handleApplyPromo = (e) => {
     e.preventDefault();
     setPromoError(null);
     setPromoMessage(null);
-    setPromoManuallyRemoved(false);
 
-    const codeToValidate = promoInput.trim() || DEFAULT_PROMO_CODE;
-    const res = validatePromoCode(codeToValidate, { groupSize: memberCount, subtotal });
+    if (!promoInput.trim()) {
+      setPromoError('Please enter a coupon code.');
+      return;
+    }
+
+    const res = validatePromoCode(promoInput, {
+      payableMembers,
+      payableSubtotal: groupPayable,
+      totalMembers: totalMemberCount,
+    });
+
     if (res.valid) {
       setAppliedPromo(res.promo);
       setPromoMessage(res.message);
@@ -317,7 +327,6 @@ export default function BasicRegistrationModal({
 
   const handleRemovePromo = () => {
     setAppliedPromo(null);
-    setPromoManuallyRemoved(true);
     setPromoInput('');
     setPromoMessage(null);
     setPromoError(null);
@@ -400,10 +409,14 @@ export default function BasicRegistrationModal({
 
       const checkoutMeta = {
         registration_type: regType,
-        group_size: memberCount,
+        group_size: totalMemberCount,
+        payable_members: payableMembers,
+        free_members: freeMembers,
         group_members: allMembersData,
-        promo_code: appliedPromo ? appliedPromo.code : null,
-        discount_amount: discountAmount,
+        group_discount: groupDiscount,
+        coupon_code: appliedPromo ? appliedPromo.code : null,
+        coupon_discount: couponDiscount,
+        discount_amount: totalSavings,
         final_amount: finalPayable,
         payment_status: finalPayable === 0 ? 'PAID' : 'PENDING',
       };
@@ -682,7 +695,7 @@ export default function BasicRegistrationModal({
           </h2>
 
           <p style={{ color: 'var(--crx-text-secondary, #a1a1aa)', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-            Full access to celebrity pronites and EDM nights. Select single or group Basic Registration (BR) (up to 50 people) with default group discounts.
+            Full access to celebrity pronites and EDM nights. Select single or group Basic Registration (BR) (up to 50 people) with built-in 9+1 group savings.
           </p>
         </div>
 
@@ -896,11 +909,18 @@ export default function BasicRegistrationModal({
                       {groupSize}
                     </div>
                     <div>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', display: 'block' }}>
-                        {groupSize} People ({groupSize} Members)
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#ffffff' }}>
+                          {groupSize} People {freeMembers > 0 ? `(${payableMembers} Paid + ${freeMembers} Free)` : `(${groupSize} Members)`}
+                        </span>
+                        {freeMembers > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '1px 6px', borderRadius: 4 }}>
+                            {freeMembers} FREE
+                          </span>
+                        )}
+                      </div>
                       <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
-                        Base: ₹{(groupSize * REG_PRICE_PER_PERSON).toLocaleString('en-IN')} &bull; Click to choose 2 to 50
+                        Pay: <strong style={{ color: '#fff' }}>₹{groupPayable.toLocaleString('en-IN')}</strong> {freeMembers > 0 ? `(Default 9+1 Offer: Saved ₹${groupDiscount.toLocaleString('en-IN')})` : ''} &bull; Click to choose 2 to 50
                       </span>
                     </div>
                   </div>
@@ -969,6 +989,7 @@ export default function BasicRegistrationModal({
                     <div style={{ overflowY: 'auto', maxHeight: 240, display: 'flex', flexDirection: 'column', gap: 3 }}>
                       {filteredGroupOptions.map((num) => {
                         const isSelected = groupSize === num;
+                        const optOffer = calculateDefaultGroupOffer(num, REG_PRICE_PER_PERSON);
                         return (
                           <div
                             key={num}
@@ -994,17 +1015,22 @@ export default function BasicRegistrationModal({
                               if (!isSelected) e.currentTarget.style.background = 'transparent';
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                               <span style={{ fontSize: 13, fontWeight: 700, color: isSelected ? 'var(--crx-gold, #D4AF37)' : '#ffffff' }}>
                                 {num} People
                               </span>
                               <span style={{ fontSize: 10.5, color: 'var(--crx-text-secondary, #a1a1aa)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4 }}>
                                 {getTierLabel(num)}
                               </span>
+                              {optOffer.freeMembers > 0 && (
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '1px 5px', borderRadius: 4 }}>
+                                  {optOffer.freeMembers} Free (Pay {optOffer.payableMembers})
+                                </span>
+                              )}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>
-                                ₹{(num * REG_PRICE_PER_PERSON).toLocaleString('en-IN')}
+                              <span style={{ fontSize: 12, fontWeight: 600, color: isSelected ? 'var(--crx-gold, #D4AF37)' : '#ffffff' }}>
+                                ₹{optOffer.groupPayable.toLocaleString('en-IN')}
                               </span>
                               {isSelected && <CheckCircle2 size={14} color="var(--crx-gold, #D4AF37)" />}
                             </div>
@@ -1069,26 +1095,29 @@ export default function BasicRegistrationModal({
               <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)', marginRight: 4 }}>
                 Quick select:
               </span>
-              {[2, 5, 10, 15, 25, 35, 50].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setGroupSize(n)}
-                  style={{
-                    background: groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
-                    color: groupSize === n ? '#000' : 'rgba(255,255,255,0.85)',
-                    border: '1px solid ' + (groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.12)'),
-                    borderRadius: 8,
-                    padding: '5px 10px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {n} {n === 50 ? 'Max (50)' : 'Members'}
-                </button>
-              ))}
+              {[2, 5, 10, 15, 20, 30, 50].map((n) => {
+                const optOffer = calculateDefaultGroupOffer(n, REG_PRICE_PER_PERSON);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setGroupSize(n)}
+                    style={{
+                      background: groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
+                      color: groupSize === n ? '#000' : 'rgba(255,255,255,0.85)',
+                      border: '1px solid ' + (groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.12)'),
+                      borderRadius: 8,
+                      padding: '5px 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {n} {n >= 10 ? `(${optOffer.freeMembers} Free)` : 'Members'}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1652,11 +1681,11 @@ export default function BasicRegistrationModal({
             </div>
           )}
 
-          {/* STEP 4: Promo Code & Rush Deals */}
+          {/* STEP 4: Coupon Code (Disabled for now) */}
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: 14,
               padding: '14px 16px',
               marginBottom: 18,
@@ -1664,99 +1693,51 @@ export default function BasicRegistrationModal({
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Tag size={15} color="var(--crx-gold, #D4AF37)" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Promo Code / Group Deal
+                <Tag size={15} color="rgba(255,255,255,0.4)" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                  Coupon Code
                 </span>
               </div>
               <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
-                Default Offer: <strong style={{ color: 'var(--crx-gold, #D4AF37)' }}>{DEFAULT_PROMO_CODE}</strong> (10–19: 1 Free • 20+: 2 Free)
+                Coupons currently inactive
               </span>
             </div>
 
-            {appliedPromo ? (
-              <div
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Tag size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                  placeholder="NO ACTIVE COUPONS AVAILABLE"
+                  disabled={true}
+                  style={{
+                    ...inp,
+                    paddingLeft: 34,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    opacity: 0.6,
+                    cursor: 'not-allowed',
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                disabled={true}
+                className="crx-btn"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  background: 'rgba(34, 197, 94, 0.12)',
-                  border: '1px solid rgba(34, 197, 94, 0.35)',
-                  borderRadius: 10,
-                  padding: '10px 14px',
+                  padding: '8px 16px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  opacity: 0.4,
+                  cursor: 'not-allowed',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CheckCircle2 size={16} color="#22c55e" />
-                  <div>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: '#22c55e' }}>
-                      {appliedPromo.code} Applied
-                    </span>
-                    <span style={{ fontSize: 11.5, color: '#fff', marginLeft: 8 }}>
-                      (-₹{discountAmount.toLocaleString('en-IN')}
-                      {freeMembersCount > 0 ? ` • ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''}` : ''})
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleRemovePromo}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#f87171',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Tag size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
-                  <input
-                    type="text"
-                    value={promoInput}
-                    onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
-                    placeholder={`ENTER PROMO CODE (e.g. ${DEFAULT_PROMO_CODE})`}
-                    style={{
-                      ...inp,
-                      paddingLeft: 34,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleApplyPromo}
-                  className="crx-btn gold"
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    borderRadius: 8,
-                  }}
-                >
-                  APPLY
-                </button>
-              </div>
-            )}
-
-            {promoMessage && (
-              <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#22c55e' }}>
-                {promoMessage}
-              </p>
-            )}
-            {promoError && (
-              <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#f87171' }}>
-                {promoError}
-              </p>
-            )}
+                APPLY
+              </button>
+            </div>
           </div>
 
           {/* STEP 5: Order Breakdown & Final Checkout Summary */}
@@ -1769,22 +1750,50 @@ export default function BasicRegistrationModal({
               marginBottom: 20,
             }}
           >
+            {/* Total Base Registration */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--crx-text-secondary, #a1a1aa)', marginBottom: 6 }}>
               <span>
-                {regType === 'GROUP' ? `Group Basic Registration (BR) (${groupSize} People × ₹2,000)` : 'Single Basic Registration (BR)'}
+                {isGroup ? `Group Basic Registration (${groupSize} People × ₹2,000)` : 'Single Basic Registration (BR)'}
               </span>
               <span style={{ color: '#fff', fontWeight: 600 }}>
-                ₹{subtotal.toLocaleString('en-IN')}
+                ₹{baseTotal.toLocaleString('en-IN')}
               </span>
             </div>
 
-            {discountAmount > 0 && (
+            {/* Default Group Offer (9+1 Offer) */}
+            {isGroup && freeMembers > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#22c55e', marginBottom: 6 }}>
-                <span>
-                  Promo Discount ({appliedPromo?.code}
-                  {freeMembersCount > 0 ? ` • ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''}` : ''})
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircle2 size={13} color="#22c55e" />
+                  Default Group Offer ({freeMembers} Free Member{freeMembers > 1 ? 's' : ''} • Paying for {payableMembers})
                 </span>
-                <span style={{ fontWeight: 600 }}>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                <span style={{ fontWeight: 700 }}>
+                  -₹{groupDiscount.toLocaleString('en-IN')}
+                </span>
+              </div>
+            )}
+
+            {/* Group Subtotal before coupon if free members exist */}
+            {isGroup && freeMembers > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'rgba(255,255,255,0.65)', marginBottom: 6, paddingLeft: 18 }}>
+                <span>Group Subtotal ({payableMembers} Payable BRs × ₹2,000)</span>
+                <span>₹{groupPayable.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+
+            {/* Coupon Code Discount */}
+            {couponDiscount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#38bdf8', marginBottom: 6 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Tag size={13} color="#38bdf8" />
+                  Coupon Discount ({appliedPromo?.code}
+                  {appliedPromo?.type === 'percent'
+                    ? ` • ${appliedPromo.value}% off on each BR`
+                    : appliedPromo?.type === 'per_br'
+                    ? ` • -₹${couponDiscountPerBR}/BR`
+                    : ''})
+                </span>
+                <span style={{ fontWeight: 700 }}>-₹{couponDiscount.toLocaleString('en-IN')}</span>
               </div>
             )}
 
@@ -1793,10 +1802,11 @@ export default function BasicRegistrationModal({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--crx-gold, #D4AF37)', display: 'block', fontWeight: 700 }}>
-                  Total Final Amount {freeMembersCount > 0 && `(Pay for ${memberCount - freeMembersCount} of ${memberCount})`}
+                  Total Final Amount {isGroup && freeMembers > 0 && `(Pay for ${payableMembers} of ${groupSize})`}
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
-                  Includes {memberCount} official wristbands &amp; pronite admission
+                  Includes {totalMemberCount} official wristbands &amp; pronite admission
+                  {totalSavings > 0 && ` • Saved ₹${totalSavings.toLocaleString('en-IN')}`}
                 </span>
               </div>
               <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -1909,7 +1919,8 @@ export default function BasicRegistrationModal({
               <p style={{ fontSize: 12.5, color: 'var(--crx-text-secondary, #a1a1aa)', margin: '0 0 16px', lineHeight: 1.5 }}>
                 Prompting checkout for <strong>{regType === 'GROUP' ? `Group Basic Registration (BR) for ${groupSize} People` : 'Single Basic Registration (BR)'}</strong>.
                 Total amount: <strong style={{ color: '#fff' }}>₹{finalPayable.toLocaleString('en-IN')}</strong>
-                {freeMembersCount > 0 ? ` (Paying for ${memberCount - freeMembersCount}, ${freeMembersCount} Free Member${freeMembersCount > 1 ? 's' : ''})` : ''}.
+                {isGroup && freeMembers > 0 ? ` (${freeMembers} Free Member${freeMembers > 1 ? 's' : ''} • Paying for ${payableMembers})` : ''}
+                {couponDiscount > 0 ? ` [Coupon ${appliedPromo?.code} Applied]` : ''}.
               </p>
 
               {/* Supported payment badges */}
