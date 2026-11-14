@@ -1768,6 +1768,35 @@ export const EVENT_GUIDELINES = {
       }
     ],
   },
+
+  "Anatomical Body Painting": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "The competition will be conducted in offline mode on 8 December 2026 at IGIMS Patna Campus.",
+          "Participants must create anatomical body art inspired by human anatomy, physiology, or related medical themes.",
+          "All designs must be appropriate, respectful, and relevant to the theme of the competition.",
+          "Participants will be provided with a paint set, a brush and water.",
+          "Judging will be based on creativity, anatomical accuracy, artistic technique, neatness, and overall presentation.",
+          "Participants must follow the instructions provided by the event coordinators.",
+          "Entry Fee: ₹25.",
+          "The winner will receive a delegate pass; 2nd and 3rd runner up will receive a medal and certificate."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Aditya: 9102331766",
+          "Shipra: 9279176905"
+        ]
+      }
+    ],
+  },
 };
 
 // Strip the leading emoji / symbols and normalise, so '📝 Preclinical Quiz'

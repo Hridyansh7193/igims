@@ -17,6 +17,13 @@ import crypticImg from '../assets/eventcards/cryptic-crossword.jpeg';
 import medimelodyImg from '../assets/eventcards/medimelody.jpeg';
 import popCultureImg from '../assets/eventcards/pop-culture-quiz.png';
 import chitragangaImg from '../assets/eventcards/chitraganga.jpeg';
+import aripanImg from '../assets/eventcards/aripan.jpeg';
+import mehendiImg from '../assets/eventcards/mehendi-delights.jpeg';
+import anatomicalImg from '../assets/eventcards/anatomical-body-painting.jpeg';
+import cyberImg from '../assets/eventcards/cyber-creation.jpeg';
+import sculptureImg from '../assets/eventcards/sculpture-spectacle.jpeg';
+import tattooImg from '../assets/eventcards/tattoo-titans.jpeg';
+import teeSplashImg from '../assets/eventcards/tee-splash.jpeg';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -33,6 +40,13 @@ export const EVENT_IMAGES = {
   'Medimelody (Song se Syndrome)': { src: medimelodyImg, pos: '25% 50%' },
   'Pop-Culture Quiz': { src: popCultureImg, pos: '50% 50%' },
   'Chitraganga (Painting)': { src: chitragangaImg, pos: '30% 100%' },
+  'Aripan (Rangoli)': { src: aripanImg, pos: '50% 60%' },
+  'Mehendi Delights (Mehendi)': { src: mehendiImg, pos: '60% 100%' },
+  'Anatomical Body Painting': { src: anatomicalImg, pos: '60% 75%' },
+  'Cyber-Creation (Digital Art)': { src: cyberImg, pos: '50% 40%' },
+  'Sculpture Spectacle (Clay Art)': { src: sculptureImg, pos: '50% 0%' },
+  'Tattoo Titans (Tattoo Art)': { src: tattooImg, pos: '50% 45%' },
+  'Tee-Splash (T-Shirt Painting)': { src: teeSplashImg, pos: '65% 50%' },
 };
 
 const normalize = (name = '') =>
