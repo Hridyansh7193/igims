@@ -1200,6 +1200,574 @@ export const EVENT_GUIDELINES = {
       { type: 'tag', text: 'Where Wit Meets Creativity, And Humour Takes Centre Stage.' },
     ],
   },
+
+  "Chitraganga (Painting)": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Round 1 — Online"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Submit a clear photograph of your original artwork online.",
+          "The artwork must be your own creation.",
+          "Participants must submit 2 progression pictures showing the development of their artwork.",
+          "The medium can be pencil, watercolour, acrylic colour, soft pastels, oil pastels, or charcoal.",
+          "Entries will be judged on clarity of theme, originality, artistic value, overall presentation, and likes."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Round 2 — Offline"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The final round will be conducted offline at IGIMS, Patna on 11 Dec 2026.",
+          "A 12 × 16 inch canvas will be provided to each participant.",
+          "Participants must bring their own colours and painting tools.",
+          "The final artwork will be evaluated by a panel of judges."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee & Registration"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Entry Fee: ₹50 per participant.",
+          "Entry closing date for Round 1: 6 December 2026.",
+          "Register by using the registration link.",
+          "All submissions must be original. Plagiarised artwork will lead to disqualification."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Themes — Round 1"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Nature and wildlife",
+          "Indian heritage",
+          "Art of cinema",
+          "Fantasy world",
+          "Spirit of festivity"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Themes — Round 2"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Portrait",
+          "Mythology",
+          "Colours of emotion",
+          "Women empowerment",
+          "Cosmos and universe"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: Delegate pass for Cerebrexia 2026",
+          "2nd & 3rd runner up: Medals + Certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Ankita: 7209750579",
+          "Vibha: 9771886160"
+        ]
+      },
+      {
+        "type": "tag",
+        "text": "Think creatively, paint fearlessly, create endlessly!"
+      }
+    ],
+  },
+
+  "Doodle Dreams (Doodle Art)": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "Participants will be provided with a sheet and markers.",
+          "The doodle must be based on one of the given themes.",
+          "Artwork must be the participant’s own original idea. Copying from any source is strictly prohibited.",
+          "Participants must follow the event guidelines.",
+          "Entry Fee: ₹25.",
+          "The event will be conducted offline on 5 December 2026."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Themes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Micro verse — the microscopic life",
+          "Cerebros — the universe within",
+          "Ward whispers — tales from the hospital",
+          "Abstractomy — abstract science"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Judging Criteria"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Originality (participant’s own idea)",
+          "Theme & message",
+          "Perfection (technical skills)",
+          "Visual appeal"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: Delegate pass",
+          "2nd & 3rd runner up: Medals and certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Amartyanjan: 9897084556"
+        ]
+      }
+    ],
+  },
+
+  "Sculpture Spectacle (Clay Art)": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "Registration fee: ₹25 per head.",
+          "Participants will be provided with clay and toothpicks.",
+          "Participate in teams of 2-4 members. No single participant is allowed.",
+          "Participants are requested to bring their own colour and decor items.",
+          "Judging is based on creativity & originality, neatness & finishing, design and aesthetic appeal, and skill used.",
+          "Decision of the judges will be final.",
+          "The event will be conducted offline on 5 December 2026."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner Team: A delegate pass",
+          "2nd & 3rd runner up: Medals and certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Rajesh: 7479962105",
+          "Prakriti: 9508428579"
+        ]
+      }
+    ],
+  },
+
+  "Tattoo Titans (Tattoo Art)": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "Participants will be provided with a black marker.",
+          "Participants must bring their own volunteers/models.",
+          "Tattooing is permitted on the arm, forearm, and face.",
+          "Participants are not allowed to refer to designs on phones, tablets, magazines, or other reference sources during the event.",
+          "Designs must reflect the chosen theme and demonstrate creativity.",
+          "Participants must follow all event guidelines.",
+          "Entry Fee: ₹25.",
+          "The event will be conducted offline on 12 December 2026.",
+          "The winner will receive a delegate pass; 2nd and 3rd runner up will receive medals and certificates."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Nivedita: 7667321330"
+        ]
+      }
+    ],
+  },
+
+  "Mehendi Delights (Mehendi)": {
+    blocks: [
+      {
+        "type": "ul",
+        "items": [
+          "Participants will be provided with mehendi cones.",
+          "Participants are expected to apply mehendi on both the front and back of the hand. The design should extend at least 6 inches beyond the palm.",
+          "Participants are allowed to copy designs.",
+          "Stickers, pens, and tattoos are not allowed.",
+          "Judgement will be based on creativity, composition, and neatness.",
+          "No on-spot registrations will be entertained.",
+          "The event will be conducted offline on 12 December 2026."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹25"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: A delegate pass",
+          "2nd & 3rd runner up: Medal + Certificate"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Mehal: 8409179970"
+        ]
+      }
+    ],
+  },
+
+  "Aripan (Rangoli)": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Offline Event"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Event date: 6 December 2026 at IGIMS Patna.",
+          "Entry Fee: ₹25 per participant.",
+          "Registration: form available on Instagram @rangdhara_cerebrexia.",
+          "Participate in teams of 2-4 members.",
+          "Judging will be based on clarity, neatness, creativity, and overall attractiveness.",
+          "Participants must complete their rangoli within the allotted time.",
+          "Each team will be provided with a designated space for creating the rangoli.",
+          "Basic colours will be provided. Participants can bring their own colours also."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Offline — Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Shipra: 9279176905",
+          "Rohit: 7633021784"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Online Event"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Registration closed on 6 December 2026.",
+          "Entry Fee: ₹25 per participant.",
+          "Registration: form available on Instagram @rangdhara_cerebrexia and @aripan_cerebrexia.",
+          "Create clear, neat, attractive, and creative designs.",
+          "Upload 2 photos as your entry: (I) photo of rangoli, (II) photo of participants with rangoli.",
+          "Judging will be based on clarity, neatness, creativity, overall attractiveness, and likes.",
+          "Top 3 winners will be decided on the basis of the judging panel and the number of likes on the Instagram post."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Online — Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Aditya: 9102331766",
+          "Roushani: 9110197055"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes (Both Events)"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: Delegate pass for Cerebrexia 2026",
+          "2nd & 3rd runner up: Medals + Certificates"
+        ]
+      }
+    ],
+  },
+
+  "Recycled Wonders (Waste Art)": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "The event will be conducted offline on 7 December 2026.",
+          "Registration fee: 25 rupees.",
+          "Participants are supposed to bring their own art and craft items as they will not be provided at the venue.",
+          "Judging criteria: proper use of waste material, creativity, cleanliness, detailing, and overall visual impact.",
+          "Decision of the judges will be final."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: Delegate pass",
+          "2nd & 3rd runner up: Medals and certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Saumya: 7080836790"
+        ]
+      }
+    ],
+  },
+
+  "Cyber-Creation (Digital Art)": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Event Details"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Single round online inter-college competition.",
+          "Registration closes on 6 December 2026.",
+          "Entry Fee: 25 rupees.",
+          "Register through the registration link on our Instagram page."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Theme"
+      },
+      {
+        "type": "p",
+        "text": "Your imagination, no boundation.."
+      },
+      {
+        "type": "h",
+        "text": "Format"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Submit artwork in JPEG/PDF format.",
+          "Participants must send 3 progressive pictures of their artwork."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Qualification Criteria"
+      },
+      {
+        "type": "p",
+        "text": "Art should be original. No AI-generated or specialized app content will be acceptable, and it leads to disqualification."
+      },
+      {
+        "type": "h",
+        "text": "Judging Criteria"
+      },
+      {
+        "type": "p",
+        "text": "Creativity, originality, theme relevance, visual appeal, technical execution, and likes."
+      },
+      {
+        "type": "h",
+        "text": "Final Decision"
+      },
+      {
+        "type": "p",
+        "text": "The judges’ decision will be final."
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Exciting prizes for all 3 winners!"
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Aditya: 9102331766",
+          "Shipra: 9279176905",
+          "Jagatjyoti: 6003364648"
+        ]
+      }
+    ],
+  },
+
+  "Tee-Splash (T-Shirt Painting)": {
+    blocks: [
+      {
+        "type": "ul",
+        "items": [
+          "T-shirts and cup will be provided.",
+          "Participants must bring other materials on their own, like brushes, markers, paints, pencils and any other required tools.",
+          "No specific theme.",
+          "A maximum of 2 participants are allowed per T-shirt.",
+          "Entry Fee: Rs 50 per participant.",
+          "The event will be conducted offline on 9 December 2026."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Judging Criteria"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Creativity",
+          "Theme and concept",
+          "Cleanliness and detailing",
+          "Color handling",
+          "Overall visual impact"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: A delegate pass",
+          "2nd & 3rd runner up: Medals and certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Shweta: 8409684445",
+          "Rohit: 7633021784"
+        ]
+      }
+    ],
+  },
+
+  "Magic Mask (Face Painting)": {
+    blocks: [
+      {
+        "type": "ul",
+        "items": [
+          "Participation is open to registered college students.",
+          "Participants must complete their artwork within the allotted time.",
+          "Designs must be original, appropriate, and theme-based.",
+          "Offensive content and unfair practices are strictly prohibited.",
+          "Judging will be based on creativity, originality, technique, and presentation.",
+          "The judges’ decision will be final.",
+          "Entry Fee: ₹25.",
+          "The event will be conducted offline at IGIMS Patna on 10 December 2026."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Themes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Mythology",
+          "Optical Illusion",
+          "Wildlife",
+          "Sci fiction"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Winner: A delegate pass",
+          "2nd & 3rd runner up: Medals and certificates"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Ankit: 7367820182"
+        ]
+      }
+    ],
+  },
 };
 
 // Strip the leading emoji / symbols and normalise, so '📝 Preclinical Quiz'

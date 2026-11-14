@@ -16,6 +16,7 @@ import generalQuizImg from '../assets/eventcards/general-quiz.png';
 import crypticImg from '../assets/eventcards/cryptic-crossword.jpeg';
 import medimelodyImg from '../assets/eventcards/medimelody.jpeg';
 import popCultureImg from '../assets/eventcards/pop-culture-quiz.png';
+import chitragangaImg from '../assets/eventcards/chitraganga.jpeg';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -31,6 +32,7 @@ export const EVENT_IMAGES = {
   'Cryptic Crossword': { src: crypticImg, pos: '50% 50%' },
   'Medimelody (Song se Syndrome)': { src: medimelodyImg, pos: '25% 50%' },
   'Pop-Culture Quiz': { src: popCultureImg, pos: '50% 50%' },
+  'Chitraganga (Painting)': { src: chitragangaImg, pos: '30% 100%' },
 };
 
 const normalize = (name = '') =>
