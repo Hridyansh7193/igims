@@ -6,6 +6,8 @@ import RegistrationModal from '../components/common/RegistrationModal';
 import QuickRegisterModal from '../components/common/QuickRegisterModal';
 import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
 import GuidelinesModal from '../components/common/GuidelinesModal';
+import EventFormModal from '../components/common/EventFormModal';
+import { hasEventForm } from '../constants/eventForms';
 import { CATEGORIES, TOTAL_EVENTS } from '../constants/eventsData';
 import { getEventGuidelines } from '../constants/eventGuidelines';
 import { getEventImage } from '../constants/eventImages';
@@ -28,6 +30,8 @@ export default function EventsPage({ setPage }) {
   const [showQuickModal, setShowQuickModal] = useState(false);
   const [showFullModal, setShowFullModal] = useState(false);
   const [showBRModal, setShowBRModal] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [pendingForm, setPendingForm] = useState(false); // profile first, then event form
   const [guidelinesEvent, setGuidelinesEvent] = useState(null);
 
   // Notification Toast
@@ -93,6 +97,17 @@ export default function EventsPage({ setPage }) {
 
     setSelectedEvent(ev);
 
+    // Events that have their own registration form (questions from the college's forms)
+    if (hasEventForm(ev.name)) {
+      if (profile) {
+        setShowFormModal(true);
+      } else {
+        setPendingForm(true);
+        setShowFullModal(true);
+      }
+      return;
+    }
+
     // If candidate has already entered their details once, use the 1-click Quick Register modal
     if (profile) {
       setShowQuickModal(true);
@@ -122,6 +137,12 @@ export default function EventsPage({ setPage }) {
   const handleFullModalSuccess = (savedProfile, eventName) => {
     setProfile(savedProfile);
     setShowFullModal(false);
+    if (pendingForm) {
+      // Profile saved; now show the event-specific form
+      setPendingForm(false);
+      setShowFormModal(true);
+      return;
+    }
     if (eventName) {
       const updated = getRegisteredEvents(user.id, user.user_metadata);
       if (!updated.includes(eventName)) updated.push(eventName);
@@ -177,14 +198,34 @@ export default function EventsPage({ setPage }) {
       {/* Full Registration Modal (First time filling details or editing) */}
       {showFullModal && (
         <RegistrationModal
-          eventName={selectedEvent?.name}
+          eventName={pendingForm ? undefined : selectedEvent?.name}
           eventCat={selectedEvent?.cat}
           initialProfile={profile}
           onClose={() => {
             setShowFullModal(false);
+            setPendingForm(false);
             setSelectedEvent(null);
           }}
           onSuccess={handleFullModalSuccess}
+        />
+      )}
+
+      {/* Event-specific registration form (answers saved to Supabase) */}
+      {showFormModal && selectedEvent && (
+        <EventFormModal
+          eventName={selectedEvent.name}
+          eventKey={selectedEvent.key}
+          profile={profile}
+          onClose={() => {
+            setShowFormModal(false);
+            setSelectedEvent(null);
+          }}
+          onSuccess={(updated, eventName) => {
+            setRegisteredEvents(updated);
+            setShowFormModal(false);
+            setSelectedEvent(null);
+            showToast('Registration Confirmed!', `You are registered for ${eventName}.`, 'success');
+          }}
         />
       )}
 

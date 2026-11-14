@@ -19,6 +19,7 @@ export const CATEGORIES = [
       '✒️ Hridaya (Poetry, Shayari & Elocution)',
       '🐝 Spell Bee',
       '🧩 Cryptic Crossword',
+      '🎼 Medimelody (Song se Syndrome)',
       '🍿 Pop-Culture Quiz',
       '🧠 General Quiz',
     ],
@@ -61,7 +62,6 @@ export const CATEGORIES = [
     label: 'Cultural',
     events: [
       '🎤 Swarmay (Singing)',
-      '🎼 Medimelody',
       '💃 Flamenco (Dancing)',
       '🎥 Cinematica (Film Making)',
       '🎭 Abhinay',

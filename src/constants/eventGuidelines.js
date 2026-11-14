@@ -338,6 +338,196 @@ export const EVENT_GUIDELINES = {
     ],
   },
 
+  'Cryptic Crossword': {
+    blocks: [
+      { type: 'h', text: 'About the Competition' },
+      {
+        type: 'p',
+        text: 'Cryptic crosswords test your logic, vocabulary, lateral thinking, and wordplay skills. Decode clever clues, discover hidden patterns, and solve puzzles through creative reasoning.',
+      },
+      {
+        type: 'p',
+        text: 'Whether you are a seasoned crossword enthusiast or a beginner, get ready to challenge your mind in an exciting battle of words and wit!',
+      },
+      { type: 'h', text: 'Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'The competition is open to all individuals, irrespective of age, profession, or educational background.',
+          'Students of Classes X, XI, XII, college students, university students, and working professionals are eligible.',
+          'Students below Class X are not eligible to participate.',
+        ],
+      },
+      { type: 'h', text: 'Competition Format' },
+      {
+        type: 'ul',
+        items: [
+          'Round 1 \u2013 Preliminary Round: A written cryptic crossword challenge for all registered participants.',
+          'Round 2 \u2013 Top 8: The eight highest-scoring participants qualify.',
+          'Round 3 \u2013 Top 4: The eight qualifiers compete to determine the top four.',
+          'Round 4 \u2013 Top 2: The four remaining participants compete to reach the final.',
+          'Final Round \u2013 Winner: The two finalists compete for the title of Cryptic Crossword Champion of Cerebrexia 2026.',
+        ],
+      },
+      { type: 'h', text: 'General Rules' },
+      {
+        type: 'ul',
+        items: [
+          'Participants must follow all instructions provided by the organisers.',
+          'Mobile phones, internet access, reference materials, and external assistance are prohibited during the rounds unless expressly permitted.',
+          'In case of a tie, a tie-breaker round or an appropriate scoring criterion may be used.',
+          'Round-specific instructions will be announced before each round.',
+          'The decision of the organising committee shall be final and binding.',
+        ],
+      },
+      { type: 'tag', text: 'Think beyond the obvious. Decode the clues. Conquer the crossword.' },
+    ],
+  },
+
+  'Medimelody (Song se Syndrome)': {
+    blocks: [
+      { type: 'h', text: 'Format' },
+      {
+        type: 'ul',
+        items: [
+          'The event will be conducted in two rounds. Both rounds will be offline.',
+          'Participants should form a team of 2\u20134 members. Individual participation is not allowed.',
+          'The duration given after every song to answer is 15\u201320 seconds.',
+        ],
+      },
+      { type: 'h', text: 'Round 1 \u2014 Qualifying Round' },
+      {
+        type: 'ol',
+        items: [
+          '5 songs will be played (audio only).',
+          'The first three teams who identify the disease will get a chance to answer.',
+          'Songs will not be repeated.',
+          'No negative marking. Correct answer: +4 points.',
+        ],
+      },
+      { type: 'h', text: 'Round 2 \u2014 Finale' },
+      {
+        type: 'ol',
+        items: [
+          'Video of the song will be played along with lyrics.',
+          'Single response will be accepted from a single team.',
+          'One song will be played for a single team.',
+          'Negative marking (\u22121) for every incorrect answer.',
+        ],
+      },
+      { type: 'h', text: 'Eligibility' },
+      { type: 'p', text: '2021, 2022, 2023, 2024 and 2025 batches.' },
+      { type: 'h', text: 'Registration' },
+      {
+        type: 'ul',
+        items: ['Scan the QR on our Instagram handle.', 'Registration fee: 50 rupees per team.'],
+      },
+      { type: 'h', text: 'Prizes' },
+      {
+        type: 'ul',
+        items: [
+          'Winner: One Basic Registration (BR)',
+          'Runner-up: 50% off on Basic Registration (BR)',
+          'Top 3 winners: medal, certificates and exciting cash prizes to all three.',
+        ],
+      },
+      { type: 'h', text: 'For Any Queries, Contact' },
+      { type: 'ul', items: ['Rishi Kumar: 9031137805', 'Anjali Kumari: 9279423552'] },
+    ],
+  },
+
+  'General Quiz': {
+    blocks: [
+      { type: 'h', text: 'Rounds' },
+      { type: 'p', text: 'The event will be conducted in two rounds:' },
+      { type: 'ul', items: ['Screening Round', 'Final Round'] },
+      { type: 'h', text: 'Genre' },
+      {
+        type: 'ul',
+        items: ['Current Affairs', 'Sports', 'New Researches', 'Politics', 'General Knowledge'],
+      },
+      { type: 'h', text: 'Team Formation' },
+      {
+        type: 'p',
+        text: 'A team can have 3 members or 2 members. Lone wolves are also welcome.',
+      },
+      { type: 'h', text: 'On-the-Spot Entries' },
+      { type: 'p', text: 'On-the-spot entries will be accepted.' },
+      { type: 'h', text: 'Entry Fee' },
+      { type: 'p', text: '\u20B925 per entry' },
+      { type: 'h', text: 'Rules for Qualifying Round' },
+      {
+        type: 'ul',
+        items: [
+          'The qualifying round contains 21 questions of 5 marks each.',
+          '+5 marks will be awarded for each correct answer.',
+          '+0 marks will be awarded for an incorrect answer.',
+          'You have the option to leave one question and attempt any 20.',
+          'A few questions have hidden star marks. In case of similar marks obtained by teams, solving more star-marked questions will give a team the edge.',
+        ],
+      },
+      { type: 'h', text: 'Rules for Final Round' },
+      {
+        type: 'ul',
+        items: [
+          'The final round has 10 questions.',
+          '+10 marks will be awarded for each correct answer.',
+          'There will be no negative marking.',
+          'Pouncing on questions will be entertained.',
+        ],
+      },
+    ],
+  },
+
+  'Pop-Culture Quiz': {
+    blocks: [
+      {
+        type: 'p',
+        text: 'Make sure to catch up to the latest developments in the Game of Thrones and Harry Potter Universes.',
+      },
+      { type: 'h', text: 'Eligibility' },
+      {
+        type: 'ul',
+        items: [
+          'Must be a college student. Do carry your college ID in case you are asked to show it on premises.',
+        ],
+      },
+      { type: 'h', text: 'Teams' },
+      {
+        type: 'ul',
+        items: [
+          'A team with a maximum of 3 members is allowed.',
+          'Teams with fewer members and lone wolves are also welcome.',
+        ],
+      },
+      { type: 'h', text: 'Registration Fee' },
+      {
+        type: 'p',
+        text: 'Each member has to register individually, paying a minimal fee of Rs. 50 per person (maximum of Rs. 150 per team).',
+      },
+      { type: 'h', text: 'Rounds' },
+      { type: 'p', text: 'The quiz will consist of two rounds:' },
+      {
+        type: 'ul',
+        items: [
+          'Preliminary Round: This is a written round in which the teams will be screened and evaluated. Only the top teams will proceed to the next round.',
+          'Stage/Final Round: Further sub-rounds will be held during this round.',
+        ],
+      },
+      { type: 'h', text: 'Prizes' },
+      { type: 'p', text: 'Prize winners will be awarded with medals + certificates along with these:' },
+      {
+        type: 'ul',
+        items: ['1st Place: One Basic Registration (BR)', '2nd Place: 50% off on Basic Registration (BR)'],
+      },
+      {
+        type: 'p',
+        text: 'Follow us on Instagram @igimsfest, @hridaya_cerebrexia and @kalakriti_igins to become eligible for participation.',
+      },
+      { type: 'tag', text: 'Don\u2019t miss this opportunity to showcase your Pop Knowledge.' },
+    ],
+  },
+
   // Guidelines supplied as "TRAUMA CODE (BLS)" – shown on the Basic Life Support Workshop card.
   'Basic Life Support Workshop': {
     blocks: [

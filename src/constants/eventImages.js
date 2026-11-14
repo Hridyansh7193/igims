@@ -14,6 +14,8 @@ import hridayaImg from '../assets/eventcards/hridaya.jpeg';
 import spellBeeImg from '../assets/eventcards/spell-bee.jpeg';
 import generalQuizImg from '../assets/eventcards/general-quiz.png';
 import crypticImg from '../assets/eventcards/cryptic-crossword.jpeg';
+import medimelodyImg from '../assets/eventcards/medimelody.jpeg';
+import popCultureImg from '../assets/eventcards/pop-culture-quiz.png';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -27,6 +29,8 @@ export const EVENT_IMAGES = {
   'Spell Bee': { src: spellBeeImg, pos: '50% 50%' },
   'General Quiz': { src: generalQuizImg, pos: '50% 50%' },
   'Cryptic Crossword': { src: crypticImg, pos: '50% 50%' },
+  'Medimelody (Song se Syndrome)': { src: medimelodyImg, pos: '25% 50%' },
+  'Pop-Culture Quiz': { src: popCultureImg, pos: '50% 50%' },
 };
 
 const normalize = (name = '') =>

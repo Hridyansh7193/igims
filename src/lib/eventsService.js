@@ -424,3 +424,68 @@ export async function addRegisteredEvent(userId, eventName, userMetadata, catego
 
   return updated;
 }
+
+/**
+ * Saves the answers of an event-specific registration form (Google-Form style)
+ * into `event_form_responses`. Throws on failure so the caller does NOT mark the
+ * user as registered when their answers were not stored.
+ * Table SQL: supabase/event_form_responses.sql
+ */
+export async function saveEventFormResponse(userId, { eventName, categoryKey, formSlug, formLabel, formTitle, answers }) {
+  if (!userId || !eventName) throw new Error('User authentication required.');
+
+  let participantId = null;
+  try {
+    const { data: part } = await supabase
+      .from('participants')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    participantId = part?.id != null ? String(part.id) : null;
+  } catch (_) {}
+
+  const { error } = await supabase.from('event_form_responses').upsert(
+    {
+      user_id       : userId,
+      participant_id: participantId,
+      event_name    : eventName,
+      category      : categoryKey || null,
+      form_slug     : formSlug,
+      form_label    : formLabel || null,
+      form_title    : formTitle || null,
+      answers       : answers || [],
+      updated_at    : new Date().toISOString(),
+    },
+    { onConflict: 'user_id,event_name' }
+  );
+  if (error) throw error;
+  return true;
+}
+
+/** All form responses of a user (for dashboard / debugging). */
+export async function fetchEventFormResponses(userId) {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from('event_form_responses')
+    .select('*')
+    .eq('user_id', userId);
+  return error ? [] : data || [];
+}
+
+/**
+ * Uploads a participant file (ID proof / payment screenshot) to the private
+ * Supabase Storage bucket `event-uploads` and returns its storage path.
+ * Bucket SQL: supabase/event_uploads_storage.sql
+ */
+export async function uploadEventFile(userId, eventName, file) {
+  if (!userId) throw new Error('User authentication required.');
+  const safe = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '');
+  const path = `${userId}/${safe(eventName)}/${Date.now()}_${safe(file.name) || 'file'}`;
+  const { error } = await supabase.storage.from('event-uploads').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+  if (error) throw error;
+  return path;
+}
