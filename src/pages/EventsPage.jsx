@@ -98,13 +98,9 @@ export default function EventsPage({ setPage }) {
     setSelectedEvent(ev);
 
     // Events that have their own registration form (questions from the college's forms)
+    // The form itself collects name / college / contact, so no separate profile screen first.
     if (hasEventForm(ev.name)) {
-      if (profile) {
-        setShowFormModal(true);
-      } else {
-        setPendingForm(true);
-        setShowFullModal(true);
-      }
+      setShowFormModal(true);
       return;
     }
 

@@ -30,7 +30,10 @@ export default function EventFormModal({ eventName, eventKey, profile, onClose, 
   // Prefill from saved profile whenever the form changes
   useEffect(() => {
     if (!current) { setValues({}); return; }
-    setValues(prefillValues(fields, { profile, email: user?.email }));
+    const meta = user?.user_metadata || {};
+    const fallbackName = (meta.full_name || meta.name || '').trim();
+    const prof = profile || { first_name: fallbackName, last_name: '' };
+    setValues(prefillValues(fields, { profile: prof, email: user?.email }));
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantSlug]);
