@@ -24,6 +24,19 @@ import cyberImg from '../assets/eventcards/cyber-creation.jpeg';
 import sculptureImg from '../assets/eventcards/sculpture-spectacle.jpeg';
 import tattooImg from '../assets/eventcards/tattoo-titans.jpeg';
 import teeSplashImg from '../assets/eventcards/tee-splash.jpeg';
+import doodleImg from '../assets/eventcards/doodle-dreams.jpeg';
+import magicMaskImg from '../assets/eventcards/magic-mask.jpeg';
+import recycledImg from '../assets/eventcards/recycled-wonders.jpeg';
+import flamencoImg from '../assets/eventcards/flamenco.jpeg';
+import dharoharImg from '../assets/eventcards/dharohar.jpeg';
+import gotTalentImg from '../assets/eventcards/got-talent.jpeg';
+import abhinayImg from '../assets/eventcards/abhinay.jpeg';
+import venustImg from '../assets/eventcards/venust.jpeg';
+import stardustImg from '../assets/eventcards/stardust.jpeg';
+import nazariyaImg from '../assets/eventcards/nazariya.jpeg';
+import cinematicaImg from '../assets/eventcards/cinematica.jpeg';
+import memeCentralImg from '../assets/eventcards/memecentral.jpeg';
+import swarmayImg from '../assets/eventcards/swarmay.jpeg';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -47,6 +60,19 @@ export const EVENT_IMAGES = {
   'Sculpture Spectacle (Clay Art)': { src: sculptureImg, pos: '50% 0%' },
   'Tattoo Titans (Tattoo Art)': { src: tattooImg, pos: '50% 45%' },
   'Tee-Splash (T-Shirt Painting)': { src: teeSplashImg, pos: '65% 50%' },
+  'Doodle Dreams (Doodle Art)': { src: doodleImg, pos: '50% 50%' },
+  'Magic Mask (Face Painting)': { src: magicMaskImg, pos: '30% 75%' },
+  'Recycled Wonders (Waste Art)': { src: recycledImg, pos: '55% 95%' },
+  'Flamenco (Dancing)': { src: flamencoImg, pos: '75% 100%' },
+  'Dharohar (Folklore)': { src: dharoharImg, pos: '52% 50%' },
+  'Got Talent': { src: gotTalentImg, pos: '50% 30%' },
+  'Abhinay': { src: abhinayImg, pos: '65% 50%' },
+  'Venust (Fashion Show)': { src: venustImg, pos: '50% 35%' },
+  'Stardust (Bollywood Recreation)': { src: stardustImg, pos: '50% 20%' },
+  'Nazariya (Photography)': { src: nazariyaImg, pos: '50% 40%' },
+  'Cinematica (Film Making)': { src: cinematicaImg, pos: '38% 50%' },
+  'MemeCentral (Meme Competition)': { src: memeCentralImg, pos: '50% 0%' },
+  'Swarmay (Singing)': { src: swarmayImg, pos: '50% 25%' },
 };
 
 const normalize = (name = '') =>

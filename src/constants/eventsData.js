@@ -83,7 +83,6 @@ export const CATEGORIES = [
     label: 'Art',
     events: [
       '🎨 Chitraganga (Painting)',
-      '🛣️ Lok Natya (Nukkad Natak)',
       '🖍️ Doodle Dreams (Doodle Art)',
       '🏺 Sculpture Spectacle (Clay Art)',
       '✒️ Tattoo Titans (Tattoo Art)',
@@ -92,8 +91,8 @@ export const CATEGORIES = [
       '♻️ Recycled Wonders (Waste Art)',
       '💻 Cyber-Creation (Digital Art)',
       '👕 Tee-Splash (T-Shirt Painting)',
-      '👨‍⚕️ Clinical Cartoons (Medical Caricature)',
       '🎭 Magic Mask (Face Painting)',
+      '🫀 Anatomical Body Painting',
     ],
   },
 ];
