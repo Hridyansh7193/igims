@@ -1797,6 +1797,845 @@ export const EVENT_GUIDELINES = {
       }
     ],
   },
+
+  "Abhinay": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Rounds"
+      },
+      {
+        "type": "p",
+        "text": "Abhinay will be conducted in 2 stages."
+      },
+      {
+        "type": "h",
+        "text": "Stage 1 — Online Qualifying Round"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Showcase your acting talent by submitting a performance video.",
+          "Maximum duration: 2 minutes."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Stage 2 — Offline Final Round"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The top contestants will perform live at the auditorium, IGIMS Patna.",
+          "Maximum performance duration: 20 minutes."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Judging Criteria for Stage 1"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Creativity",
+          "Acting Skills",
+          "Originality",
+          "Presentation",
+          "Likes on Instagram (if applicable)"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "₹50 for solo entry.",
+          "₹100 for group entry."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Important Restrictions"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Online Event: The performance video should not exceed 2 minutes.",
+          "Offline Event: The live performance should not exceed 20 minutes.",
+          "Types of Performances: Participants may perform a monologue, skit, mime, dramatic scene, or any other acting performance.",
+          "Props and Costumes: Props and costumes are allowed, provided they are safe and appropriate. Participants have to bring their own props.",
+          "Content Guidelines: Performances must be respectful and appropriate. No derogatory, offensive, or defamatory content targeting any individual or community will be entertained.",
+          "Participation: Both individual and group participation are allowed."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "For Queries, Contact"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Prateek: 8540949798",
+          "Saurabh: 6204926608",
+          "Minhaz Alam: 6205327996",
+          "Riya: 9234535959"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Follow Us"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "@igimsfest",
+          "@abhinay_cerebrexia_"
+        ]
+      }
+    ],
+  },
+
+  "Cricket": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Men's Cricket"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Each team will have a maximum of 15 (4 reserves) registered players exactly.",
+          "Each game will be played with a red leather ball.",
+          "Normal rules of ICC will be applied for the whole tournament.",
+          "Scoring will be as per the ICC rule book of cricket.",
+          "Teams will be awarded 2 points for a win, 1 point for a draw and no points for a loss.",
+          "The decision of the umpire in all matters pertaining to the playing rules of an individual game is final."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Men's — Duration of Matches"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Group stage: 14 overs (4 over power play).",
+          "Minimum 5 bowlers must be used, 1 bowler can bowl maximum 3 overs.",
+          "Semifinal: same as group stage.",
+          "Final: same as group stage.",
+          "Draw games in semifinals and finals will further progress by super over as per the rules of ICC."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Men's — Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹4500 per team (₹300 per person)"
+      },
+      {
+        "type": "h",
+        "text": "Women's Cricket"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Each team will have a maximum of 8 (and 4 substitutes) registered players exactly.",
+          "Each game will be played with a green tennis ball.",
+          "Normal rules of ICC will be applied for the whole tournament.",
+          "Scoring will be as per the ICC rule book of cricket.",
+          "Teams will be awarded 2 points for a win, 1 point for a draw and no points for a loss.",
+          "The decision of the umpire in all matters pertaining to the playing rules of an individual game is final."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Women's — Duration of Matches"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Group stage: 8 overs.",
+          "1 bowler can bowl maximum 2 overs.",
+          "Semifinal: same as group stage.",
+          "Final: 10 overs (same rule as per the ICC).",
+          "Draw games in semifinals and finals will further progress by super over as per the rules of ICC."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Women's — Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹1200 per team (₹100 per person)"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificates, Cash Prize"
+      }
+    ],
+  },
+
+  "Football": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Duration of Matches"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Group stages: 60 minutes (2×30 minutes) game time, 10 minutes of half time.",
+          "Semifinal: 60 minutes (2×30 minutes) game time, 10 minutes of half time.",
+          "Final: 90 minutes (2×45 minutes) game time, 20 minutes of half time.",
+          "Drawn games in the finals will be followed by 20 minutes extra time (2×10 minutes), 5 minutes of half time.",
+          "Drawn games in the semifinal will be decided by 5 penalty kicks to each team."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Match Rules"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Group placing will be decided by points gained, followed by goal difference (goals scored subtracted by goals against), followed by goals scored, followed by head-to-head, followed by a toss.",
+          "The decision of the referee in all matters pertaining to the playing rules of an individual game is final.",
+          "Normal rules of FIFA will be applied for the whole tournament.",
+          "Each team should carry their own balls for practice. No balls will be provided for the same."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Guidelines"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Players must wear proper football gear. Jerseys and studs are mandatory.",
+          "A valid college ID card for every team member is mandatory during registration.",
+          "All players in a team must belong to the same college. If any outsider is found, the entire team may be disqualified from the tournament.",
+          "Multiple teams may register from the same college. However, a player cannot represent more than one team if multiple teams from the same college are registered.",
+          "A maximum of 11 players + 4 rolling substitutes can register or participate in a team. Once registered, players cannot be changed.",
+          "All teams must maintain order and discipline both on and off the field.",
+          "The referee’s decision is final and binding. Aggressive or foul behaviour towards opponents or the referee will not be entertained.",
+          "Teams must report 1 hour before their scheduled match.",
+          "The organisers shall not be held responsible for any major or minor injuries or incidents sustained by players during the game, on or off the field. However, first-aid facilities will be available at the venue.",
+          "The organisers reserve the right to change match dates and timings and reschedule fixtures as required.",
+          "Teams will be awarded 3 points for a win, 1 point for a draw, and 0 points for a loss."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹3750 per team (₹250 per person)"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificates, Cash Prize"
+      },
+      {
+        "type": "p",
+        "text": "Note: Non-adherence to any of the guidelines mentioned above may lead to disqualification of team."
+      }
+    ],
+  },
+
+  "Volleyball": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "1. Team Composition"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Teams consist of a total of 10 players in the squad and six players on the court at a time.",
+          "A minimum of four players must be present to start a game.",
+          "Substitutions are allowed during stoppages in play."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "2. Scoring"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Matches will be played in a best-of-three sets format.",
+          "Rally scoring is used, meaning a point is awarded on every serve.",
+          "Sets are played to 25 points (with a 2-point advantage), and a third set (if needed) is played to 25 points.",
+          "A team must win by at least 2 points. Semifinal and final will be played for 5 sets, 4 sets of 25 points and final set of 15 points. In the last set of each match court will be changed at half score."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "3. Serve"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The server must stand behind the end line when serving.",
+          "The serve must clear the net and land in the opposing team’s court."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "4. Play"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Each team is allowed three hits to return the ball over the net.",
+          "A player may not hit the ball twice consecutively (except for blocking)."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "5. Net Violations"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Players may not touch the net during play.",
+          "Crossing the centerline into the opponent’s side is prohibited."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "6. Substitutions"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Substitutions are allowed but must be made through the back row players and during stoppages in play."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "7. Timeouts"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Each team is allowed two timeouts per set of 1 min each."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "8. Deciding Sets"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "In the event of a tied match (1–1 in sets), a deciding third set is played to 25 points."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "9. Sportsmanship"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "All participants are expected to display good sportsmanship and respect for opponents and officials."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹1500 per team"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "Badminton": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Events"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Singles — male and female.",
+          "Doubles — male and female.",
+          "Mixed doubles."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹200 per person"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificates, Cash Prizes"
+      },
+      {
+        "type": "h",
+        "text": "Scoring System"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "All singles and doubles matches are the best of three games.",
+          "The first side to 21 points wins a game.",
+          "Point is scored on every serve and awarded to whichever side wins the rally. The winning side gets the next serve.",
+          "If the score is 20–20, a side must win by two clear points to win the game. If it reaches 29–29, the first to get their 30th point wins."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Changing of Ends"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "In badminton, players are required to change ends under specific conditions.",
+          "They should change ends at the conclusion of the first game.",
+          "If a third game is required, they should also change ends at the end of the second game.",
+          "In the third game, the change of ends occurs when one side reaches a score of 11 points."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Intervals"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Players shall have a 60 seconds interval between two consecutive serves.",
+          "A 2 minute interval between each set is allowed."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Singles"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The server serves from the appropriate service court at the start of the match (0–0) and when their score is level.",
+          "If their score is odd, they serve from the left service court. If it is even, they serve from the right service court. These are some badminton singles service rules of scoring.",
+          "After scoring a point, if the server prevails in the rally, the server then serves again from the secondary service court.",
+          "The winner of a rally earns a point and takes over as the new server."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Doubles"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The service is sent to the player in alternate box.",
+          "The server serves from the right service court at the start of the game and when the score is tied. The server serves from the left court when anything is strange.",
+          "The serving side earns a point if it prevails in a rally and the same server then serves from the alternate service court.",
+          "The point is awarded to the receiving side if the serving side loses the rally and the new service will begin from receiving side by the player alternate to the previous serve of same side.",
+          "The players from receiving side will maintain their respective service court until new point to their team is awarded."
+        ]
+      }
+    ],
+  },
+
+  "Kabaddi": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "Teams: Each team consists of 7 players on the field and 3 substitutes on the bench.",
+          "Objective: The main objective is for a “raider” from one team to enter the opposing team’s half, tag one or more of their players, and return to their half without being tackled.",
+          "The Raider: The raider must chant “Kabaddi, Kabaddi” continuously while in the opposing half to prove they are not inhaling. They can take a breath once they’ve tagged an opponent.",
+          "Defenders: The opposing team’s players are defenders. They must try to tackle the raider before the raider returns to their own half.",
+          "Tackling: A successful tackle is when a defender touches the raider and prevents them from returning to their half. The raider is declared “out.”",
+          "Points: Points are awarded for each defender tagged by the raider. The team that successfully tackles the raider earns a point for each defender tagged.",
+          "Raider out: If the raider is tackled and goes out of bounds or takes too long to return to their half, they are declared “out.”",
+          "Revivals: When a defender is tagged by the raider, they are out, but they can be revived if their team successfully tags an opponent raider.",
+          "All-out: If an entire defending team is declared “out” in a single raid, the opposing team earns two additional points, known as an “all-out.”",
+          "Time limits: 40 minutes (2 halves of 20 minutes).",
+          "Winning: The team with the most points at the end of the game or the first team to reach a predetermined number of points wins.",
+          "Fouls: Players must play fairly, and fouls such as holding, kicking, or any form of unsportsmanlike conduct are penalized.",
+          "Bonus: Rules of PKL will apply."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Men: ₹1000 per team",
+          "Women: ₹750 per team"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Cash Prizes, Medals, Certificate"
+      }
+    ],
+  },
+
+  "Athletics": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "The 100 Meters"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Starting position: Athletes begin the race in a crouched position with one foot forward and one foot back, in the starting blocks. They place their fingers or hands on the ground in front of the starting line.",
+          "Starting commands: The race starts with a series of commands from the starter. These typically include “on your marks” (athletes get into the starting position), “set” (athletes raise their hips and get ready to sprint), and the firing of the starting gun or a sound signal.",
+          "False starts: Athletes are allowed one false start without disqualification. If any athlete false starts again after the initial warning, they are disqualified from the race.",
+          "Running lanes: Athletes must stay within their assigned lanes throughout the race. Running outside of your lane can result in disqualification.",
+          "Finish line: The finish line is marked with a white line across the track. Athletes must cross this line to finish the race.",
+          "Timing: Electronic timing systems are used to measure the athletes’ times with high precision.",
+          "Winning: The first athlete to cross the finish line is the winner. The times of all participants are recorded.",
+          "Records: World records and national records are kept for the 100 meters.",
+          "Doping control: Athletes may be subject to doping control to ensure fair play and adherence to anti-doping regulations.",
+          "Clothing and footwear: Athletes must adhere to specific rules regarding clothing and footwear, including the use of starting blocks."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Shot Put — Throwing Rules"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Technique: The shot must be put from the shoulder with one hand only. It should be held close to the neck and remain in that position throughout the motion, not dropping below shoulder height.",
+          "Grip: Athletes can tape their fingertips but cannot wear gloves.",
+          "Time limit: A competitor must begin the throwing motion within 60 seconds of their name being called."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Discus Throw — General Rules"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The throw must be made from a circle with a 2.5m diameter.",
+          "The athlete cannot touch the top of the rim or the ground outside the circle at any point during the throw.",
+          "The discus must land within the 34.92° landing sector marked on the field.",
+          "The thrower must remain in the circle until the discus has landed. Once the discus has landed, the thrower must exit the circle from the back half."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Discus Throw — Fouls"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Touching the ground outside the circle before the discus lands.",
+          "Stepping out of the circle from the front half before the discus lands.",
+          "Touching the top of the throwing circle’s rim.",
+          "The discus landing outside the designated 34.92° sector.",
+          "Stepping into the circle before the announcer calls the athlete’s name."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Long Jump — Key Rules"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Take-off: Athletes must take off from the runway without touching the ground beyond the take-off board.",
+          "Foul line: The take-off board has a foul line at its end. Stepping over this line is a foul.",
+          "Measurement: The jump is measured from the foul line to the closest point of the mark made in the sand upon landing.",
+          "Landing: The athlete must land in the sandpit. Stepping back in the sand after landing or falling back with your hands behind you are fouls.",
+          "Attempts: Competitors are given a set number of attempts, with the best legal jump counting as their score.",
+          "Time limit: An athlete must begin their jump within a one-minute time limit after their name is called.",
+          "Wind: For a jump to be considered for record purposes, the wind speed must not exceed 2 meters per second."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹100 per person"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "Carrom": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Setup"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Board and pieces: The board has 9 pieces of each color (usually black and white) and a red piece called the “Queen.”",
+          "Formation: The pieces are arranged in the center in a circular formation with the Queen in the middle."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Objective"
+      },
+      {
+        "type": "p",
+        "text": "The goal is to score points by sinking your pieces (either black or white) into the pockets, and ultimately to sink the Queen."
+      },
+      {
+        "type": "h",
+        "text": "Gameplay"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Turns: Players take turns striking their pieces with a striker.",
+          "Striking: You can strike the striker with your finger to hit your pieces. The striker must touch your pieces first.",
+          "Pocketing pieces: If you successfully pocket one of your pieces, you continue your turn. If you miss, the turn passes to the other player.",
+          "Sinking the Queen: To claim the Queen, you must sink it and then sink one of your pieces in the next turn. If you fail, the Queen is returned to the center."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Fouls"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Pocketing the striker: If you pocket the striker, you lose one of your pieces.",
+          "Incorrect strike: Hitting the opponent’s pieces first is a foul, and the turn passes."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Winning"
+      },
+      {
+        "type": "p",
+        "text": "The game ends when a player has pocketed all their pieces and the Queen according to the rules. Points can also be counted based on pieces left on the board for scoring."
+      },
+      {
+        "type": "h",
+        "text": "Scoring"
+      },
+      {
+        "type": "p",
+        "text": "Players can keep track of scores based on pieces pocketed and any penalties incurred."
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹50 per person"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "Rubik's Mania": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "Scrambling: Before each solve, the cube is scrambled randomly using a computer-generated algorithm.",
+          "Solving time: Competitors have a maximum amount of time (usually 15 seconds) to inspect the cube before starting their solve.",
+          "Solving: The competitor starts the solve by placing their hands on a timer pad. They must then solve the cube as quickly as possible.",
+          "Stopping the timer: The timer stops automatically when the cube is solved. Competitors are also allowed to manually stop the timer when they believe they have completed the solve.",
+          "Average of 3: A competitor’s result is an average time of 3 solves.",
+          "Penalties: Penalties can be added to a solve time for various infractions, such as using an incorrect method, making extra moves, or performing illegal moves.",
+          "Inspection: A competitor may not touch the cube during the inspection phase after the solve begins.",
+          "Cube integrity: The cube must be a standard Rubik’s Cube, and it is subject to inspection to ensure it is not modified or tampered with.",
+          "Disqualification: Competitors can be disqualified for violating rules or attempting to cheat.",
+          "Cube will be 3×3.",
+          "There will be 2 rounds. A competitor can use only the beginners method to solve for round 1. And top 5 will qualify for 2nd round. And qualifier can use any method to solve the cube in 2nd round."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "BGMI": {
+    blocks: [
+      {
+        "type": "ol",
+        "items": [
+          "A player can register from one squad only.",
+          "Groups will be decided randomly.",
+          "Emulator is not allowed. (Players can use mobile or tab)",
+          "If caught cheating, will result in direct disqualification of team.",
+          "Matches will start on scheduled time, so join the lobby on time.",
+          "Replacement will be allowed in emergency cases. Contact coordinators for that.",
+          "In case of tie, finish point will be prioritized."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹200 per squad"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "Table Tennis": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Events"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Singles — Men, Women",
+          "Doubles",
+          "Mixed Doubles"
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Guidelines"
+      },
+      {
+        "type": "ol",
+        "items": [
+          "Table size: A standard table tennis table is 9 feet long, 5 feet wide, and 2.5 feet high (2.74m × 1.525m × 76cm).",
+          "Equipment: Players use a lightweight ball and paddles (also known as rackets or bats) with rubber on both sides.",
+          "Scoring: A game will be played to 11 points, and a player must win by a margin of at least 2 points.",
+          "Serve: The serve must be hit from an open palm, and the ball must bounce once on the server’s side of the table before clearing the net and landing in the opponent’s side. The server must alternate serving diagonally. Serve changes after 2 points.",
+          "Rally: Players take turns hitting the ball over the net. The ball must bounce once on each side of the table during a rally.",
+          "Let: If a point is interrupted due to outside interference or an unexpected event, a let is called, and the point is replayed.",
+          "Point scoring: Points are awarded when one player fails to return the ball according to the rules (e.g., it lands out of bounds, doesn’t clear the net, or is hit twice in a row by a player).",
+          "Doubles: In doubles play, each team alternates hitting the ball, and the ball must cross the net diagonally.",
+          "Deuce: When the score reaches 10–10, players continue until one player leads by 2 points until 15 points."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹150 per person"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
+
+  "Chess": {
+    blocks: [
+      {
+        "type": "h",
+        "text": "Fair Play & General Rules for Online Rounds"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Entry requirements: A player should have played at least 10 rated blitz games to enter the tournament.",
+          "We will not be responsible for any network issues a player may encounter.",
+          "Cheating is strictly prohibited, including using cheat engines or external help. Players found to be abusing this policy will be disqualified and will be forbidden from participating in future tournaments conducted by Lichess.org.",
+          "Allegations of suspected players must be reported to the organizers personally. The organizers will manually analyze the games by comparing them with their previous available games, and appropriate actions will be taken.",
+          "In case of any observed discrepancy, the organizing committee’s decision will be final."
+        ]
+      },
+      {
+        "type": "h",
+        "text": "Entry Fee"
+      },
+      {
+        "type": "p",
+        "text": "₹100 per person"
+      },
+      {
+        "type": "h",
+        "text": "Prizes"
+      },
+      {
+        "type": "p",
+        "text": "Medals, Certificate, Cash Prize"
+      }
+    ],
+  },
 };
 
 // Strip the leading emoji / symbols and normalise, so '📝 Preclinical Quiz'

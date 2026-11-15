@@ -25,19 +25,6 @@ export const CATEGORIES = [
     ],
   },
   {
-    key: 'informal',
-    label: 'Informal',
-    events: [
-      '👨‍👩‍👧‍👦 Family Feud',
-      '🎯 Dare to Dart',
-      '💪 Push Up Challenge',
-      '🤝 Arm Wrestling',
-      '🗺️ Treasure Hunt',
-      '🎬 Film Reenactment',
-      '🍳 Cooking',
-    ],
-  },
-  {
     key: 'sports',
     label: 'Sports',
     events: [
@@ -70,12 +57,7 @@ export const CATEGORIES = [
       '😂 MemeCentral (Meme Competition)',
       '🎬 Stardust (Bollywood Recreation)',
       '🎭 Dharohar (Folklore)',
-      '🎶 Antakshari',
-      '🤫 Dumb Charades',
-      '🪑 Musical Chairs',
-      '🍿 Movie Night',
       '👗 Venust (Fashion Show)',
-      '✨ Prom Night',
     ],
   },
   {
