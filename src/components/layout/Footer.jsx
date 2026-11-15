@@ -1,10 +1,9 @@
 import React from 'react';
-import { Instagram, Facebook, Linkedin, Youtube } from '../common/SocialIcons';
+import { Instagram, WhatsApp } from '../common/SocialIcons';
 import Sticker from '../common/Sticker';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function Footer({ setPage }) {
-  const socials = [Instagram, Facebook, Linkedin, Youtube];
   const narrow = useIsNarrow(760);
 
   return (
@@ -105,17 +104,94 @@ export default function Footer({ setPage }) {
           <Sticker tone="cyan" rotate={-2} style={{ marginBottom: 14 }}>
             Connect
           </Sticker>
-          <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
-            {socials.map((Icon, i) => (
-              <a key={i} href="#" className="crx-social" style={{ color: 'var(--paper)' }}>
-                <Icon size={17} />
-              </a>
-            ))}
-          </div>
-          <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 12px' }}>cerebrexia@igims.edu</p>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '4px 8px' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
-            <span style={{ fontSize: 10, color: 'var(--muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Razorpay Secured</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <a
+              href="https://www.instagram.com/igimsfest?srtk=MWR5NzJobTV6MDB5aw=="
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                color: 'var(--paper)',
+                textDecoration: 'none',
+                fontSize: 13,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#E1306C';
+                e.currentTarget.style.transform = 'translateX(3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--paper)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(225, 48, 108, 0.12)',
+                  border: '1px solid rgba(225, 48, 108, 0.28)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: '#E1306C',
+                }}
+              >
+                <Instagram size={16} />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>Instagram</span>
+                <span>@igimsfest</span>
+              </div>
+            </a>
+
+            <a
+              href="https://wa.me/918271791542"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                color: 'var(--paper)',
+                textDecoration: 'none',
+                fontSize: 13,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#25D366';
+                e.currentTarget.style.transform = 'translateX(3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--paper)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(37, 211, 102, 0.12)',
+                  border: '1px solid rgba(37, 211, 102, 0.28)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: '#25D366',
+                }}
+              >
+                <WhatsApp size={16} color="#25D366" />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>WhatsApp</span>
+                <span>+91 82717 91542</span>
+              </div>
+            </a>
           </div>
         </div>
       </div>
