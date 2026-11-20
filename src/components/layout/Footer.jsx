@@ -149,6 +149,7 @@ export default function Footer({ setPage }) {
               </div>
             </a>
 
+            {/* WhatsApp - Divyansh */}
             <a
               href="https://wa.me/918271791542"
               target="_blank"
@@ -188,8 +189,53 @@ export default function Footer({ setPage }) {
                 <WhatsApp size={16} color="#25D366" />
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>WhatsApp</span>
+                <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>WhatsApp &middot; Divyansh</span>
                 <span>+91 82717 91542</span>
+              </div>
+            </a>
+
+            {/* WhatsApp - Veer */}
+            <a
+              href="https://wa.me/919128187476"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                color: 'var(--paper)',
+                textDecoration: 'none',
+                fontSize: 13,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#25D366';
+                e.currentTarget.style.transform = 'translateX(3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--paper)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(37, 211, 102, 0.12)',
+                  border: '1px solid rgba(37, 211, 102, 0.28)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: '#25D366',
+                }}
+              >
+                <WhatsApp size={16} color="#25D366" />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 700 }}>WhatsApp &middot; Veer</span>
+                <span>+91 91281 87476</span>
               </div>
             </a>
           </div>

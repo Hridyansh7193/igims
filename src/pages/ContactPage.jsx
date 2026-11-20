@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { WhatsApp } from '../components/common/SocialIcons';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
 import { useIsNarrow } from '../hooks/useIsNarrow';
@@ -38,6 +39,7 @@ export default function ContactPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {[
                 { icon: Mail, l: 'Email', v: 'cerebrexia@igims.edu' },
+                { icon: WhatsApp, l: 'WhatsApp Support', v: 'Divyansh: +91 82717 91542 / Veer: +91 91281 87476' },
                 { icon: Phone, l: 'Student Helplines', v: '+91 82102 23381 / +91 95720 68244' },
                 { icon: MapPin, l: 'Venue', v: 'IGIMS, Sheikhpura, Patna – 800014' },
               ].map((item) => (
