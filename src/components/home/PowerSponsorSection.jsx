@@ -76,7 +76,7 @@ export default function PowerSponsorSection() {
         </Reveal>
 
         {/* Sponsor Poster Card */}
-        <Reveal delay={150}>
+        <Reveal delay={0.1} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <div
             style={{
               position: 'relative',
@@ -116,7 +116,6 @@ export default function PowerSponsorSection() {
               <img
                 src={powerSponsorImg}
                 alt="Cerebrexia '26 Official Power Sponsor"
-                loading="lazy"
                 style={{
                   width: '100%',
                   height: '100%',
