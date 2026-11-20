@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { issueTicketsForBasicRegistration } from './ticketService.js';
 
 /**
  * Normalizes participant profile to ensure backward and forward compatibility
@@ -320,6 +321,21 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
       .update({ payment_status: 'PAID', updated_at: new Date().toISOString() })
       .eq('user_id', userId);
   } catch (_) {}
+
+  // Automatically issue QR tickets and dispatch emails to attendee + admin
+  try {
+    const { data: brRecord } = await supabase
+      .from('basic_registrations')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (brRecord) {
+      await issueTicketsForBasicRegistration(userId, brRecord, paymentDetails);
+    }
+  } catch (tktErr) {
+    console.warn('[eventsService] Ticket issuance error:', tktErr);
+  }
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { paid: true, paymentId } }));

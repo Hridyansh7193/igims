@@ -12,10 +12,12 @@ import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
+import GateScannerPage from './pages/GateScannerPage';
+import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'scanner'];
 
 export default function App() {
   const getInitialPage = () => {
@@ -31,6 +33,7 @@ export default function App() {
   const [page, setPage] = useState(getInitialPage);
   const [introComplete, setIntroComplete] = useState(false);
   const [revealHeroTitle, setRevealHeroTitle] = useState(false);
+  const [showTitleSponsor, setShowTitleSponsor] = useState(false);
 
   const navigateTo = useCallback((nextPage) => {
     setPage(nextPage);
@@ -67,6 +70,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('crx_intro_seen', '1');
     }
+    setShowTitleSponsor(true);
   }, []);
 
   const handleWipeStart = useCallback(() => {
@@ -80,8 +84,8 @@ export default function App() {
       <div className="crx-root">
         <GlobalStyle />
 
-        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation) */}
-        {!introComplete && !isPolicyPage && (
+        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation or gate scanner) */}
+        {!introComplete && !isPolicyPage && page !== 'scanner' && (
           <IntroAnimation
             onComplete={handleIntroComplete}
             onWipeStart={handleWipeStart}
@@ -89,24 +93,35 @@ export default function App() {
           />
         )}
 
-        {/* Main site content */}
-        <DynamicBackground />
-        <div className="crx-dots" />
-        <div className="crx-vignette" />
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
-          <NavBar page={page} setPage={navigateTo} />
-          {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
-          {page === 'events' && <EventsPage setPage={navigateTo} />}
-          {page === 'pronites' && <PronitesPage />}
-          {page === 'accommodation' && <AccommodationPage />}
-          {page === 'about' && <AboutPage />}
-          {page === 'contact' && <ContactPage />}
-          {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
-          {isPolicyPage && (
-            <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
-          )}
-          <Footer setPage={navigateTo} />
-        </div>
+        {/* Title Sponsor Pop-up (Pops up right after starting animation ends and website loads) */}
+        {showTitleSponsor && page !== 'scanner' && (
+          <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
+        )}
+
+        {/* Gate Scanner standalone view for APK / Volunteers */}
+        {page === 'scanner' ? (
+          <GateScannerPage />
+        ) : (
+          <>
+            <DynamicBackground />
+            <div className="crx-dots" />
+            <div className="crx-vignette" />
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+              <NavBar page={page} setPage={navigateTo} />
+              {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
+              {page === 'events' && <EventsPage setPage={navigateTo} />}
+              {page === 'pronites' && <PronitesPage />}
+              {page === 'accommodation' && <AccommodationPage />}
+              {page === 'about' && <AboutPage />}
+              {page === 'contact' && <ContactPage />}
+              {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
+              {isPolicyPage && (
+                <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
+              )}
+              <Footer setPage={navigateTo} />
+            </div>
+          </>
+        )}
       </div>
     </AuthProvider>
   );

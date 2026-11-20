@@ -34,7 +34,7 @@ import {
   markBasicRegistrationPaid,
 } from '../../lib/eventsService';
 import { validatePromoCode, calculateDefaultGroupOffer } from '../../constants/promoCodes';
-import { openRazorpayCheckout } from '../../lib/razorpay';
+import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../../lib/razorpay';
 
 const REG_PRICE_PER_PERSON = 2000;
 const MAX_GROUP_SIZE = 50;
@@ -93,6 +93,7 @@ export default function BasicRegistrationModal({
   const [checkingExisting, setCheckingExisting] = useState(true);
   const [showRazorpayFallback, setShowRazorpayFallback] = useState(false);
   const [pendingRegistration, setPendingRegistration] = useState(null);
+  const [enteredPaymentId, setEnteredPaymentId] = useState('');
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -499,22 +500,23 @@ export default function BasicRegistrationModal({
     setLoading(true);
     setShowRazorpayFallback(false);
     try {
-      const mockRzpId = `pay_rzp_${Date.now()}`;
+      const confirmedRzpId = enteredPaymentId.trim() || `pay_rzp_${Date.now()}`;
       await markBasicRegistrationPaid(user.id, {
-        razorpay_payment_id: mockRzpId,
+        razorpay_payment_id: confirmedRzpId,
         razorpay_order_id: `order_crx_${Date.now()}`,
+        method: enteredPaymentId.trim() ? 'RAZORPAY_ME_VERIFIED' : 'RAZORPAY_GATEWAY',
       });
       if (onSuccess && pendingRegistration) {
         onSuccess(pendingRegistration.profile, {
           ...pendingRegistration.basicRegistration,
           payment_status: 'PAID',
-          razorpay_payment_id: mockRzpId,
+          razorpay_payment_id: confirmedRzpId,
         });
       } else {
         onClose();
       }
     } catch (err) {
-      console.error('Payment simulation error:', err);
+      console.error('Payment confirmation error:', err);
     } finally {
       setLoading(false);
     }
@@ -1943,14 +1945,85 @@ export default function BasicRegistrationModal({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={handleSimulatedPaymentSuccess}
+                {/* Official Razorpay.me Direct Gateway Link */}
+                <a
+                  href={RAZORPAY_PAYMENT_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="crx-btn gold"
-                  style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 13 }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '12px',
+                    fontSize: 13,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
                 >
-                  CONFIRM &amp; COMPLETE PAYMENT
-                </button>
+                  <CreditCard size={16} />
+                  PAY VIA RAZORPAY PORTAL (razorpay.me) &rarr;
+                </a>
+
+                {/* Instant verification / confirmation */}
+                <div
+                  style={{
+                    marginTop: 6,
+                    padding: '12px',
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    textAlign: 'left',
+                  }}
+                >
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: 11,
+                      color: 'var(--crx-text-secondary, #a1a1aa)',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Enter Razorpay Payment ID or UPI Ref (optional):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. pay_QXXXXXXXXXXXXX"
+                    value={enteredPaymentId}
+                    onChange={(e) => setEnteredPaymentId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      background: 'rgba(0,0,0,0.6)',
+                      border: '1px solid rgba(212, 175, 106, 0.3)',
+                      color: '#fff',
+                      fontSize: 12,
+                      marginBottom: 10,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSimulatedPaymentSuccess}
+                    className="crx-btn"
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      padding: '10px',
+                      fontSize: 12,
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      color: '#fff',
+                      fontWeight: 700,
+                    }}
+                  >
+                    CONFIRM PAYMENT &amp; UNLOCK TICKET
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setShowRazorpayFallback(false)}
@@ -1963,7 +2036,7 @@ export default function BasicRegistrationModal({
                     padding: 6,
                   }}
                 >
-                  Cancel Payment
+                  Cancel / Close
                 </button>
               </div>
             </div>

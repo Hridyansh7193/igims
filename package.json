@@ -10,8 +10,14 @@
     "scrape-forms": "node scripts/scrape-forms.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@supabase/supabase-js": "^2.116.0",
+    "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.16.0",
+    "nodemailer": "^10.6.0",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^6.32.1"

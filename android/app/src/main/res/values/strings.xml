@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CRX Gate Scanner</string>
+    <string name="title_activity_main">CRX Gate Scanner</string>
+    <string name="package_name">in.cerebrexia.scanner</string>
+    <string name="custom_url_scheme">in.cerebrexia.scanner</string>
+</resources>

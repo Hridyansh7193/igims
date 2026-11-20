@@ -5,6 +5,7 @@ import MascotSection from '../components/home/MascotSection';
 import StatsSection from '../components/home/StatsSection';
 import SplitPanelSection from '../components/home/SplitPanelSection';
 import GallerySection from '../components/home/GallerySection';
+import PowerSponsorSection from '../components/home/PowerSponsorSection';
 import RegistrationOptionsSection from '../components/home/RegistrationOptionsSection';
 import FAQ from '../components/home/FAQ';
 import ClosingHero from '../components/home/ClosingHero';
@@ -25,6 +26,7 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       {/* Continuing original sections */}
       <SplitPanelSection setPage={setPage} />
       <GallerySection />
+      <PowerSponsorSection />
 
       {/* QnA / FAQ */}
       <FAQ />
