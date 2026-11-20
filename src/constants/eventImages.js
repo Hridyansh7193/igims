@@ -37,6 +37,20 @@ import nazariyaImg from '../assets/eventcards/nazariya.jpeg';
 import cinematicaImg from '../assets/eventcards/cinematica.jpeg';
 import memeCentralImg from '../assets/eventcards/memecentral.jpeg';
 import swarmayImg from '../assets/eventcards/swarmay.jpeg';
+import footballImg from '../assets/eventcards/football.jpeg';
+import badmintonImg from '../assets/eventcards/badminton.jpeg';
+import volleyballImg from '../assets/eventcards/volleyball.jpeg';
+import kabaddiImg from '../assets/eventcards/kabaddi.jpeg';
+import cricketImg from '../assets/eventcards/cricket.jpeg';
+import bgmiImg from '../assets/eventcards/bgmi.jpeg';
+import rubiksImg from '../assets/eventcards/rubiks-mania.jpeg';
+import athleticsImg from '../assets/eventcards/athletics.jpeg';
+import chessImg from '../assets/eventcards/chess.jpeg';
+import carromImg from '../assets/eventcards/carrom.jpeg';
+import tableTennisImg from '../assets/eventcards/table-tennis.jpeg';
+import tugOfWarImg from '../assets/eventcards/tug-of-war.jpeg';
+import khoKhoImg from '../assets/eventcards/kho-kho.jpeg';
+import mixCricketImg from '../assets/eventcards/mix-cricket.jpeg';
 
 export const EVENT_IMAGES = {
   'Basic Life Support Workshop': { src: blsImg, pos: '50% 60%' },
@@ -73,6 +87,20 @@ export const EVENT_IMAGES = {
   'Cinematica (Film Making)': { src: cinematicaImg, pos: '38% 50%' },
   'MemeCentral (Meme Competition)': { src: memeCentralImg, pos: '50% 0%' },
   'Swarmay (Singing)': { src: swarmayImg, pos: '50% 25%' },
+  "Football": { src: footballImg, pos: '50% 100%' },
+  "Badminton": { src: badmintonImg, pos: '50% 20%' },
+  "Volleyball": { src: volleyballImg, pos: '40% 30%' },
+  "Kabaddi": { src: kabaddiImg, pos: '55% 50%' },
+  "Cricket": { src: cricketImg, pos: '50% 70%' },
+  "BGMI": { src: bgmiImg, pos: '30% 50%' },
+  "Rubik's Mania": { src: rubiksImg, pos: '45% 45%' },
+  "Athletics": { src: athleticsImg, pos: '60% 50%' },
+  "Chess": { src: chessImg, pos: '45% 30%' },
+  "Carrom": { src: carromImg, pos: '50% 50%' },
+  "Table Tennis": { src: tableTennisImg, pos: '50% 50%' },
+  "Tug of War": { src: tugOfWarImg, pos: '50% 50%' },
+  "Kho Kho": { src: khoKhoImg, pos: '70% 50%' },
+  "Mix Cricket": { src: mixCricketImg, pos: '15% 50%' },
 };
 
 const normalize = (name = '') =>
