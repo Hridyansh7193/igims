@@ -4,7 +4,7 @@
  */
 
 const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
-export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCIEMj';
+export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCiEMj';
 export const RAZORPAY_PAYMENT_PAGE_URL = import.meta.env.VITE_RAZORPAY_PAYMENT_LINK || 'https://razorpay.me/@igimscerebrexia2026';
 
 /**
@@ -79,6 +79,22 @@ export async function openRazorpayCheckout({
   // Load SDK script
   const isLoaded = await loadRazorpayScript();
 
+  // Generate verified server-side Razorpay Order ID to prevent gateway rejection
+  let orderId = null;
+  try {
+    const orderRes = await fetch('/api/create-razorpay-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    });
+    if (orderRes.ok) {
+      const orderData = await orderRes.json();
+      orderId = orderData.order_id;
+    }
+  } catch (err) {
+    console.warn('[Razorpay] Server order creation notice:', err);
+  }
+
   // If live key is present and script loaded, launch official Razorpay
   if (isLoaded && keyId && window.Razorpay) {
     try {
@@ -88,6 +104,7 @@ export async function openRazorpayCheckout({
         currency: 'INR',
         name: "Cerebrexia '26 | IGIMS Patna",
         description,
+        ...(orderId ? { order_id: orderId } : {}),
         image: typeof window !== 'undefined' ? `${window.location.origin}/logo.jpg` : '/logo.jpg',
         prefill: {
           name: prefill.name || '',
