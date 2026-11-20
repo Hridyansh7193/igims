@@ -14,6 +14,8 @@ import {
   fetchCategorizedRegistrations, markBasicRegistrationPaid
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
+import { fetchUserTickets } from '../lib/ticketService';
+import TicketCard from '../components/common/TicketCard';
 
 export default function DashboardPage({ setPage }) {
   const { user, signOut } = useAuth();
@@ -22,6 +24,7 @@ export default function DashboardPage({ setPage }) {
   const [sportsList,       setSportsList]       = useState([]);
   const [culturalList,     setCulturalList]     = useState([]);
   const [basicReg,         setBasicReg]         = useState(null);
+  const [userTickets,      setUserTickets]      = useState([]);
   const [fetchingReg,      setFetchingReg]      = useState(false);
   const [fetchError,       setFetchError]       = useState(null);
   const [signOutLoading,   setSignOutLoading]   = useState(false);
@@ -36,10 +39,11 @@ export default function DashboardPage({ setPage }) {
     setFetchingReg(true);
     setFetchError(null);
     try {
-      const [profile, categorized, evs] = await Promise.all([
+      const [profile, categorized, evs, tkts] = await Promise.all([
         fetchParticipantProfile(user.id, user.user_metadata),
         fetchCategorizedRegistrations(user.id),
         Promise.resolve(getRegisteredEvents(user.id, user.user_metadata)),
+        fetchUserTickets(user.id),
       ]);
 
       setParticipant(profile);
@@ -47,6 +51,7 @@ export default function DashboardPage({ setPage }) {
       setSportsList(categorized.sports || []);
       setCulturalList(categorized.cultural || []);
       setRegisteredEvents(evs);
+      setUserTickets(tkts || []);
     } catch (err) {
       console.error('[Dashboard] fetch error:', err);
       setFetchError('Could not load your registration. Check your connection.');
@@ -600,6 +605,39 @@ export default function DashboardPage({ setPage }) {
                 </p>
               </div>
             </div>
+
+            {/* OFFICIAL QR PASSES SECTION */}
+            {userTickets.length > 0 && (
+              <div
+                style={{
+                  padding: '28px 24px',
+                  borderRadius: 20,
+                  border: '1px solid rgba(212, 175, 55, 0.45)',
+                  background: 'linear-gradient(160deg, #18080f 0%, #0a0306 100%)',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 40px rgba(212, 175, 55, 0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <Ticket size={20} color="var(--crx-gold, #D4AF37)" />
+                      <h3 className="crx-display" style={{ fontSize: 22, color: '#fff', margin: 0 }}>
+                        OFFICIAL GATE PASS &amp; ENTRY QR CODES ({userTickets.length})
+                      </h3>
+                    </div>
+                    <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
+                      Present at gate &bull; Valid for all 4 Event Days (17, 18, 19, 20 Dec 2026) &bull; Single entry per day.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20, justifyContent: 'center' }}>
+                  {userTickets.map((t) => (
+                    <TicketCard key={t.id || t.ticket_number} ticket={t} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* SEPARATE DATABASE 1: Basic Registration (BR) */}
             <div
