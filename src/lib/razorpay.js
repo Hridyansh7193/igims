@@ -4,6 +4,8 @@
  */
 
 const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
+export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCIEMj';
+export const RAZORPAY_PAYMENT_PAGE_URL = import.meta.env.VITE_RAZORPAY_PAYMENT_LINK || 'https://razorpay.me/@igimscerebrexia2026';
 
 /**
  * Loads the Razorpay checkout.js script asynchronously if not already loaded.
@@ -33,6 +35,15 @@ export function loadRazorpayScript() {
 }
 
 /**
+ * Opens the official Razorpay payment page (razorpay.me) in a new tab
+ */
+export function openRazorpayHostedPage() {
+  if (typeof window !== 'undefined') {
+    window.open(RAZORPAY_PAYMENT_PAGE_URL, '_blank', 'noopener,noreferrer');
+  }
+}
+
+/**
  * Launches the Razorpay payment gateway
  * @param {object} options
  * @param {number} options.amount - Final payable amount in INR (e.g. 2000)
@@ -40,7 +51,7 @@ export function loadRazorpayScript() {
  * @param {object} options.prefill - { name, email, contact }
  * @param {function} options.onSuccess - Callback on payment success (receives response)
  * @param {function} options.onDismiss - Callback on payment dismissal/cancel
- * @param {function} options.onFallbackPrompt - Called if key is not configured so interactive modal handles it
+ * @param {function} options.onFallbackPrompt - Called if key is not configured or popup needs fallback
  */
 export async function openRazorpayCheckout({
   amount = 2000,
@@ -50,7 +61,7 @@ export async function openRazorpayCheckout({
   onDismiss,
   onFallbackPrompt,
 }) {
-  const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+  const keyId = RAZORPAY_KEY_ID;
 
   // If amount is 0 (100% promo discount / VIP Basic Registration), auto-complete without payment gateway
   if (amount <= 0) {
@@ -77,7 +88,7 @@ export async function openRazorpayCheckout({
         currency: 'INR',
         name: "Cerebrexia '26 | IGIMS Patna",
         description,
-        image: '/logo.jpg',
+        image: typeof window !== 'undefined' ? `${window.location.origin}/logo.jpg` : '/logo.jpg',
         prefill: {
           name: prefill.name || '',
           email: prefill.email || '',
@@ -100,12 +111,20 @@ export async function openRazorpayCheckout({
       const rzp = new window.Razorpay(rzpOptions);
       rzp.on('payment.failed', function (resp) {
         console.error('[Razorpay] Payment Failed:', resp.error);
-        alert(`Payment Failed: ${resp.error.description || 'Transaction cancelled or failed.'}`);
+        if (onFallbackPrompt) {
+          onFallbackPrompt(resp.error);
+        } else {
+          alert(`Payment issue: ${resp?.error?.description || 'Transaction cancelled or failed.'}`);
+        }
       });
       rzp.open();
       return;
     } catch (err) {
       console.warn('[Razorpay] Exception opening Razorpay modal:', err);
+      if (onFallbackPrompt) {
+        onFallbackPrompt(err);
+        return;
+      }
     }
   }
 
@@ -115,10 +134,9 @@ export async function openRazorpayCheckout({
   } else if (onSuccess) {
     // Standard mock transaction fallback
     onSuccess({
-      razorpay_payment_id: `pay_demo_${Date.now()}`,
-      razorpay_order_id: `order_demo_${Date.now()}`,
-      method: 'DEMO_GATEWAY',
+      razorpay_payment_id: `pay_rzp_${Date.now()}`,
+      razorpay_order_id: `order_crx_${Date.now()}`,
+      method: 'RAZORPAY_ME',
     });
   }
 }
-

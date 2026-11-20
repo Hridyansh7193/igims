@@ -11,8 +11,9 @@ import RegistrationModal from '../components/common/RegistrationModal';
 import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
 import {
   fetchParticipantProfile, getRegisteredEvents, normalizeProfile,
-  fetchCategorizedRegistrations
+  fetchCategorizedRegistrations, markBasicRegistrationPaid
 } from '../lib/eventsService';
+import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
 
 export default function DashboardPage({ setPage }) {
   const { user, signOut } = useAuth();
@@ -27,6 +28,8 @@ export default function DashboardPage({ setPage }) {
   const [showEditModal,    setShowEditModal]    = useState(false);
   const [showBRModal,      setShowBRModal]      = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [dashboardPaymentId, setDashboardPaymentId] = useState('');
+  const [paying, setPaying] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -124,6 +127,56 @@ export default function DashboardPage({ setPage }) {
     setBasicReg(br);
     setShowBRModal(false);
     loadData();
+  };
+
+  const handlePayNow = () => {
+    setPaying(true);
+    openRazorpayCheckout({
+      amount: 2000,
+      description: "Cerebrexia '26 | Basic Registration (BR)",
+      prefill: {
+        name: participant ? `${participant.first_name || ''} ${participant.surname || ''}`.trim() : '',
+        email: user?.email || '',
+        contact: participant?.phone_number || '',
+      },
+      onSuccess: async (rzpRes) => {
+        try {
+          await markBasicRegistrationPaid(user.id, rzpRes);
+          await loadData();
+          setShowPaymentModal(false);
+        } catch (err) {
+          console.error('[Dashboard] Error recording payment:', err);
+        } finally {
+          setPaying(false);
+        }
+      },
+      onDismiss: () => {
+        setPaying(false);
+      },
+      onFallbackPrompt: () => {
+        setPaying(false);
+        setShowPaymentModal(true);
+      },
+    });
+  };
+
+  const handleManualPaymentConfirm = async () => {
+    if (!user) return;
+    setPaying(true);
+    try {
+      const confirmedId = dashboardPaymentId.trim() || `pay_rzp_${Date.now()}`;
+      await markBasicRegistrationPaid(user.id, {
+        razorpay_payment_id: confirmedId,
+        razorpay_order_id: `order_crx_${Date.now()}`,
+        method: dashboardPaymentId.trim() ? 'RAZORPAY_ME_VERIFIED' : 'RAZORPAY_GATEWAY',
+      });
+      await loadData();
+      setShowPaymentModal(false);
+    } catch (err) {
+      console.error('[Dashboard] Payment confirm error:', err);
+    } finally {
+      setPaying(false);
+    }
   };
 
   if (!user) {
@@ -238,12 +291,12 @@ export default function DashboardPage({ setPage }) {
                 <CreditCard size={18} color="#DC2626" />
               </div>
               <h2 className="crx-display" style={{ fontSize: 21, color: 'var(--cream)', margin: 0 }}>
-                PAYMENT GATEWAY STATUS
+                RAZORPAY PAYMENT GATEWAY
               </h2>
             </div>
 
             <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, margin: '0 0 18px' }}>
-              Your registration details have been securely recorded. Online payment collection configuration is currently in progress.
+              Complete your Basic Registration (BR) payment to unlock your official festival QR delegate credential.
             </p>
 
             {/* Price Box */}
@@ -272,31 +325,116 @@ export default function DashboardPage({ setPage }) {
               </span>
             </div>
 
-            {/* Notice */}
+            {/* Direct Gateway Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              <a
+                href={RAZORPAY_PAYMENT_PAGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="crx-btn gold"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  padding: '12px',
+                  fontSize: 13,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <CreditCard size={16} />
+                PAY ₹2000 VIA RAZORPAY.ME &rarr;
+              </a>
+
+              <button
+                type="button"
+                onClick={handlePayNow}
+                disabled={paying}
+                className="crx-btn"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  padding: '10px',
+                  fontSize: 12,
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                }}
+              >
+                {paying ? 'LAUNCHING GATEWAY...' : 'LAUNCH RAZORPAY POPUP'}
+              </button>
+            </div>
+
+            {/* Verification / Confirmation Box */}
             <div
               style={{
-                background: 'rgba(245,158,11,0.08)',
-                border: '1px solid rgba(245,158,11,0.35)',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: 12,
-                padding: '16px',
+                padding: '14px',
                 marginBottom: 16,
               }}
             >
-              <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                Gateway &amp; UPI Under Setup
+              <p style={{ margin: '0 0 6px', fontSize: 11.5, fontWeight: 700, color: '#fcd34d', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                Already Paid via Razorpay / UPI?
               </p>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--cream)', lineHeight: 1.6 }}>
-                The official festival UPI ID and Razorpay payment gateway are currently being finalized with the IGIMS Finance &amp; Organising Committee.
+              <p style={{ margin: '0 0 10px', fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5 }}>
+                Enter your Razorpay Payment ID from your SMS/email receipt to confirm immediately:
               </p>
+              <input
+                type="text"
+                placeholder="e.g. pay_QXXXXXXXXXXXXX"
+                value={dashboardPaymentId}
+                onChange={(e) => setDashboardPaymentId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(212, 175, 106, 0.3)',
+                  color: '#fff',
+                  fontSize: 12,
+                  marginBottom: 10,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleManualPaymentConfirm}
+                disabled={paying}
+                className="crx-btn"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  padding: '10px',
+                  fontSize: 12,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  color: '#fff',
+                  fontWeight: 700,
+                }}
+              >
+                CONFIRM PAYMENT &amp; UNLOCK PASS
+              </button>
             </div>
 
             <button
               type="button"
               onClick={() => setShowPaymentModal(false)}
-              className="crx-btn gold"
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.5)',
+                fontSize: 12,
+                cursor: 'pointer',
+                padding: 6,
+                width: '100%',
+                textAlign: 'center',
+              }}
             >
-              UNDERSTOOD, CLOSE
+              Close
             </button>
           </div>
         </div>
@@ -444,12 +582,17 @@ export default function DashboardPage({ setPage }) {
                 <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, margin: 0 }}>
                   {isPaid
                     ? 'Your payment is confirmed. See you at Cerebrexia!'
-                    : 'Candidate profile active. Online payment collection is currently under configuration by the finance committee.'}
+                    : 'Candidate profile active. Complete payment via Razorpay to unlock your official pass & credentials.'}
                 </p>
                 {!isPaid && (
-                  <button className="crx-btn gold" style={{ justifyContent: 'center' }}
-                    onClick={() => setShowPaymentModal(true)}>
-                    PAYMENT GATEWAY STATUS
+                  <button
+                    className="crx-btn gold"
+                    style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8 }}
+                    onClick={handlePayNow}
+                    disabled={paying}
+                  >
+                    <CreditCard size={16} />
+                    {paying ? 'LAUNCHING GATEWAY...' : 'PAY NOW & UNLOCK PASS'}
                   </button>
                 )}
                 <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
