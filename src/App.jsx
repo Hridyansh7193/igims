@@ -12,6 +12,7 @@ import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
+import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
@@ -31,6 +32,7 @@ export default function App() {
   const [page, setPage] = useState(getInitialPage);
   const [introComplete, setIntroComplete] = useState(false);
   const [revealHeroTitle, setRevealHeroTitle] = useState(false);
+  const [showTitleSponsor, setShowTitleSponsor] = useState(false);
 
   const navigateTo = useCallback((nextPage) => {
     setPage(nextPage);
@@ -67,6 +69,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('crx_intro_seen', '1');
     }
+    setShowTitleSponsor(true);
   }, []);
 
   const handleWipeStart = useCallback(() => {
@@ -87,6 +90,11 @@ export default function App() {
             onWipeStart={handleWipeStart}
             onOpenPolicy={navigateTo}
           />
+        )}
+
+        {/* Title Sponsor Pop-up (Pops up right after starting animation ends and website loads) */}
+        {showTitleSponsor && (
+          <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
         )}
 
         {/* Main site content */}
