@@ -70,14 +70,17 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
       const ticketNum = `${baseTicketNum}-${String(index + 1).padStart(2, '0')}`;
       const fullName = `${member.first_name || ''} ${member.surname || ''}`.trim() || (isLead ? fallbackName : `Group Member ${index + 1}`);
 
+      const memberEmail = (member.email || '').trim().toLowerCase();
+      const attendeeEmail = memberEmail || (isLead ? (fallbackEmail || '').trim().toLowerCase() : '') || '';
+
       ticketsToInsert.push({
         ticket_number: ticketNum,
         basic_registration_id: basicReg.id || null,
         user_id: userId,
         attendee_name: fullName,
-        attendee_email: member.email || fallbackEmail || '',
-        attendee_phone: member.phone_number || fallbackPhone || '',
-        attendee_college: member.college_name || fallbackCollege || '',
+        attendee_email: attendeeEmail,
+        attendee_phone: (member.phone_number || '').trim() || fallbackPhone || '',
+        attendee_college: (member.college_name || '').trim() || fallbackCollege || '',
         role: isLead ? 'LEAD' : `MEMBER_${index + 1}`,
         qr_token: createSecureToken(),
         pass_type: 'BASIC_REGISTRATION_PRONITES',
@@ -85,6 +88,7 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
         metadata: {
           group_size: groupMembers.length,
           member_index: index + 1,
+          member_role: isLead ? 'LEAD' : `MEMBER_${index + 1}`,
           razorpay_payment_id: paymentDetails.razorpay_payment_id || null,
         },
       });

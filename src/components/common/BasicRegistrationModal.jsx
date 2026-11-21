@@ -359,12 +359,18 @@ export default function BasicRegistrationModal({
       state_of_college: leadForm.state_of_college.trim(),
     };
 
+    const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
     if (!lead.first_name) { setActiveMemberTab(0); return 'Lead member first name is required.'; }
     if (!lead.surname) { setActiveMemberTab(0); return 'Lead member surname is required.'; }
     if (!lead.college_name) { setActiveMemberTab(0); return 'Lead member college name is required.'; }
     if (!/^[0-9]{10}$/.test(lead.phone_number)) { setActiveMemberTab(0); return 'Lead member phone must be exactly 10 digits.'; }
     if (!lead.city_of_college) { setActiveMemberTab(0); return 'Lead member city is required.'; }
     if (!lead.state_of_college) { setActiveMemberTab(0); return 'Lead member state is required.'; }
+    if (!user?.email || !EMAIL_REGEX.test(user.email.trim())) {
+      setActiveMemberTab(0);
+      return 'Valid lead member email is required from your logged-in account.';
+    }
 
     // 2. Validate Group Members if GROUP
     if (regType === 'GROUP') {
@@ -376,6 +382,14 @@ export default function BasicRegistrationModal({
         if (!/^[0-9]{10}$/.test(m.phone_number?.trim() || '')) {
           setActiveMemberTab(i + 1);
           return `Member ${num}: Valid 10-digit phone number is required.`;
+        }
+        if (!m.email?.trim()) {
+          setActiveMemberTab(i + 1);
+          return `Member ${num}: Email is required so their QR pass can be delivered.`;
+        }
+        if (!EMAIL_REGEX.test(m.email.trim())) {
+          setActiveMemberTab(i + 1);
+          return `Member ${num}: Please enter a valid email address (e.g. member@college.edu).`;
         }
         if (!m.college_name?.trim()) { setActiveMemberTab(i + 1); return `Member ${num}: College name is required.`; }
       }
@@ -403,7 +417,7 @@ export default function BasicRegistrationModal({
           first_name: leadForm.first_name.trim(),
           surname: leadForm.surname.trim(),
           phone_number: leadForm.phone_number.trim(),
-          email: user?.email || '',
+          email: (user?.email || '').trim().toLowerCase(),
           college_name: leadForm.college_name.trim(),
           city_of_college: leadForm.city_of_college.trim(),
           state_of_college: leadForm.state_of_college.trim(),
@@ -414,7 +428,7 @@ export default function BasicRegistrationModal({
               first_name: m.first_name.trim(),
               surname: m.surname.trim(),
               phone_number: m.phone_number.trim(),
-              email: m.email.trim(),
+              email: (m.email || '').trim().toLowerCase(),
               college_name: m.college_name.trim(),
               city_of_college: m.city_of_college.trim() || leadForm.city_of_college.trim(),
               state_of_college: m.state_of_college.trim() || leadForm.state_of_college.trim(),
@@ -541,15 +555,19 @@ export default function BasicRegistrationModal({
     leadForm.first_name?.trim() &&
     leadForm.surname?.trim() &&
     /^[0-9]{10}$/.test(leadForm.phone_number?.trim()) &&
-    leadForm.college_name?.trim()
+    leadForm.college_name?.trim() &&
+    user?.email?.trim() &&
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(user.email.trim())
   );
-  const additionalCompletedCount = groupMembers.filter(
-    (m) =>
-      m.first_name?.trim() &&
-      m.surname?.trim() &&
-      /^[0-9]{10}$/.test(m.phone_number?.trim() || '') &&
-      m.college_name?.trim()
-  ).length;
+  const isMemberCompleted = (m) => Boolean(
+    m?.first_name?.trim() &&
+    m?.surname?.trim() &&
+    /^[0-9]{10}$/.test(m?.phone_number?.trim() || '') &&
+    m?.email?.trim() &&
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(m.email.trim()) &&
+    m?.college_name?.trim()
+  );
+  const additionalCompletedCount = groupMembers.filter(isMemberCompleted).length;
   const totalCompletedCount = (leadCompleted ? 1 : 0) + additionalCompletedCount;
 
   // Group size options array: 2 to 50
@@ -1293,7 +1311,7 @@ export default function BasicRegistrationModal({
                       {Array.from({ length: groupSize - 1 }).map((_, idx) => {
                         const mNum = idx + 2;
                         const m = groupMembers[idx];
-                        const isDone = Boolean(m?.first_name?.trim() && m?.phone_number?.trim());
+                        const isDone = isMemberCompleted(m);
                         const isSel = activeMemberTab === idx + 1;
                         return (
                           <div
@@ -1380,7 +1398,7 @@ export default function BasicRegistrationModal({
                 </button>
                 {Array.from({ length: groupSize - 1 }).map((_, idx) => {
                   const mNum = idx + 2;
-                  const isFilled = groupMembers[idx]?.first_name && groupMembers[idx]?.phone_number;
+                  const isFilled = isMemberCompleted(groupMembers[idx]);
                   const isSel = activeMemberTab === idx + 1;
                   return (
                     <button
@@ -1659,7 +1677,7 @@ export default function BasicRegistrationModal({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                    Email (for E-Ticket)
+                    Email (for QR Pass Delivery) <span style={{ color: 'var(--crx-gold, #D4AF37)' }}>*</span>
                   </label>
                   <div style={{ position: 'relative' }}>
                     <Mail size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
@@ -1671,8 +1689,12 @@ export default function BasicRegistrationModal({
                       onBlur={blurInp}
                       placeholder="member@college.edu"
                       style={inp}
+                      required
                     />
                   </div>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 4, display: 'block' }}>
+                    Each member's personal 4-day QR entry pass is delivered directly to this email address.
+                  </span>
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>

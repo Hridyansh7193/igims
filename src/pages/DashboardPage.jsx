@@ -287,7 +287,7 @@ export default function DashboardPage({ setPage }) {
       );
       const successful = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
       if (successful > 0) {
-        setEmailAllMessage(`Sent ${successful} pass${successful > 1 ? 'es' : ''} to ${user?.email || 'your email'}! Please check inbox and spam.`);
+        setEmailAllMessage(`Sent ${successful} pass${successful > 1 ? 'es' : ''} to member email address(es)! Please check inbox and spam.`);
       } else {
         setEmailAllMessage('Could not send emails. Please verify your connection.');
       }
@@ -959,7 +959,7 @@ export default function DashboardPage({ setPage }) {
                         fontWeight: 700,
                       }}
                     >
-                      <Mail size={14} /> {emailingAll ? 'Sending to Inbox...' : 'Email Passes to Me'}
+                      <Mail size={14} /> {emailingAll ? 'Sending Passes...' : (userTickets.length > 1 ? 'Email Passes to Members' : 'Email Pass to Me')}
                     </button>
                     {emailAllMessage && (
                       <div style={{ fontSize: 11, color: emailAllMessage.includes('Sent') ? '#22c55e' : '#ef4444', marginTop: 6, textAlign: 'right' }}>
