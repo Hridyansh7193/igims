@@ -242,7 +242,7 @@ export const EVENT_GUIDELINES = {
       { type: 'p', text: 'Medals and certificates for all three winners! Along with these -' },
       {
         type: 'ul',
-        items: ['1st Place: One delegate pass', '2nd Place: 50% off on one delegate pass'],
+        items: ['1st Place: One delegate', '2nd Place: 50% off on one delegate'],
       },
       { type: 'h', text: 'For Further Queries, Contact' },
       { type: 'ul', items: ['Pranav: 74889 32917', 'Eshna: 75759 52453'] },
@@ -1278,7 +1278,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: Delegate pass for Cerebrexia 2026",
+          "Winner: Delegate for Cerebrexia 2026",
           "2nd & 3rd runner up: Medals + Certificates"
         ]
       },
@@ -1346,7 +1346,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: Delegate pass",
+          "Winner: Delegate",
           "2nd & 3rd runner up: Medals and certificates"
         ]
       },
@@ -1384,7 +1384,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner Team: A delegate pass",
+          "Winner Team: A delegate",
           "2nd & 3rd runner up: Medals and certificates"
         ]
       },
@@ -1415,7 +1415,7 @@ export const EVENT_GUIDELINES = {
           "Participants must follow all event guidelines.",
           "Entry Fee: ₹25.",
           "The event will be conducted offline on 12 December 2026.",
-          "The winner will receive a delegate pass; 2nd and 3rd runner up will receive medals and certificates."
+          "The winner will receive a delegate; 2nd and 3rd runner up will receive medals and certificates."
         ]
       },
       {
@@ -1460,7 +1460,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: A delegate pass",
+          "Winner: A delegate",
           "2nd & 3rd runner up: Medal + Certificate"
         ]
       },
@@ -1541,7 +1541,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: Delegate pass for Cerebrexia 2026",
+          "Winner: Delegate for Cerebrexia 2026",
           "2nd & 3rd runner up: Medals + Certificates"
         ]
       }
@@ -1567,7 +1567,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: Delegate pass",
+          "Winner: Delegate",
           "2nd & 3rd runner up: Medals and certificates"
         ]
       },
@@ -1699,7 +1699,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: A delegate pass",
+          "Winner: A delegate",
           "2nd & 3rd runner up: Medals and certificates"
         ]
       },
@@ -1752,7 +1752,7 @@ export const EVENT_GUIDELINES = {
       {
         "type": "ul",
         "items": [
-          "Winner: A delegate pass",
+          "Winner: A delegate",
           "2nd & 3rd runner up: Medals and certificates"
         ]
       },
@@ -1781,7 +1781,7 @@ export const EVENT_GUIDELINES = {
           "Judging will be based on creativity, anatomical accuracy, artistic technique, neatness, and overall presentation.",
           "Participants must follow the instructions provided by the event coordinators.",
           "Entry Fee: ₹25.",
-          "The winner will receive a delegate pass; 2nd and 3rd runner up will receive a medal and certificate."
+          "The winner will receive a delegate; 2nd and 3rd runner up will receive a medal and certificate."
         ]
       },
       {
