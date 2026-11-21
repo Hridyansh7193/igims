@@ -185,7 +185,7 @@ function buildTicketEmailHTML({
 
     <div class="footer">
       <p style="margin: 0 0 6px;">Indira Gandhi Institute of Medical Sciences &bull; Sheikhpura, Patna &ndash; 800014</p>
-      <p style="margin: 0;">For queries or support: thecerebrexia17@gmail.com &bull; Official Fest Portal: igims-sand.vercel.app</p>
+      <p style="margin: 0;">For queries or support: thecerebrexia17@gmail.com &bull; Official Fest Portal: www.cerebrexiaigims.com</p>
     </div>
   </div>
 </body>

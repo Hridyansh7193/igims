@@ -246,8 +246,12 @@ export async function issueTicketForEventRegistration(userId, eventName, categor
  */
 export async function dispatchTicketEmail(ticket, groupSize = 1) {
   try {
-    const endpoint = typeof window !== 'undefined' && (window.location.protocol === 'file:' || !window.location.origin.includes('vercel.app'))
-      ? 'https://igims-sand.vercel.app/api/send-ticket-email'
+    const isCustomOrVercel = typeof window !== 'undefined' && (
+      window.location.origin.includes('cerebrexiaigims.com') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
+      ? 'https://www.cerebrexiaigims.com/api/send-ticket-email'
       : '/api/send-ticket-email';
 
     const res = await fetch(endpoint, {
@@ -295,8 +299,12 @@ export async function fetchUserTickets(userId, userEmail = '') {
  */
 export async function checkinTicketAtGate(qrToken, gateVolunteer = 'Gate Volunteer', dayOverride = null) {
   try {
-    const endpoint = typeof window !== 'undefined' && (window.location.protocol === 'file:' || !window.location.origin.includes('vercel.app'))
-      ? 'https://igims-sand.vercel.app/api/gate-checkin'
+    const isCustomOrVercel = typeof window !== 'undefined' && (
+      window.location.origin.includes('cerebrexiaigims.com') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
+      ? 'https://www.cerebrexiaigims.com/api/gate-checkin'
       : '/api/gate-checkin';
 
     const res = await fetch(endpoint, {

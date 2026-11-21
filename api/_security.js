@@ -2,6 +2,8 @@ import crypto from 'crypto';
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
+  'https://www.cerebrexiaigims.com',
+  'https://cerebrexiaigims.com',
   'https://igims-sand.vercel.app',
   'https://cerebrexia.in',
   'https://www.cerebrexia.in',
