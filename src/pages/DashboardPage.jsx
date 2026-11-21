@@ -14,7 +14,7 @@ import {
   fetchCategorizedRegistrations, markBasicRegistrationPaid
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
-import { fetchUserTickets } from '../lib/ticketService';
+import { fetchUserTickets, issueTicketsForBasicRegistration } from '../lib/ticketService';
 import { validatePromoCodeOnline } from '../lib/promoService';
 import TicketCard from '../components/common/TicketCard';
 
@@ -54,12 +54,23 @@ export default function DashboardPage({ setPage }) {
         fetchUserTickets(user.id, user.email),
       ]);
 
+      let finalTickets = tkts || [];
+      const isPaid = profile?.payment_status === 'PAID' || categorized.basic?.payment_status === 'PAID';
+      if (isPaid && finalTickets.length === 0) {
+        try {
+          const issued = await issueTicketsForBasicRegistration(user.id, categorized.basic || profile, {});
+          if (issued && issued.length > 0) {
+            finalTickets = issued;
+          }
+        } catch (_) {}
+      }
+
       setParticipant(profile);
       setBasicReg(categorized.basic);
       setSportsList(categorized.sports || []);
       setCulturalList(categorized.cultural || []);
       setRegisteredEvents(evs);
-      setUserTickets(tkts || []);
+      setUserTickets(finalTickets);
     } catch (err) {
       console.error('[Dashboard] fetch error:', err);
       setFetchError('Could not load your registration. Check your connection.');

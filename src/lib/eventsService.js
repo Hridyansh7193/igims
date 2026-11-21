@@ -324,11 +324,36 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
 
   // Automatically issue QR tickets and dispatch emails to attendee + admin
   try {
-    const { data: brRecord } = await supabase
+    let brRecord = null;
+    const { data: dbBr } = await supabase
       .from('basic_registrations')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
+    if (dbBr) {
+      brRecord = dbBr;
+    } else {
+      try {
+        const local = localStorage.getItem('crx_basic_reg_' + userId);
+        if (local) brRecord = JSON.parse(local);
+      } catch (_) {}
+
+      if (!brRecord) {
+        const { data: pData } = await supabase
+          .from('participants')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (pData) {
+          brRecord = {
+            ...pData,
+            user_email: pData.email || pData.user_email,
+            registration_type: 'SINGLE',
+          };
+        }
+      }
+    }
 
     if (brRecord) {
       await issueTicketsForBasicRegistration(userId, brRecord, paymentDetails);

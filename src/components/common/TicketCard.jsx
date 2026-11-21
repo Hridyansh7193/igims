@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download, Mail, CheckCircle2, Ticket, ShieldCheck } from 'lucide-react';
+import { Download, Mail, CheckCircle2, Ticket, ShieldCheck, RefreshCw } from 'lucide-react';
 import Sticker from './Sticker';
+import { dispatchTicketEmail } from '../../lib/ticketService';
 
 export default function TicketCard({ ticket }) {
   const [qrUrl, setQrUrl] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
 
   useEffect(() => {
     if (!ticket?.qr_token) return;
@@ -28,6 +31,24 @@ export default function TicketCard({ ticket }) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleSendEmail = async () => {
+    if (!ticket?.attendee_email) return;
+    setSendingEmail(true);
+    setEmailStatus(null);
+    try {
+      const res = await dispatchTicketEmail(ticket, 1);
+      if (res && res.success) {
+        setEmailStatus('sent');
+      } else {
+        setEmailStatus('error');
+      }
+    } catch (_) {
+      setEmailStatus('error');
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   return (
@@ -118,9 +139,37 @@ export default function TicketCard({ ticket }) {
         >
           <Download size={13} /> Save QR
         </button>
+        {ticket.attendee_email && (
+          <button
+            onClick={handleSendEmail}
+            disabled={sendingEmail}
+            className="crx-btn"
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              fontSize: 11,
+              padding: '8px 12px',
+              background: 'rgba(212, 175, 55, 0.15)',
+              border: '1px solid rgba(212, 175, 55, 0.4)',
+              color: 'var(--crx-gold, #D4AF37)',
+            }}
+          >
+            <Mail size={13} /> {sendingEmail ? 'Sending...' : 'Email QR'}
+          </button>
+        )}
       </div>
 
-      {ticket.attendee_email && (
+      {emailStatus === 'sent' && (
+        <span style={{ fontSize: 11, color: '#22c55e', marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <CheckCircle2 size={12} /> QR Pass sent to {ticket.attendee_email}!
+        </span>
+      )}
+      {emailStatus === 'error' && (
+        <span style={{ fontSize: 11, color: '#ef4444', marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Could not send email. Try again.
+        </span>
+      )}
+      {emailStatus === null && ticket.attendee_email && (
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <Mail size={10} /> Sent to {ticket.attendee_email}
         </span>

@@ -24,6 +24,39 @@ function createTicketNumber(prefix = 'BR', suffix = '') {
 export async function issueTicketsForBasicRegistration(userId, basicReg, paymentDetails = {}) {
   if (!userId || !basicReg) return [];
 
+  // Fetch participant profile if basicReg does not contain attendee contact info
+  let fallbackName = 'Cerebrexia Delegate';
+  let fallbackEmail = basicReg.user_email || basicReg.email || '';
+  let fallbackPhone = basicReg.phone_number || '';
+  let fallbackCollege = basicReg.college_name || '';
+
+  if (!fallbackEmail || !fallbackName || fallbackName === 'Attendee') {
+    try {
+      const { data: profile } = await supabase
+        .from('participants')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (profile) {
+        fallbackName = `${profile.first_name || ''} ${profile.last_name || profile.surname || ''}`.trim() || fallbackName;
+        fallbackEmail = profile.email || profile.user_email || fallbackEmail;
+        fallbackPhone = profile.phone_number || fallbackPhone;
+        fallbackCollege = profile.college_name || fallbackCollege;
+      }
+    } catch (_) {}
+  }
+
+  if (!fallbackEmail) {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      fallbackEmail = authData?.user?.email || '';
+      if (!fallbackName || fallbackName === 'Cerebrexia Delegate' || fallbackName === 'Attendee') {
+        fallbackName = authData?.user?.user_metadata?.full_name || authData?.user?.user_metadata?.name || fallbackName;
+      }
+    } catch (_) {}
+  }
+
   const registrationType = basicReg.registration_type || 'SINGLE';
   const groupMembers = Array.isArray(basicReg.group_members) ? basicReg.group_members : [];
   const baseTicketNum = createTicketNumber('BR');
@@ -35,16 +68,16 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
     groupMembers.forEach((member, index) => {
       const isLead = index === 0 || member.role === 'LEAD';
       const ticketNum = `${baseTicketNum}-${String(index + 1).padStart(2, '0')}`;
-      const fullName = `${member.first_name || ''} ${member.surname || ''}`.trim() || 'Attendee';
+      const fullName = `${member.first_name || ''} ${member.surname || ''}`.trim() || (isLead ? fallbackName : `Group Member ${index + 1}`);
 
       ticketsToInsert.push({
         ticket_number: ticketNum,
         basic_registration_id: basicReg.id || null,
         user_id: userId,
         attendee_name: fullName,
-        attendee_email: member.email || basicReg.user_email || '',
-        attendee_phone: member.phone_number || '',
-        attendee_college: member.college_name || '',
+        attendee_email: member.email || fallbackEmail || '',
+        attendee_phone: member.phone_number || fallbackPhone || '',
+        attendee_college: member.college_name || fallbackCollege || '',
         role: isLead ? 'LEAD' : `MEMBER_${index + 1}`,
         qr_token: createSecureToken(),
         pass_type: 'BASIC_REGISTRATION_PRONITES',
@@ -58,15 +91,15 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
     });
   } else {
     // Single Registration: 1 Ticket
-    const fullName = `${basicReg.first_name || ''} ${basicReg.surname || ''}`.trim() || 'Attendee';
+    const fullName = `${basicReg.first_name || ''} ${basicReg.surname || ''}`.trim() || fallbackName;
     ticketsToInsert.push({
       ticket_number: baseTicketNum,
       basic_registration_id: basicReg.id || null,
       user_id: userId,
       attendee_name: fullName,
-      attendee_email: basicReg.user_email || '',
-      attendee_phone: basicReg.phone_number || '',
-      attendee_college: basicReg.college_name || '',
+      attendee_email: basicReg.user_email || basicReg.email || fallbackEmail || '',
+      attendee_phone: basicReg.phone_number || fallbackPhone || '',
+      attendee_college: basicReg.college_name || fallbackCollege || '',
       role: 'SINGLE',
       qr_token: createSecureToken(),
       pass_type: 'BASIC_REGISTRATION_PRONITES',
@@ -213,7 +246,11 @@ export async function issueTicketForEventRegistration(userId, eventName, categor
  */
 export async function dispatchTicketEmail(ticket, groupSize = 1) {
   try {
-    const res = await fetch('/api/send-ticket-email', {
+    const endpoint = typeof window !== 'undefined' && (window.location.protocol === 'file:' || !window.location.origin.includes('vercel.app'))
+      ? 'https://igims-sand.vercel.app/api/send-ticket-email'
+      : '/api/send-ticket-email';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticket, group_size: groupSize }),

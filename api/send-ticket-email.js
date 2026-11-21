@@ -9,7 +9,7 @@ import {
 } from './_security.js';
 
 const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
 
@@ -271,19 +271,22 @@ export default async function handler(req, res) {
   const emailSubject = sanitizeHeader(rawSubject);
 
   const gmailUser = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
-  const gmailPass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  const gmailPass = (process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj').replace(/\s+/g, '');
   const resendKey = process.env.RESEND_API_KEY || '';
   const resendFrom = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
   const copyEmail = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
   const archiveEmail = 'thecerebrexia17@gmail.com';
 
   const bccRecipients = Array.from(new Set([copyEmail, archiveEmail])).filter(Boolean);
+  let lastError = null;
 
-  // Method 1: Gmail SMTP
+  // Method 1: Gmail SMTP (Direct port 465 SSL)
   if (gmailPass) {
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
           user: gmailUser,
           pass: gmailPass,
@@ -310,6 +313,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
     } catch (smtpErr) {
       console.error('[send-ticket-email] Gmail SMTP error:', smtpErr.message);
+      lastError = smtpErr.message;
     }
   }
 
@@ -336,13 +340,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
     } catch (resendErr) {
       console.error('[send-ticket-email] Resend error:', resendErr.message);
+      lastError = resendErr.message;
     }
   }
 
-  return res.status(200).json({
-    success: true,
-    provider: 'unconfigured_mock',
-    message: 'QR pass generated successfully.',
-    qr_data_url: qrDataUrl,
+  return res.status(500).json({
+    success: false,
+    error: 'Failed to dispatch ticket email via mail server',
+    details: lastError || 'Email delivery service unavailable',
   });
 }
