@@ -164,11 +164,11 @@ export async function createPromoCode({ code, discountPercent, description = '',
   const session = getAdminSession();
   const token = session?.token || '';
   const cleanCode = String(code || '').trim().toUpperCase();
-  const percent = parseInt(discountPercent, 10);
+  const percent = parseFloat(discountPercent);
 
   if (!cleanCode) throw new Error('Promo code is required.');
   if (isNaN(percent) || percent <= 0 || percent > 100) {
-    throw new Error('Discount percentage must be between 1 and 100.');
+    throw new Error('Discount percentage must be between 0.01% and 100%.');
   }
 
   const newCodeObj = {

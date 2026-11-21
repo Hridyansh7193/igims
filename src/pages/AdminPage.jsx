@@ -116,14 +116,14 @@ export default function AdminPage({ setPage }) {
     setFormSuccess(null);
 
     const cleanCode = newCode.trim().toUpperCase();
-    const percent = parseInt(newPercent, 10);
+    const percent = parseFloat(newPercent);
 
     if (!cleanCode) {
       setFormError('Please enter a promo code name.');
       return;
     }
     if (isNaN(percent) || percent <= 0 || percent > 100) {
-      setFormError('Discount percentage must be between 1% and 100%.');
+      setFormError('Discount percentage must be between 0.01% and 100%.');
       return;
     }
 
@@ -186,9 +186,11 @@ export default function AdminPage({ setPage }) {
   };
 
   // Live calculation for preview
-  const previewPercent = Math.min(100, Math.max(1, parseInt(newPercent, 10) || 0));
+  const rawParsed = parseFloat(newPercent);
+  const previewPercent = !isNaN(rawParsed) ? Math.min(100, Math.max(0.01, rawParsed)) : 0;
   const previewDiscount = Math.round((2000 * previewPercent) / 100);
   const previewFinal = Math.max(0, 2000 - previewDiscount);
+  const formattedPercent = Number(previewPercent.toFixed(2));
 
   // Filtered list
   const filteredCodes = promoCodes.filter((p) => {
@@ -740,13 +742,13 @@ export default function AdminPage({ setPage }) {
                   Discount Percentage *
                 </label>
                 <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--crx-gold, #D4AF37)' }}>
-                  {previewPercent}% OFF
+                  {formattedPercent}% OFF
                 </span>
               </div>
 
               {/* Quick Select Buttons */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                {[10, 15, 20, 25, 30, 50, 100].map((pct) => (
+                {[5, 10, 12.5, 15, 20, 25, 33.33, 50, 100].map((pct) => (
                   <button
                     key={pct}
                     type="button"
@@ -754,9 +756,9 @@ export default function AdminPage({ setPage }) {
                     style={{
                       padding: '5px 10px',
                       borderRadius: 6,
-                      background: newPercent === pct ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
-                      border: newPercent === pct ? '1px solid var(--crx-gold, #D4AF37)' : '1px solid rgba(255,255,255,0.12)',
-                      color: newPercent === pct ? '#000' : 'var(--cream, #fff)',
+                      background: Number(newPercent) === pct ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
+                      border: Number(newPercent) === pct ? '1px solid var(--crx-gold, #D4AF37)' : '1px solid rgba(255,255,255,0.12)',
+                      color: Number(newPercent) === pct ? '#000' : 'var(--cream, #fff)',
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -771,31 +773,40 @@ export default function AdminPage({ setPage }) {
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <input
                   type="range"
-                  min={1}
+                  min={0.5}
                   max={100}
-                  value={newPercent}
-                  onChange={(e) => setNewPercent(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: '#D4AF37' }}
-                />
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
+                  step={0.5}
                   value={newPercent}
                   onChange={(e) => setNewPercent(e.target.value)}
-                  style={{
-                    width: 65,
-                    padding: '8px 10px',
-                    borderRadius: 8,
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    color: '#fff',
-                    fontSize: 13,
-                    textAlign: 'center',
-                    fontWeight: 700,
-                    outline: 'none',
-                  }}
+                  style={{ flex: 1, accentColor: '#D4AF37' }}
                 />
+                <div style={{ position: 'relative', width: 90 }}>
+                  <input
+                    type="number"
+                    min={0.01}
+                    max={100}
+                    step="any"
+                    value={newPercent}
+                    onChange={(e) => setNewPercent(e.target.value)}
+                    placeholder="12.5"
+                    style={{
+                      width: '100%',
+                      padding: '8px 24px 8px 10px',
+                      borderRadius: 8,
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: '#fff',
+                      fontSize: 13,
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: 11, pointerEvents: 'none', fontWeight: 700 }}>
+                    %
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1039,7 +1050,7 @@ export default function AdminPage({ setPage }) {
                             borderRadius: 12,
                           }}
                         >
-                          {p.discount_percent}% OFF
+                          {Number(p.discount_percent)}% OFF
                         </span>
 
                         <span

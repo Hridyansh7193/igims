@@ -157,7 +157,7 @@ export default async function handler(req, res) {
     // CREATE PROMO CODE
     if (action === 'create') {
       const rawCode = sanitizeAlphaNumDash(req.body.code || '').toUpperCase();
-      const discountPercent = parseInt(req.body.discount_percent, 10);
+      const discountPercent = parseFloat(req.body.discount_percent);
       const description = escapeHtml(String(req.body.description || '').trim()).slice(0, 200);
       const maxUses = req.body.max_uses ? parseInt(req.body.max_uses, 10) : null;
 
@@ -165,7 +165,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Promo code must be 2-30 alphanumeric characters.' });
       }
       if (isNaN(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
-        return res.status(400).json({ error: 'Discount percentage must be an integer between 1 and 100.' });
+        return res.status(400).json({ error: 'Discount percentage must be a number between 0.01% and 100%.' });
       }
       if (maxUses !== null && (isNaN(maxUses) || maxUses <= 0)) {
         return res.status(400).json({ error: 'Max uses must be a positive number if provided.' });
