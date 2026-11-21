@@ -33,7 +33,7 @@ import {
   fetchParticipantProfile,
   markBasicRegistrationPaid,
 } from '../../lib/eventsService';
-import { validatePromoCode, calculateDefaultGroupOffer } from '../../constants/promoCodes';
+import { calculateDefaultGroupOffer } from '../../constants/promoCodes';
 import { validatePromoCodeOnline } from '../../lib/promoService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../../lib/razorpay';
 
@@ -159,16 +159,7 @@ export default function BasicRegistrationModal({
           setPromoError(res.message);
         }
       }).catch(() => {
-        // Fallback sync validation
-        const syncRes = validatePromoCode(appliedPromo.code, {
-          payableMembers: offer.payableMembers,
-          payableSubtotal: offer.groupPayable,
-          totalMembers: count,
-        });
-        if (syncRes.valid) {
-          setAppliedPromo(syncRes.promo);
-          setPromoMessage(syncRes.message);
-        }
+        // Validation could not be verified
       });
     }
   }, [groupSize, regType]);
@@ -337,39 +328,13 @@ export default function BasicRegistrationModal({
         setPromoError(null);
         setPromoInput('');
       } else {
-        // Try synchronous fallback catalog check
-        const syncRes = validatePromoCode(cleanInput, {
-          payableMembers,
-          payableSubtotal: groupPayable,
-          totalMembers: totalMemberCount,
-        });
-
-        if (syncRes.valid) {
-          setAppliedPromo(syncRes.promo);
-          setPromoMessage(syncRes.message);
-          setPromoError(null);
-          setPromoInput('');
-        } else {
-          setAppliedPromo(null);
-          setPromoError(res.message || syncRes.message || 'Invalid or inactive promo code.');
-          setPromoMessage(null);
-        }
+        setAppliedPromo(null);
+        setPromoError(res.message || 'Invalid or inactive promo code.');
+        setPromoMessage(null);
       }
     } catch (err) {
       console.warn('[BasicRegistrationModal] coupon validation error:', err);
-      const syncRes = validatePromoCode(cleanInput, {
-        payableMembers,
-        payableSubtotal: groupPayable,
-        totalMembers: totalMemberCount,
-      });
-      if (syncRes.valid) {
-        setAppliedPromo(syncRes.promo);
-        setPromoMessage(syncRes.message);
-        setPromoError(null);
-        setPromoInput('');
-      } else {
-        setPromoError('Could not verify coupon. Check connection.');
-      }
+      setPromoError('Could not verify coupon. Check connection.');
     } finally {
       setApplyingPromo(false);
     }
@@ -1812,7 +1777,7 @@ export default function BasicRegistrationModal({
                           handleApplyPromo(e);
                         }
                       }}
-                      placeholder="ENTER PROMO CODE (e.g. CRX20)"
+                      placeholder="ENTER PROMO CODE"
                       style={{
                         ...inp,
                         paddingLeft: 34,

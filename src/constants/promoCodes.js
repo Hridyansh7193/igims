@@ -54,208 +54,19 @@ export const calculateGroupTierDiscount = calculateDefaultGroupOffer;
 
 /**
  * Active Built-in Promo Codes Catalog
+ * All promo codes are now managed and created exclusively by the admin in the Admin Portal.
  */
-export const PROMO_CODES = {
-  CRX20: {
-    code: 'CRX20',
-    type: 'percent',
-    value: 20,
-    label: '20% Fest Discount',
-    description: '20% off on each payable Basic Registration',
-  },
-  CRX10: {
-    code: 'CRX10',
-    type: 'percent',
-    value: 10,
-    label: '10% Fest Discount',
-    description: '10% off on each payable Basic Registration',
-  },
-  CRX25: {
-    code: 'CRX25',
-    type: 'percent',
-    value: 25,
-    label: '25% Fest Discount',
-    description: '25% off on each payable Basic Registration',
-  },
-  CRX26: {
-    code: 'CRX26',
-    type: 'percent',
-    value: 10,
-    label: "10% Fest Code",
-    description: '10% off on each payable Basic Registration',
-  },
-  EARLYBIRD: {
-    code: 'EARLYBIRD',
-    type: 'percent',
-    value: 15,
-    label: '15% Early Bird Discount',
-    description: '15% off on each payable Basic Registration',
-  },
-  RUSH20: {
-    code: 'RUSH20',
-    type: 'percent',
-    value: 20,
-    label: '20% Rush Deal Discount',
-    description: '20% off on each payable Basic Registration',
-  },
-  RUSH10: {
-    code: 'RUSH10',
-    type: 'percent',
-    value: 10,
-    label: '10% Rush Discount',
-    description: '10% off on each payable Basic Registration',
-  },
-  RUSH30: {
-    code: 'RUSH30',
-    type: 'percent',
-    value: 30,
-    label: '30% Flash Rush Discount',
-    description: '30% off on each payable Basic Registration',
-  },
-  RUSH50: {
-    code: 'RUSH50',
-    type: 'percent',
-    value: 50,
-    label: '50% Mega Rush Deal',
-    description: '50% off on each payable Basic Registration',
-  },
-  CEREBREXIA: {
-    code: 'CEREBREXIA',
-    type: 'percent',
-    value: 10,
-    label: '10% Festival Celebration Code',
-    description: '10% off on each payable Basic Registration',
-  },
-  CEREBREXIA26: {
-    code: 'CEREBREXIA26',
-    type: 'percent',
-    value: 10,
-    label: "10% Cerebrexia '26 Fest Code",
-    description: '10% off on each payable Basic Registration',
-  },
-  VIP50: {
-    code: 'VIP50',
-    type: 'percent',
-    value: 50,
-    label: '50% VIP Delegate Discount',
-    description: '50% off on each payable Basic Registration',
-  },
-  VIP100: {
-    code: 'VIP100',
-    type: 'percent',
-    value: 100,
-    label: '100% Complimentary VIP BR',
-    description: '100% complimentary VIP registration',
-  },
-  IGIMS50: {
-    code: 'IGIMS50',
-    type: 'percent',
-    value: 50,
-    label: '50% IGIMS Host College Deal',
-    description: '50% off on each payable Basic Registration',
-  },
-};
+export const PROMO_CODES = {};
 
 /**
- * Inactive Promo Codes Catalog (Preserved safely for future reactivation)
+ * Inactive Promo Codes Catalog
  */
-export const INACTIVE_PROMO_CODES = {
-  RUSH20: {
-    code: 'RUSH20',
-    type: 'percent',
-    value: 20,
-    label: '20% Rush Deal Discount',
-    description: '20% off on each payable Basic Registration',
-  },
-  RUSH10: {
-    code: 'RUSH10',
-    type: 'percent',
-    value: 10,
-    label: '10% Rush Discount',
-    description: '10% off on each payable Basic Registration',
-  },
-  RUSH30: {
-    code: 'RUSH30',
-    type: 'percent',
-    value: 30,
-    label: '30% Flash Rush Discount',
-    description: '30% off on each payable Basic Registration',
-  },
-  RUSH50: {
-    code: 'RUSH50',
-    type: 'percent',
-    value: 50,
-    label: '50% Mega Rush Deal',
-    description: '50% off on each payable Basic Registration',
-  },
-  CEREBREXIA: {
-    code: 'CEREBREXIA',
-    type: 'percent',
-    value: 10,
-    label: '10% Festival Celebration Code',
-    description: '10% off on each payable Basic Registration',
-  },
-  CEREBREXIA26: {
-    code: 'CEREBREXIA26',
-    type: 'percent',
-    value: 10,
-    label: "10% Cerebrexia '26 Fest Code",
-    description: '10% off on each payable Basic Registration',
-  },
-  CRX26: {
-    code: 'CRX26',
-    type: 'percent',
-    value: 10,
-    label: '10% CRX26 Voucher',
-    description: '10% off on each payable Basic Registration',
-  },
-  IGIMS50: {
-    code: 'IGIMS50',
-    type: 'percent',
-    value: 50,
-    label: '50% IGIMS Host College Deal',
-    description: '50% off on each payable Basic Registration',
-  },
-  EARLYBIRD: {
-    code: 'EARLYBIRD',
-    type: 'percent',
-    value: 15,
-    label: '15% Early Bird Discount',
-    description: '15% off on each payable Basic Registration',
-  },
-  SAVE200: {
-    code: 'SAVE200',
-    type: 'per_br',
-    value: 200,
-    label: '₹200 Off Per BR',
-    description: 'Flat ₹200 off on each payable Basic Registration',
-  },
-  SAVE500: {
-    code: 'SAVE500',
-    type: 'per_br',
-    value: 500,
-    label: '₹500 Off Per BR',
-    description: 'Flat ₹500 off on each payable Basic Registration',
-  },
-  FESTIVAL: {
-    code: 'FESTIVAL',
-    type: 'flat',
-    value: 500,
-    label: '₹500 Fest Voucher',
-    description: 'Flat ₹500 off on total checkout',
-  },
-  VIP100: {
-    code: 'VIP100',
-    type: 'percent',
-    value: 100,
-    label: '100% Complimentary VIP BR',
-    description: '100% complimentary VIP registration',
-  },
-};
+export const INACTIVE_PROMO_CODES = {};
 
 /**
- * Validates a coupon code against payable members and payable subtotal
- * (Currently returns invalid as coupons are disabled)
+ * Validates a coupon code synchronously.
+ * Note: Promo codes are dynamically managed by the admin via Supabase / Admin Portal.
+ * Use `validatePromoCodeOnline` in promoService.js to validate codes provided by admin.
  * @param {string} inputCode - Code entered by user
  * @param {object} params - { payableMembers, payableSubtotal, totalMembers }
  * @returns {{
@@ -268,46 +79,12 @@ export const INACTIVE_PROMO_CODES = {
  * }}
  */
 export function validatePromoCode(inputCode, { payableMembers = 1, payableSubtotal = 2000, totalMembers = 1 } = {}) {
-  const code = String(inputCode || '').trim().toUpperCase();
-  if (!code) {
-    return {
-      valid: false,
-      couponDiscount: 0,
-      discountPerBR: 0,
-      finalTotal: payableSubtotal,
-      message: 'Please enter a coupon code.',
-      promo: null,
-    };
-  }
-
-  const promo = PROMO_CODES[code];
-  if (promo && promo.type === 'percent') {
-    const discountPercent = Number(promo.value) || 0;
-    const discountPerBR = Math.round((2000 * discountPercent) / 100);
-    const couponDiscount = Math.round((payableSubtotal * discountPercent) / 100);
-    const finalTotal = Math.max(0, payableSubtotal - couponDiscount);
-    return {
-      valid: true,
-      couponDiscount,
-      discountPerBR,
-      finalTotal,
-      message: `${discountPercent}% discount applied!`,
-      promo: {
-        code,
-        type: 'percent',
-        value: discountPercent,
-        label: promo.label || `${discountPercent}% Off`,
-        description: promo.description || `${discountPercent}% off on registration`,
-      },
-    };
-  }
-
   return {
     valid: false,
     couponDiscount: 0,
     discountPerBR: 0,
     finalTotal: payableSubtotal,
-    message: 'Invalid or expired coupon code.',
+    message: 'Invalid or inactive promo code.',
     promo: null,
   };
 }

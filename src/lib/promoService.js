@@ -1,5 +1,4 @@
 import { supabase } from './supabaseClient';
-import { PROMO_CODES } from '../constants/promoCodes';
 
 const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 const ADMIN_STORAGE_KEY = 'crx_admin_session';
@@ -146,22 +145,10 @@ export async function fetchAllPromoCodes() {
     }
   }
 
-  // 3. Built-in codes catalog
-  const catalogList = Object.values(PROMO_CODES).map((p) => ({
-    id: `builtin_${p.code}`,
-    code: p.code,
-    discount_percent: p.value,
-    description: p.description || p.label,
-    is_active: true,
-    times_used: 0,
-    created_at: new Date('2026-11-20T00:00:00Z').toISOString(),
-  }));
-
   const localList = getLocalPromoCodes();
 
-  // Deduplicate by code: DB > Local > Built-in
+  // Deduplicate by code: DB > Local (only promo codes managed by admin)
   const codeMap = new Map();
-  for (const item of catalogList) codeMap.set(item.code, item);
   for (const item of localList) codeMap.set(item.code, item);
   for (const item of fetchedList) codeMap.set(item.code, item);
 
@@ -340,31 +327,7 @@ export async function validatePromoCodeOnline(inputCode, { payableMembers = 1, p
     };
   }
 
-  // 1. Check built-in promo codes catalog first (Fastest & 100% reliable)
-  const builtIn = PROMO_CODES[cleanCode];
-  if (builtIn) {
-    const discountPercent = Number(builtIn.value) || 0;
-    const discountPerBR = Math.round((2000 * discountPercent) / 100);
-    const couponDiscount = Math.round((payableSubtotal * discountPercent) / 100);
-    const finalTotal = Math.max(0, payableSubtotal - couponDiscount);
-
-    return {
-      valid: true,
-      couponDiscount,
-      discountPerBR,
-      finalTotal,
-      message: `${discountPercent}% discount applied! Saved ₹${couponDiscount.toLocaleString('en-IN')}`,
-      promo: {
-        code: cleanCode,
-        type: 'percent',
-        value: discountPercent,
-        label: `${discountPercent}% Off`,
-        description: builtIn.description || `${discountPercent}% off on registration`,
-      },
-    };
-  }
-
-  // 2. Check local custom codes added via Admin Portal
+  // 1. Check local admin codes created in Admin Portal
   const localMatched = getLocalPromoCodes().find((c) => c.code === cleanCode && c.is_active);
   if (localMatched) {
     const discountPercent = Number(localMatched.discount_percent || localMatched.value) || 0;
@@ -388,7 +351,7 @@ export async function validatePromoCodeOnline(inputCode, { payableMembers = 1, p
     };
   }
 
-  // 3. Try API validation
+  // 2. Try API validation (checks Supabase promo_codes table via serverless backend)
   try {
     const res = await fetch(`${API_BASE_URL}/api/admin-promo-codes`, {
       method: 'POST',

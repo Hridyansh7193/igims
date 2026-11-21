@@ -691,7 +691,7 @@ export default function AdminPage({ setPage }) {
                   required
                   value={newCode}
                   onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. CRX25, EARLYBIRD, FESTIVAL"
+                  placeholder="e.g. FEST20, SPECIAL15"
                   style={{
                     width: '100%',
                     padding: '11px 12px 11px 36px',
