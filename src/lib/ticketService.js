@@ -264,7 +264,10 @@ export async function checkinTicketAtGate(qrToken, gateVolunteer = 'Gate Volunte
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-gate-api-key': 'crx26_volunteer_gate_secret',
+      },
       body: JSON.stringify({
         qr_token: qrToken,
         gate_volunteer: gateVolunteer,

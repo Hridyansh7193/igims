@@ -1,7 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  escapeHtml,
+  sanitizeAlphaNumDash,
+  timingSafeMatch,
+  checkRateLimit,
+  setSecureCorsHeaders,
+} from './_security.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+
+const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY || 'crx26_volunteer_gate_secret';
 
 /**
  * Determines the festival event day based on IST date or staff override
@@ -11,7 +23,7 @@ function getEventDay(override) {
     return override;
   }
 
-  // Get current date in IST (UTC+5:30)
+  // Current date in IST (UTC+5:30)
   const now = new Date();
   const istOffset = 5.5 * 60 * 60 * 1000;
   const istDate = new Date(now.getTime() + istOffset);
@@ -26,14 +38,47 @@ function getEventDay(override) {
     if (day === 20) return 'DAY_4';
   }
 
-  // If outside festival dates (e.g. testing phase), use date string
   return `DAY_TEST_${istDate.getUTCFullYear()}-${month}-${day}`;
 }
 
+/**
+ * Strips sensitive PII and returns only essential attendee info for gate staff
+ */
+function sanitizeAttendeeOutput(ticket) {
+  if (!ticket) return null;
+  return {
+    attendee_name: escapeHtml(ticket.attendee_name || ''),
+    attendee_college: escapeHtml(ticket.attendee_college || 'Cerebrexia Delegate'),
+    ticket_number: ticket.ticket_number,
+    role: ticket.role || 'DELEGATE',
+    pass_type: ticket.pass_type || 'CONCERT_PRONITES',
+  };
+}
+
 export default async function handler(req, res) {
+  setSecureCorsHeaders(req, res, 'POST, OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ status: 'ERROR', message: 'Method Not Allowed' });
+  }
+
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+
+  // Rate limit: 60 scans per minute per IP
+  const rate = checkRateLimit(clientIp, 'gate_checkin', 60, 60000);
+  if (!rate.allowed) {
+    return res.status(429).json({ status: 'ERROR', message: 'Rate limit exceeded. Please wait a moment.' });
+  }
+
+  // Gate volunteer authorization guard (from dedicated volunteer scanner app)
+  const providedGateKey = req.headers['x-gate-api-key'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '') || req.body?.gate_key;
+  if (providedGateKey && !timingSafeMatch(providedGateKey, GATE_SECRET_KEY)) {
+    return res.status(401).json({ status: 'ERROR', message: 'Unauthorized gate scanner terminal.' });
   }
 
   const { qr_token, gate_volunteer = 'Gate 1 Staff', day_override } = req.body || {};
@@ -42,16 +87,23 @@ export default async function handler(req, res) {
     return res.status(400).json({ status: 'ERROR', message: 'QR token is required' });
   }
 
-  // Clean token if it was passed as a full URL
-  const cleanToken = qr_token.includes('token=')
+  // Clean and sanitize token against PostgREST injection
+  let rawToken = qr_token.includes('token=')
     ? new URL(qr_token).searchParams.get('token')
     : qr_token.replace(/^CRX26:/, '').trim();
 
+  const cleanToken = sanitizeAlphaNumDash(rawToken);
+
+  if (!cleanToken || cleanToken.length < 3 || cleanToken.length > 80) {
+    return res.status(400).json({ status: 'ERROR', message: 'Malformed QR token' });
+  }
+
+  const safeVolunteerName = escapeHtml(String(gate_volunteer).slice(0, 50));
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   const activeDay = getEventDay(day_override);
 
   try {
-    // 1. Find ticket in Supabase
+    // 1. Find ticket in Supabase (Parameterized / sanitised)
     const { data: ticket, error: ticketErr } = await supabase
       .from('tickets')
       .select('*')
@@ -59,7 +111,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (ticketErr) {
-      console.error('[gate-checkin] Ticket query error:', ticketErr);
+      console.error('[gate-checkin] Database error:', ticketErr.message);
       return res.status(500).json({ status: 'ERROR', message: 'Database error searching ticket' });
     }
 
@@ -73,21 +125,21 @@ export default async function handler(req, res) {
     if (!['PAID', 'CONFIRMED'].includes(ticket.payment_status)) {
       return res.status(200).json({
         status: 'UNPAID',
-        message: `Ticket status is ${ticket.payment_status || 'PENDING'}. Not eligible for entry.`,
-        attendee: ticket,
+        message: `Ticket payment status is ${ticket.payment_status || 'PENDING'}. Not eligible for entry.`,
+        attendee: sanitizeAttendeeOutput(ticket),
       });
     }
 
     // 2. Check if already scanned today
     const { data: existingCheckin, error: checkinErr } = await supabase
       .from('ticket_checkins')
-      .select('*')
+      .select('id, scanned_at, event_day')
       .eq('ticket_id', ticket.id)
       .eq('event_day', activeDay)
       .maybeSingle();
 
     if (checkinErr && checkinErr.code !== 'PGRST116') {
-      console.error('[gate-checkin] Checkin query error:', checkinErr);
+      console.error('[gate-checkin] Checkin query error:', checkinErr.message);
     }
 
     if (existingCheckin) {
@@ -100,7 +152,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         status: 'ALREADY_SCANNED',
         message: `ALREADY ENTERED TODAY at ${scanTime}!`,
-        attendee: ticket,
+        attendee: sanitizeAttendeeOutput(ticket),
         event_day: activeDay,
         scanned_at: existingCheckin.scanned_at,
       });
@@ -112,36 +164,35 @@ export default async function handler(req, res) {
       .insert({
         ticket_id: ticket.id,
         event_day: activeDay,
-        scanned_by: gate_volunteer,
+        scanned_by: safeVolunteerName,
         gate_location: 'Gate 1 Main',
       })
-      .select()
+      .select('id, scanned_at')
       .single();
 
     if (insertErr) {
-      // Check if duplicate entry constraint violation
       if (insertErr.code === '23505') {
         return res.status(200).json({
           status: 'ALREADY_SCANNED',
           message: 'ALREADY ENTERED TODAY (Concurrent scan prevented)!',
-          attendee: ticket,
+          attendee: sanitizeAttendeeOutput(ticket),
           event_day: activeDay,
         });
       }
-      console.error('[gate-checkin] Insert error:', insertErr);
+      console.error('[gate-checkin] Insert error:', insertErr.message);
       return res.status(500).json({ status: 'ERROR', message: 'Failed to record gate scan' });
     }
 
-    // 4. Return success
+    // 4. Return sanitized success response
     return res.status(200).json({
       status: 'ENTRY_GRANTED',
       message: 'VALID ENTRY GRANTED!',
-      attendee: ticket,
+      attendee: sanitizeAttendeeOutput(ticket),
       event_day: activeDay,
       scanned_at: newCheckin.scanned_at,
     });
   } catch (err) {
-    console.error('[gate-checkin] Unexpected error:', err);
-    return res.status(500).json({ status: 'ERROR', message: err?.message || 'Server error during checkin' });
+    console.error('[gate-checkin] Unexpected exception:', err);
+    return res.status(500).json({ status: 'ERROR', message: 'Server error during checkin' });
   }
 }

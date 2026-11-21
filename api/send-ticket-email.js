@@ -1,13 +1,18 @@
 import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
 import { Resend } from 'resend';
+import {
+  escapeHtml,
+  sanitizeHeader,
+  checkRateLimit,
+  setSecureCorsHeaders,
+} from './_security.js';
 
 const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
 
-// Copy recipient specifically configured: cerebrexia01@gmail.com
 const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
 const ARCHIVE_EMAIL = 'thecerebrexia17@gmail.com';
 
@@ -52,7 +57,7 @@ async function generateQRDataURL(token) {
 }
 
 /**
- * Generates styled HTML email for attendee pass (BR or Event)
+ * Generates styled HTML email with escaped attendee inputs (OWASP A03: Injection mitigation)
  */
 function buildTicketEmailHTML({
   attendee_name,
@@ -65,18 +70,24 @@ function buildTicketEmailHTML({
   event_name,
   category,
 }) {
+  const safeName = escapeHtml(attendee_name);
+  const safeCollege = escapeHtml(attendee_college || 'Cerebrexia Delegate');
+  const safeTicket = escapeHtml(ticket_number);
+  const safeEvent = escapeHtml(event_name);
+  const safeCategory = escapeHtml(category);
+
   const isEvent = pass_type === 'EVENT_PASS' || !!event_name;
   const festivalTitle = "Cerebrexia '26";
   const badgeLabel = isEvent
-    ? `Official Event Pass &bull; ${event_name}`
+    ? `Official Event Pass &bull; ${safeEvent}`
     : (group_size && group_size > 1 ? `Group Registration (${group_size} Passes)` : `Verified Delegate Pass`);
 
   const greetingLead = isEvent
-    ? `Your registration for <strong>${event_name}</strong> (${category || 'Competitive Event'}) at <strong>${festivalTitle}</strong> is confirmed. Below is your official QR credential for campus access and event reporting.`
+    ? `Your registration for <strong>${safeEvent}</strong> (${safeCategory || 'Competitive Event'}) at <strong>${festivalTitle}</strong> is confirmed. Below is your official QR credential for campus access and event reporting.`
     : `Your Basic Registration (BR) for <strong>${festivalTitle}</strong> is confirmed! Below is your official entry pass with scannable QR code valid across all 4 festival days (17, 18, 19, and 20 December 2026).`;
 
   const accessLevel = isEvent
-    ? `${event_name} Participation &amp; Campus Access`
+    ? `${safeEvent} Participation &amp; Campus Access`
     : `Full Pronites &amp; Star Celebrity Nights (All 4 Days: 17, 18, 19, 20 Dec)`;
 
   return `
@@ -84,7 +95,7 @@ function buildTicketEmailHTML({
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${festivalTitle} Entry Pass — ${ticket_number}</title>
+  <title>${festivalTitle} Entry Pass — ${safeTicket}</title>
   <style>
     body { margin: 0; padding: 0; background-color: #0b0406; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4ede4; }
     .container { max-width: 600px; margin: 30px auto; background: #13070b; border: 1px solid #b3123a; border-radius: 16px; overflow: hidden; }
@@ -116,7 +127,7 @@ function buildTicketEmailHTML({
 
     <div class="content">
       <div class="badge">${badgeLabel}</div>
-      <h2 class="greeting">Hello, ${attendee_name}!</h2>
+      <h2 class="greeting">Hello, ${safeName}!</h2>
       <p style="font-size: 14px; line-height: 1.6; color: #d4c5b9; margin: 0 0 16px;">
         ${greetingLead}
       </p>
@@ -124,7 +135,7 @@ function buildTicketEmailHTML({
       <!-- QR Card -->
       <div class="qr-card">
         <img class="qr-img" src="${qr_src}" alt="Pass QR Code" />
-        <div class="ticket-id">${ticket_number}</div>
+        <div class="ticket-id">${safeTicket}</div>
         <p style="font-size: 11px; color: #555; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 0.8px;">
           ${isEvent ? 'Gate &amp; Event Verification QR' : 'Scannable once per day &bull; 17, 18, 19, 20 Dec 2026'}
         </p>
@@ -134,11 +145,11 @@ function buildTicketEmailHTML({
       <table class="info-table">
         <tr>
           <td class="info-label">Pass Holder</td>
-          <td class="info-value">${attendee_name}</td>
+          <td class="info-value">${safeName}</td>
         </tr>
         <tr>
           <td class="info-label">College</td>
-          <td class="info-value">${attendee_college || 'Not specified'}</td>
+          <td class="info-value">${safeCollege}</td>
         </tr>
         <tr>
           <td class="info-label">Access Level</td>
@@ -147,7 +158,7 @@ function buildTicketEmailHTML({
         ${isEvent ? `
         <tr>
           <td class="info-label">Registered Event</td>
-          <td class="info-value">${event_name} ${category ? `(${category})` : ''}</td>
+          <td class="info-value">${safeEvent} ${safeCategory ? `(${safeCategory})` : ''}</td>
         </tr>
         ` : `
         <tr>
@@ -186,15 +197,36 @@ function buildTicketEmailHTML({
  * API handler: Dispatches QR Pass email to attendee and copies cerebrexia01@gmail.com
  */
 export default async function handler(req, res) {
+  setSecureCorsHeaders(req, res, 'POST, OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+
+  // Rate limit: max 12 email dispatches per minute per IP to prevent mail bombing (OWASP A04)
+  const rate = checkRateLimit(clientIp, 'send_ticket_email', 12, 60000);
+  if (!rate.allowed) {
+    return res.status(429).json({ error: 'Too many email requests. Please wait a minute.' });
   }
 
   const { ticket, group_size } = req.body || {};
 
   if (!ticket || !ticket.attendee_email || !ticket.qr_token) {
     return res.status(400).json({ error: 'Missing required ticket details' });
+  }
+
+  // Strict email format validation
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const cleanEmail = String(ticket.attendee_email).trim().toLowerCase();
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ error: 'Invalid recipient email format' });
   }
 
   const isEvent = ticket.pass_type === 'EVENT_PASS' || !!(ticket.metadata && ticket.metadata.event_name);
@@ -208,7 +240,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to generate QR Code' });
   }
 
-  // Generate HTML with inline CID for email clients that block base64
   const emailHtmlCid = buildTicketEmailHTML({
     attendee_name: ticket.attendee_name,
     attendee_college: ticket.attendee_college,
@@ -221,7 +252,6 @@ export default async function handler(req, res) {
     category: category,
   });
 
-  // Fallback HTML with data URL (ideal for Resend web views)
   const emailHtmlDataUrl = buildTicketEmailHTML({
     attendee_name: ticket.attendee_name,
     attendee_college: ticket.attendee_college,
@@ -234,9 +264,11 @@ export default async function handler(req, res) {
     category: category,
   });
 
-  const emailSubject = isEvent
+  // Sanitize subject line to eliminate CRLF header injection (OWASP A03)
+  const rawSubject = isEvent
     ? `Cerebrexia '26 Event Pass: ${eventName} — ${ticket.ticket_number} (${ticket.attendee_name})`
     : `Cerebrexia '26 Entry Pass & QR Code — ${ticket.ticket_number} (${ticket.attendee_name})`;
+  const emailSubject = sanitizeHeader(rawSubject);
 
   const gmailUser = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
   const gmailPass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
@@ -245,10 +277,9 @@ export default async function handler(req, res) {
   const copyEmail = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
   const archiveEmail = 'thecerebrexia17@gmail.com';
 
-  // Copy recipients: cerebrexia01@gmail.com + archive copy to thecerebrexia17@gmail.com
   const bccRecipients = Array.from(new Set([copyEmail, archiveEmail])).filter(Boolean);
 
-  // Method 1: Priority: Try Gmail SMTP if credentials provided (sends genuinely from thecerebrexia17@gmail.com)
+  // Method 1: Gmail SMTP
   if (gmailPass) {
     try {
       const transporter = nodemailer.createTransport({
@@ -261,13 +292,13 @@ export default async function handler(req, res) {
 
       const mailOptions = {
         from: `"Cerebrexia '26 IGIMS" <${gmailUser}>`,
-        to: ticket.attendee_email,
+        to: cleanEmail,
         bcc: bccRecipients,
         subject: emailSubject,
         html: emailHtmlCid,
         attachments: qrBuffer ? [
           {
-            filename: `Pass-${ticket.ticket_number}.png`,
+            filename: `Pass-${sanitizeHeader(ticket.ticket_number)}.png`,
             content: qrBuffer,
             cid: 'gate_pass_qr',
           },
@@ -275,46 +306,43 @@ export default async function handler(req, res) {
       };
 
       const info = await transporter.sendMail(mailOptions);
-      console.log('[send-ticket-email] Sent via Gmail SMTP from', gmailUser, 'to', ticket.attendee_email, 'BCC:', bccRecipients, 'MessageId:', info.messageId);
+      console.log('[send-ticket-email] Sent via Gmail SMTP to', cleanEmail, 'MessageId:', info.messageId);
       return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
     } catch (smtpErr) {
-      console.error('[send-ticket-email] Gmail SMTP error:', smtpErr);
-      // Fall through to Resend if available
+      console.error('[send-ticket-email] Gmail SMTP error:', smtpErr.message);
     }
   }
 
-  // Method 2: Try Resend if configured
+  // Method 2: Resend
   if (resendKey) {
     try {
       const resend = new Resend(resendKey);
       const resendPayload = {
         from: resendFrom,
-        to: [ticket.attendee_email],
+        to: [cleanEmail],
         bcc: bccRecipients,
         reply_to: gmailUser,
         subject: emailSubject,
         html: emailHtmlDataUrl,
         attachments: qrBuffer ? [
           {
-            filename: `Pass-${ticket.ticket_number}.png`,
+            filename: `Pass-${sanitizeHeader(ticket.ticket_number)}.png`,
             content: qrBuffer.toString('base64'),
           },
         ] : [],
       };
 
       const resendRes = await resend.emails.send(resendPayload);
-      console.log('[send-ticket-email] Successfully sent via Resend:', resendRes);
       return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
     } catch (resendErr) {
-      console.error('[send-ticket-email] Resend error:', resendErr);
+      console.error('[send-ticket-email] Resend error:', resendErr.message);
     }
   }
 
-  // If neither provider is configured, return graceful status with QR data
   return res.status(200).json({
     success: true,
     provider: 'unconfigured_mock',
-    message: 'QR pass generated. To dispatch live emails, add RESEND_API_KEY (or GMAIL_APP_PASSWORD) in Vercel environment variables.',
+    message: 'QR pass generated successfully.',
     qr_data_url: qrDataUrl,
   });
 }

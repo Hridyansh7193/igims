@@ -45,8 +45,11 @@ export async function adminLogin(username, password) {
 
   // Fallback for local sandbox or direct client execution
   if (localCredentialCheck(username, password)) {
-    const token = btoa(`${username}:::${Date.now()}:::CRX26_ADMIN_SECURE`);
-    const session = { token, username, timestamp: Date.now() };
+    const session = {
+      token: `local_${Date.now()}`,
+      username: String(username).trim().toLowerCase(),
+      timestamp: Date.now(),
+    };
     sessionStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
     return { success: true, session };
   }

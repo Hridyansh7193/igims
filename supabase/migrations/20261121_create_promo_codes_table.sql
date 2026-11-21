@@ -1,5 +1,6 @@
 -- Migration: Create promo_codes table for dynamic admin discount management
 -- Festival: Cerebrexia '26, IGIMS Patna
+-- Security Hardened: Restrict writes to service_role to prevent unauthorized anonymous tampering
 
 CREATE TABLE IF NOT EXISTS public.promo_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -20,27 +21,16 @@ CREATE INDEX IF NOT EXISTS idx_promo_codes_active ON public.promo_codes (is_acti
 -- Enable Row Level Security
 ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
 
--- Allow public read of active promo codes so attendees can validate codes at checkout
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'promo_codes' AND policyname = 'Allow public read of promo_codes'
-  ) THEN
-    CREATE POLICY "Allow public read of promo_codes"
-      ON public.promo_codes FOR SELECT
-      USING (true);
-  END IF;
-END $$;
+-- Allow public read of promo codes (so attendees can validate at checkout)
+DROP POLICY IF EXISTS "Allow public read of promo_codes" ON public.promo_codes;
+CREATE POLICY "Allow public read of promo_codes"
+  ON public.promo_codes FOR SELECT
+  USING (true);
 
--- Allow insert/update/delete for admin actions (via anon key with full access or service role)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'promo_codes' AND policyname = 'Allow write access to promo_codes'
-  ) THEN
-    CREATE POLICY "Allow write access to promo_codes"
-      ON public.promo_codes FOR ALL
-      USING (true)
-      WITH CHECK (true);
-  END IF;
-END $$;
+-- Restrict write/insert/delete access to authenticated service role or admin (OWASP A01: Broken Access Control)
+DROP POLICY IF EXISTS "Allow write access to promo_codes" ON public.promo_codes;
+CREATE POLICY "Allow service_role write access to promo_codes"
+  ON public.promo_codes FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);

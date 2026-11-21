@@ -1,4 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  escapeHtml,
+  sanitizeAlphaNumDash,
+  timingSafeMatch,
+  signToken,
+  verifyToken,
+  checkRateLimit,
+  setSecureCorsHeaders,
+} from './_security.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
 const SUPABASE_KEY =
@@ -8,73 +17,56 @@ const SUPABASE_KEY =
 
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'admin').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'cerebrexia2026';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || `${ADMIN_PASSWORD}_secure_crx26_salt`;
 
 function verifyCredentials(user, pass) {
-  if (!user || !pass) return false;
-  const normalizedUser = String(user).trim().toLowerCase();
-  const validUsernames = [ADMIN_USERNAME, 'cerebrexia', 'igims_admin'];
-  const validPasswords = [ADMIN_PASSWORD, 'cerebrexia2026', 'crx@admin2026'];
-  return validUsernames.includes(normalizedUser) && validPasswords.includes(String(pass));
-}
+  if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
+  const normalizedUser = user.trim().toLowerCase();
 
-function verifyToken(token) {
-  if (!token || typeof token !== 'string') return false;
-  try {
-    const decoded = Buffer.from(token, 'base64').toString('utf8');
-    const [user, ts, sign] = decoded.split(':::');
-    if (!user || !ts || !sign) return false;
-    // Check if token signature is valid
-    if (sign !== 'CRX26_ADMIN_SECURE') return false;
-    // Check expiration (24 hours)
-    const tokenTime = parseInt(ts, 10);
-    if (isNaN(tokenTime) || Date.now() - tokenTime > 24 * 60 * 60 * 1000) {
-      return false;
-    }
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
+  const isUserValid = timingSafeMatch(normalizedUser, ADMIN_USERNAME) || timingSafeMatch(normalizedUser, 'cerebrexia');
+  const isPassValid = timingSafeMatch(pass, ADMIN_PASSWORD) || (!process.env.ADMIN_PASSWORD && timingSafeMatch(pass, 'cerebrexia2026'));
 
-function generateToken(user) {
-  const payload = `${user}:::${Date.now()}:::CRX26_ADMIN_SECURE`;
-  return Buffer.from(payload).toString('base64');
+  return isUserValid && isPassValid;
 }
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-token');
+  setSecureCorsHeaders(req, res, 'GET, POST, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 1. PUBLIC VALIDATION (No auth required to check a promo code during checkout)
+  // 1. PUBLIC VALIDATION (Used by attendees at checkout)
   if (req.method === 'POST' && req.body?.action === 'validate') {
-    const rawCode = (req.body?.code || '').trim().toUpperCase();
-    if (!rawCode) {
-      return res.status(400).json({ valid: false, message: 'Please enter a coupon code.' });
+    // Rate limit: max 30 validations per minute per IP to prevent code enumeration
+    const rate = checkRateLimit(clientIp, 'promo_validate', 30, 60000);
+    if (!rate.allowed) {
+      return res.status(429).json({ valid: false, message: 'Too many requests. Please wait a moment.' });
+    }
+
+    const rawCode = sanitizeAlphaNumDash(req.body?.code || '').toUpperCase();
+    if (!rawCode || rawCode.length < 2 || rawCode.length > 30) {
+      return res.status(400).json({ valid: false, message: 'Please enter a valid coupon code.' });
     }
 
     try {
       const { data, error } = await supabase
         .from('promo_codes')
-        .select('*')
-        .ilike('code', rawCode)
+        .select('id, code, discount_percent, description, is_active, max_uses, times_used')
+        .eq('code', rawCode)
         .eq('is_active', true)
         .maybeSingle();
 
       if (error) {
-        console.error('[admin-promo-codes] validation query error:', error);
+        console.error('[admin-promo-codes] Validation error:', error.message);
         return res.status(500).json({ valid: false, message: 'Could not verify coupon. Try again.' });
       }
 
       if (!data) {
-        return res.status(200).json({ valid: false, message: 'Invalid or expired coupon code.' });
+        return res.status(200).json({ valid: false, message: 'Invalid or inactive coupon code.' });
       }
 
       if (data.max_uses && data.times_used >= data.max_uses) {
@@ -88,21 +80,37 @@ export default async function handler(req, res) {
           type: 'percent',
           value: Number(data.discount_percent),
           label: `${data.discount_percent}% Discount`,
-          description: data.description || `${data.discount_percent}% off on registration`,
+          description: escapeHtml(data.description) || `${data.discount_percent}% off on registration`,
         },
         message: `${data.discount_percent}% discount code applied successfully!`,
       });
     } catch (err) {
-      console.error('[admin-promo-codes] validation exception:', err);
+      console.error('[admin-promo-codes] Validation exception:', err);
       return res.status(500).json({ valid: false, message: 'Server error verifying coupon.' });
     }
   }
 
   // 2. ADMIN LOGIN
   if (req.method === 'POST' && req.body?.action === 'login') {
+    // Rate limit: max 10 failed login attempts per 5 minutes per IP to prevent brute-force attacks
+    const rate = checkRateLimit(clientIp, 'admin_login', 10, 300000);
+    if (!rate.allowed) {
+      return res.status(429).json({ success: false, message: 'Too many login attempts. Please wait 5 minutes.' });
+    }
+
     const { username, password } = req.body;
     if (verifyCredentials(username, password)) {
-      const token = generateToken(username);
+      // 24-hour token expiry with HMAC-SHA256 signature
+      const token = signToken(
+        {
+          user: String(username).trim().toLowerCase(),
+          role: 'ADMIN',
+          iat: Date.now(),
+          exp: Date.now() + 24 * 60 * 60 * 1000,
+        },
+        ADMIN_JWT_SECRET
+      );
+
       return res.status(200).json({
         success: true,
         token,
@@ -110,20 +118,20 @@ export default async function handler(req, res) {
         message: 'Admin authentication successful',
       });
     }
+
     return res.status(401).json({ success: false, message: 'Invalid admin username or password' });
   }
 
-  // Check admin authorization for all management actions
+  // 3. AUTHENTICATION GUARD FOR ADMIN OPERATIONS
   const token = req.headers['x-admin-token'] || req.body?.token;
-  const isAuthorized =
-    verifyToken(token) ||
-    verifyCredentials(req.body?.admin_username, req.body?.admin_password);
+  const decodedSession = verifyToken(token, ADMIN_JWT_SECRET);
+  const isDirectAuthed = verifyCredentials(req.body?.admin_username, req.body?.admin_password);
 
-  if (!isAuthorized) {
-    return res.status(401).json({ error: 'Unauthorized. Admin credentials or session token required.' });
+  if (!decodedSession && !isDirectAuthed) {
+    return res.status(401).json({ error: 'Unauthorized: Valid admin credentials or session required.' });
   }
 
-  // 3. GET: List all promo codes (active and inactive)
+  // 4. GET: List all promo codes (active and inactive)
   if (req.method === 'GET') {
     try {
       const { data, error } = await supabase
@@ -132,30 +140,35 @@ export default async function handler(req, res) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('[admin-promo-codes] Fetch error:', error.message);
+        return res.status(500).json({ error: 'Failed to fetch promo codes' });
       }
       return res.status(200).json({ promoCodes: data || [] });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.error('[admin-promo-codes] Fetch exception:', err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }
 
-  // 4. POST: Admin mutations (create, delete, toggle)
+  // 5. POST: Admin mutations
   if (req.method === 'POST') {
     const { action } = req.body || {};
 
     // CREATE PROMO CODE
     if (action === 'create') {
-      const rawCode = (req.body.code || '').trim().toUpperCase();
+      const rawCode = sanitizeAlphaNumDash(req.body.code || '').toUpperCase();
       const discountPercent = parseInt(req.body.discount_percent, 10);
-      const description = (req.body.description || '').trim();
+      const description = escapeHtml(String(req.body.description || '').trim()).slice(0, 200);
       const maxUses = req.body.max_uses ? parseInt(req.body.max_uses, 10) : null;
 
-      if (!rawCode) {
-        return res.status(400).json({ error: 'Promo code is required.' });
+      if (!rawCode || rawCode.length < 2 || rawCode.length > 30) {
+        return res.status(400).json({ error: 'Promo code must be 2-30 alphanumeric characters.' });
       }
       if (isNaN(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
-        return res.status(400).json({ error: 'Discount percentage must be between 1 and 100.' });
+        return res.status(400).json({ error: 'Discount percentage must be an integer between 1 and 100.' });
+      }
+      if (maxUses !== null && (isNaN(maxUses) || maxUses <= 0)) {
+        return res.status(400).json({ error: 'Max uses must be a positive number if provided.' });
       }
 
       try {
@@ -180,20 +193,22 @@ export default async function handler(req, res) {
           if (error.code === '23505') {
             return res.status(400).json({ error: `Promo code "${rawCode}" already exists.` });
           }
-          return res.status(500).json({ error: error.message });
+          console.error('[admin-promo-codes] Insert error:', error.message);
+          return res.status(500).json({ error: 'Database error creating promo code.' });
         }
 
         return res.status(201).json({ success: true, promoCode: data });
       } catch (err) {
-        return res.status(500).json({ error: err.message });
+        console.error('[admin-promo-codes] Insert exception:', err);
+        return res.status(500).json({ error: 'Internal server error' });
       }
     }
 
     // DELETE PROMO CODE
     if (action === 'delete') {
-      const { id } = req.body;
+      const id = sanitizeAlphaNumDash(req.body.id || '');
       if (!id) {
-        return res.status(400).json({ error: 'Promo code ID is required.' });
+        return res.status(400).json({ error: 'Valid promo code ID is required.' });
       }
 
       try {
@@ -203,37 +218,43 @@ export default async function handler(req, res) {
           .eq('id', id);
 
         if (error) {
-          return res.status(500).json({ error: error.message });
+          console.error('[admin-promo-codes] Delete error:', error.message);
+          return res.status(500).json({ error: 'Database error deleting promo code.' });
         }
 
         return res.status(200).json({ success: true, message: 'Promo code removed successfully.' });
       } catch (err) {
-        return res.status(500).json({ error: err.message });
+        console.error('[admin-promo-codes] Delete exception:', err);
+        return res.status(500).json({ error: 'Internal server error' });
       }
     }
 
     // TOGGLE PROMO CODE (Active / Inactive)
     if (action === 'toggle') {
-      const { id, is_active } = req.body;
-      if (!id || typeof is_active !== 'boolean') {
-        return res.status(400).json({ error: 'ID and is_active boolean are required.' });
+      const id = sanitizeAlphaNumDash(req.body.id || '');
+      const isActive = Boolean(req.body.is_active);
+
+      if (!id) {
+        return res.status(400).json({ error: 'Valid promo code ID is required.' });
       }
 
       try {
         const { data, error } = await supabase
           .from('promo_codes')
-          .update({ is_active, updated_at: new Date().toISOString() })
+          .update({ is_active: isActive, updated_at: new Date().toISOString() })
           .eq('id', id)
           .select()
           .single();
 
         if (error) {
-          return res.status(500).json({ error: error.message });
+          console.error('[admin-promo-codes] Toggle error:', error.message);
+          return res.status(500).json({ error: 'Database error updating promo code.' });
         }
 
         return res.status(200).json({ success: true, promoCode: data });
       } catch (err) {
-        return res.status(500).json({ error: err.message });
+        console.error('[admin-promo-codes] Toggle exception:', err);
+        return res.status(500).json({ error: 'Internal server error' });
       }
     }
 
