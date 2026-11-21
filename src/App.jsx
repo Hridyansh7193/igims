@@ -14,11 +14,12 @@ import AboutPage from './pages/AboutPage';
 import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
 import GateScannerPage from './pages/GateScannerPage';
+import AdminPage from './pages/AdminPage';
 import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin'];
 
 export default function App() {
   const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
@@ -83,14 +84,15 @@ export default function App() {
   }
 
   const isPolicyPage = POLICY_ROUTES.includes(page);
+  const isBypassIntro = isPolicyPage || page === 'admin';
 
   return (
     <AuthProvider>
       <div className="crx-root">
         <GlobalStyle />
 
-        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation) */}
-        {!introComplete && !isPolicyPage && (
+        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation or admin) */}
+        {!introComplete && !isBypassIntro && (
           <IntroAnimation
             onComplete={handleIntroComplete}
             onWipeStart={handleWipeStart}
@@ -99,7 +101,7 @@ export default function App() {
         )}
 
         {/* Title Sponsor Pop-up (Pops up right after starting animation ends and website loads) */}
-        {showTitleSponsor && (
+        {showTitleSponsor && !isBypassIntro && (
           <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
         )}
 
@@ -115,6 +117,7 @@ export default function App() {
           {page === 'about' && <AboutPage />}
           {page === 'contact' && <ContactPage />}
           {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
+          {page === 'admin' && <AdminPage setPage={navigateTo} />}
           {isPolicyPage && (
             <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
           )}

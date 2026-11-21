@@ -14,7 +14,7 @@
  */
 
 export const PRICE_PER_REGISTRATION = 2000;
-export const COUPONS_ENABLED = false;
+export const COUPONS_ENABLED = true;
 
 /**
  * Calculates the built-in default group offer (9+1 offer)
@@ -169,12 +169,46 @@ export const INACTIVE_PROMO_CODES = {
  * }}
  */
 export function validatePromoCode(inputCode, { payableMembers = 1, payableSubtotal = 2000, totalMembers = 1 } = {}) {
+  const code = String(inputCode || '').trim().toUpperCase();
+  if (!code) {
+    return {
+      valid: false,
+      couponDiscount: 0,
+      discountPerBR: 0,
+      finalTotal: payableSubtotal,
+      message: 'Please enter a coupon code.',
+      promo: null,
+    };
+  }
+
+  const promo = PROMO_CODES[code] || INACTIVE_PROMO_CODES[code];
+  if (promo && promo.type === 'percent') {
+    const discountPercent = Number(promo.value) || 0;
+    const discountPerBR = Math.round((2000 * discountPercent) / 100);
+    const couponDiscount = Math.round((payableSubtotal * discountPercent) / 100);
+    const finalTotal = Math.max(0, payableSubtotal - couponDiscount);
+    return {
+      valid: true,
+      couponDiscount,
+      discountPerBR,
+      finalTotal,
+      message: `${discountPercent}% discount applied!`,
+      promo: {
+        code,
+        type: 'percent',
+        value: discountPercent,
+        label: promo.label || `${discountPercent}% Off`,
+        description: promo.description || `${discountPercent}% off on registration`,
+      },
+    };
+  }
+
   return {
     valid: false,
     couponDiscount: 0,
     discountPerBR: 0,
     finalTotal: payableSubtotal,
-    message: 'Coupon codes are currently inactive.',
+    message: 'Invalid or expired coupon code.',
     promo: null,
   };
 }

@@ -34,6 +34,7 @@ import {
   markBasicRegistrationPaid,
 } from '../../lib/eventsService';
 import { validatePromoCode, calculateDefaultGroupOffer } from '../../constants/promoCodes';
+import { validatePromoCodeOnline } from '../../lib/promoService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../../lib/razorpay';
 
 const REG_PRICE_PER_PERSON = 2000;
@@ -85,6 +86,7 @@ export default function BasicRegistrationModal({
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoMessage, setPromoMessage] = useState(null);
   const [promoError, setPromoError] = useState(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   // Processing & UI States
   const [loading, setLoading] = useState(false);
@@ -143,19 +145,31 @@ export default function BasicRegistrationModal({
     if (appliedPromo) {
       const count = regType === 'GROUP' ? groupSize : 1;
       const offer = calculateDefaultGroupOffer(count, REG_PRICE_PER_PERSON);
-      const res = validatePromoCode(appliedPromo.code, {
+      validatePromoCodeOnline(appliedPromo.code, {
         payableMembers: offer.payableMembers,
         payableSubtotal: offer.groupPayable,
         totalMembers: count,
+      }).then((res) => {
+        if (res.valid) {
+          setAppliedPromo(res.promo);
+          setPromoMessage(res.message);
+        } else {
+          setAppliedPromo(null);
+          setPromoMessage(null);
+          setPromoError(res.message);
+        }
+      }).catch(() => {
+        // Fallback sync validation
+        const syncRes = validatePromoCode(appliedPromo.code, {
+          payableMembers: offer.payableMembers,
+          payableSubtotal: offer.groupPayable,
+          totalMembers: count,
+        });
+        if (syncRes.valid) {
+          setAppliedPromo(syncRes.promo);
+          setPromoMessage(syncRes.message);
+        }
       });
-      if (res.valid) {
-        setAppliedPromo(res.promo);
-        setPromoMessage(res.message);
-      } else {
-        setAppliedPromo(null);
-        setPromoMessage(null);
-        setPromoError(res.message);
-      }
     }
   }, [groupSize, regType]);
 
@@ -298,31 +312,66 @@ export default function BasicRegistrationModal({
   const totalSavings = groupDiscount + couponDiscount;
 
   // Coupon Code Validation Handler
-  const handleApplyPromo = (e) => {
+  const handleApplyPromo = async (e) => {
     e.preventDefault();
     setPromoError(null);
     setPromoMessage(null);
 
-    if (!promoInput.trim()) {
+    const cleanInput = promoInput.trim().toUpperCase();
+    if (!cleanInput) {
       setPromoError('Please enter a coupon code.');
       return;
     }
 
-    const res = validatePromoCode(promoInput, {
-      payableMembers,
-      payableSubtotal: groupPayable,
-      totalMembers: totalMemberCount,
-    });
+    setApplyingPromo(true);
+    try {
+      const res = await validatePromoCodeOnline(cleanInput, {
+        payableMembers,
+        payableSubtotal: groupPayable,
+        totalMembers: totalMemberCount,
+      });
 
-    if (res.valid) {
-      setAppliedPromo(res.promo);
-      setPromoMessage(res.message);
-      setPromoError(null);
-      setPromoInput('');
-    } else {
-      setAppliedPromo(null);
-      setPromoError(res.message);
-      setPromoMessage(null);
+      if (res.valid) {
+        setAppliedPromo(res.promo);
+        setPromoMessage(res.message);
+        setPromoError(null);
+        setPromoInput('');
+      } else {
+        // Try synchronous fallback catalog check
+        const syncRes = validatePromoCode(cleanInput, {
+          payableMembers,
+          payableSubtotal: groupPayable,
+          totalMembers: totalMemberCount,
+        });
+
+        if (syncRes.valid) {
+          setAppliedPromo(syncRes.promo);
+          setPromoMessage(syncRes.message);
+          setPromoError(null);
+          setPromoInput('');
+        } else {
+          setAppliedPromo(null);
+          setPromoError(res.message || syncRes.message || 'Invalid or inactive promo code.');
+          setPromoMessage(null);
+        }
+      }
+    } catch (err) {
+      console.warn('[BasicRegistrationModal] coupon validation error:', err);
+      const syncRes = validatePromoCode(cleanInput, {
+        payableMembers,
+        payableSubtotal: groupPayable,
+        totalMembers: totalMemberCount,
+      });
+      if (syncRes.valid) {
+        setAppliedPromo(syncRes.promo);
+        setPromoMessage(syncRes.message);
+        setPromoError(null);
+        setPromoInput('');
+      } else {
+        setPromoError('Could not verify coupon. Check connection.');
+      }
+    } finally {
+      setApplyingPromo(false);
     }
   };
 
@@ -1683,11 +1732,11 @@ export default function BasicRegistrationModal({
             </div>
           )}
 
-          {/* STEP 4: Coupon Code (Disabled for now) */}
+          {/* STEP 4: Promo / Coupon Code Section */}
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: appliedPromo ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: 14,
               padding: '14px 16px',
               marginBottom: 18,
@@ -1695,51 +1744,105 @@ export default function BasicRegistrationModal({
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Tag size={15} color="rgba(255,255,255,0.4)" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Coupon Code
+                <Tag size={15} color={appliedPromo ? '#22c55e' : 'var(--crx-gold, #D4AF37)'} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cream)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                  Promo / Coupon Code
                 </span>
               </div>
-              <span style={{ fontSize: 11, color: 'var(--crx-text-secondary, #a1a1aa)' }}>
-                Coupons currently inactive
+              <span style={{ fontSize: 11, color: appliedPromo ? '#22c55e' : 'var(--crx-text-secondary, #a1a1aa)' }}>
+                {appliedPromo ? `${appliedPromo.value}% Discount Applied` : 'Have a festival discount code?'}
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ position: 'relative', flex: 1 }}>
-                <Tag size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                <input
-                  type="text"
-                  value={promoInput}
-                  onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
-                  placeholder="NO ACTIVE COUPONS AVAILABLE"
-                  disabled={true}
-                  style={{
-                    ...inp,
-                    paddingLeft: 34,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    opacity: 0.6,
-                    cursor: 'not-allowed',
-                  }}
-                />
-              </div>
-              <button
-                type="button"
-                disabled={true}
-                className="crx-btn"
+            {appliedPromo ? (
+              <div
                 style={{
-                  padding: '8px 16px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  borderRadius: 8,
-                  opacity: 0.4,
-                  cursor: 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
                 }}
               >
-                APPLY
-              </button>
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CheckCircle2 size={16} color="#22c55e" />
+                  <div>
+                    <span style={{ fontWeight: 800, color: '#fff', fontSize: 13, letterSpacing: 0.8 }}>
+                      {appliedPromo.code}
+                    </span>
+                    <span style={{ fontSize: 11, color: '#86efac', marginLeft: 8 }}>
+                      ({appliedPromo.value}% OFF &bull; -₹{couponDiscount.toLocaleString('en-IN')})
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#fca5a5',
+                    borderRadius: 6,
+                    padding: '4px 10px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <X size={12} /> Remove
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleApplyPromo} style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Tag size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                      placeholder="ENTER PROMO CODE (e.g. CRX20)"
+                      style={{
+                        ...inp,
+                        paddingLeft: 34,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={applyingPromo || !promoInput.trim()}
+                    className="crx-btn gold"
+                    style={{
+                      padding: '8px 18px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      borderRadius: 8,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {applyingPromo ? 'CHECKING...' : 'APPLY'}
+                  </button>
+                </div>
+
+                {promoError && (
+                  <p style={{ margin: '4px 0 0', fontSize: 11.5, color: '#f87171' }}>
+                    {promoError}
+                  </p>
+                )}
+                {promoMessage && !promoError && (
+                  <p style={{ margin: '4px 0 0', fontSize: 11.5, color: '#34d399' }}>
+                    {promoMessage}
+                  </p>
+                )}
+              </form>
+            )}
           </div>
 
           {/* STEP 5: Order Breakdown & Final Checkout Summary */}
