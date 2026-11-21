@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw,
   Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard,
-  MapPin, Ticket, Trophy, Music, Sparkles, Tag
+  MapPin, Ticket, Trophy, Music, Sparkles, Tag, Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -14,7 +14,7 @@ import {
   fetchCategorizedRegistrations, markBasicRegistrationPaid
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
-import { fetchUserTickets, issueTicketsForBasicRegistration } from '../lib/ticketService';
+import { fetchUserTickets, issueTicketsForBasicRegistration, dispatchTicketEmail } from '../lib/ticketService';
 import { validatePromoCodeOnline } from '../lib/promoService';
 import TicketCard from '../components/common/TicketCard';
 
@@ -41,6 +41,8 @@ export default function DashboardPage({ setPage }) {
   const [promoError, setPromoError] = useState(null);
   const [promoMessage, setPromoMessage] = useState(null);
   const [validatingPromo, setValidatingPromo] = useState(false);
+  const [emailingAll, setEmailingAll] = useState(false);
+  const [emailAllMessage, setEmailAllMessage] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -272,6 +274,27 @@ export default function DashboardPage({ setPage }) {
       console.error('[Dashboard] Payment confirm error:', err);
     } finally {
       setPaying(false);
+    }
+  };
+
+  const handleEmailAllPasses = async () => {
+    if (!userTickets || userTickets.length === 0) return;
+    setEmailingAll(true);
+    setEmailAllMessage(null);
+    try {
+      const results = await Promise.allSettled(
+        userTickets.map((t) => dispatchTicketEmail(t, userTickets.length))
+      );
+      const successful = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
+      if (successful > 0) {
+        setEmailAllMessage(`Sent ${successful} pass${successful > 1 ? 'es' : ''} to ${user?.email || 'your email'}! Please check inbox and spam.`);
+      } else {
+        setEmailAllMessage('Could not send emails. Please verify your connection.');
+      }
+    } catch (_) {
+      setEmailAllMessage('Failed to send pass emails. Please try again.');
+    } finally {
+      setEmailingAll(false);
     }
   };
 
@@ -917,6 +940,32 @@ export default function DashboardPage({ setPage }) {
                     <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
                       Present at gate &bull; Valid Dec 17, 18, 19, 20 &bull; 1 scan allowed per day
                     </p>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleEmailAllPasses}
+                      disabled={emailingAll}
+                      className="crx-btn"
+                      style={{
+                        fontSize: 12,
+                        padding: '8px 16px',
+                        background: 'rgba(212, 175, 55, 0.15)',
+                        border: '1px solid rgba(212, 175, 55, 0.45)',
+                        color: 'var(--crx-gold, #D4AF37)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontWeight: 700,
+                      }}
+                    >
+                      <Mail size={14} /> {emailingAll ? 'Sending to Inbox...' : 'Email Passes to Me'}
+                    </button>
+                    {emailAllMessage && (
+                      <div style={{ fontSize: 11, color: emailAllMessage.includes('Sent') ? '#22c55e' : '#ef4444', marginTop: 6, textAlign: 'right' }}>
+                        {emailAllMessage}
+                      </div>
+                    )}
                   </div>
                 </div>
 

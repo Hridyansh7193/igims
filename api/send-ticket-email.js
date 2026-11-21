@@ -210,8 +210,8 @@ export default async function handler(req, res) {
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
 
-  // Rate limit: max 12 email dispatches per minute per IP to prevent mail bombing (OWASP A04)
-  const rate = checkRateLimit(clientIp, 'send_ticket_email', 12, 60000);
+  // Rate limit: max 30 email dispatches per minute per IP to support group registrations (OWASP A04)
+  const rate = checkRateLimit(clientIp, 'send_ticket_email', 30, 60000);
   if (!rate.allowed) {
     return res.status(429).json({ error: 'Too many email requests. Please wait a minute.' });
   }
@@ -270,6 +270,26 @@ export default async function handler(req, res) {
     : `Cerebrexia '26 Entry Pass & QR Code — ${ticket.ticket_number} (${ticket.attendee_name})`;
   const emailSubject = sanitizeHeader(rawSubject);
 
+  const plainText = [
+    `Hello ${ticket.attendee_name || 'Attendee'},`,
+    '',
+    `Your official entry pass for Cerebrexia '26 (${ticket.ticket_number}) is confirmed!`,
+    `Pass: ${ticket.pass_type || 'Basic Registration'}`,
+    `Access: ${isEvent ? eventName : 'Full Pronites & Star Celebrity Nights (17, 18, 19, 20 Dec 2026)'}`,
+    `College: ${ticket.attendee_college || 'Cerebrexia Delegate'}`,
+    '',
+    `Your official entry QR pass is attached to this email as Pass-${sanitizeHeader(ticket.ticket_number)}.png.`,
+    'You can also view and download your QR pass anytime on your dashboard: https://www.cerebrexiaigims.com/#dashboard',
+    '',
+    'Gate Entry Guidelines:',
+    '- 1 scan permitted per day across all 4 festival days (17, 18, 19, and 20 December 2026).',
+    '- Please present your physical college ID card matching the name on this pass at the gate.',
+    '- Duplicate scans or shared passes will be rejected by the gate scanners.',
+    '',
+    'Indira Gandhi Institute of Medical Sciences (IGIMS), Sheikhpura, Patna - 800014',
+    'Official Festival Portal: www.cerebrexiaigims.com',
+  ].join('\n');
+
   const gmailUser = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
   const gmailPass = (process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj').replace(/\s+/g, '');
   const resendKey = process.env.RESEND_API_KEY || '';
@@ -298,6 +318,7 @@ export default async function handler(req, res) {
         to: cleanEmail,
         bcc: bccRecipients,
         subject: emailSubject,
+        text: plainText,
         html: emailHtmlCid,
         attachments: qrBuffer ? [
           {
@@ -327,6 +348,7 @@ export default async function handler(req, res) {
         bcc: bccRecipients,
         reply_to: gmailUser,
         subject: emailSubject,
+        text: plainText,
         html: emailHtmlDataUrl,
         attachments: qrBuffer ? [
           {

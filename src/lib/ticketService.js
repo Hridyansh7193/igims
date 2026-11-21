@@ -131,14 +131,19 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
     savedTickets = ticketsToInsert.map(t => ({ ...t, id: 'local_' + Date.now() }));
   }
 
-  // 2. Dispatch email for each ticket asynchronously from thecerebrexia17@gmail.com with copy to cerebrexia01@gmail.com
-  savedTickets.forEach((ticket) => {
-    if (ticket.attendee_email) {
-      dispatchTicketEmail(ticket, ticketsToInsert.length).catch((e) => {
-        console.warn('[ticketService] Email send error for ticket', ticket.ticket_number, e);
-      });
-    }
-  });
+  // 2. Dispatch email for each ticket and await delivery confirmation before finishing
+  await Promise.allSettled(
+    savedTickets.map(async (ticket) => {
+      if (ticket.attendee_email) {
+        try {
+          const res = await dispatchTicketEmail(ticket, ticketsToInsert.length);
+          console.info('[ticketService] Ticket email dispatch result for', ticket.ticket_number, res);
+        } catch (e) {
+          console.warn('[ticketService] Email send error for ticket', ticket.ticket_number, e);
+        }
+      }
+    })
+  );
 
   return savedTickets;
 }
@@ -229,9 +234,11 @@ export async function issueTicketForEventRegistration(userId, eventName, categor
 
     // 3. Dispatch pass email with QR code (sent from thecerebrexia17@gmail.com, copy to cerebrexia01@gmail.com)
     if (savedTicket.attendee_email) {
-      dispatchTicketEmail(savedTicket, 1).catch((err) => {
+      try {
+        await dispatchTicketEmail(savedTicket, 1);
+      } catch (err) {
         console.warn('[ticketService] Event ticket email dispatch error:', err);
-      });
+      }
     }
 
     return savedTicket;
@@ -258,6 +265,7 @@ export async function dispatchTicketEmail(ticket, groupSize = 1) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticket, group_size: groupSize }),
+      keepalive: true,
     });
     return await res.json();
   } catch (err) {
