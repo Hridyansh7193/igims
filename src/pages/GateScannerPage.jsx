@@ -45,7 +45,7 @@ function playAudioFeedback(type) {
   } catch (_) {}
 }
 
-export default function GateScannerPage() {
+export default function GateScannerPage({ setPage }) {
   const [activeDay, setActiveDay] = useState('DAY_1');
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
@@ -198,8 +198,27 @@ export default function GateScannerPage() {
       {/* Gate App Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div>
-          <span style={{ fontSize: 10, letterSpacing: 1.5, color: 'var(--crx-gold, #D4AF37)', textTransform: 'uppercase', fontWeight: 700 }}>
-            Cerebrexia '26 Gate Pass APK
+          {setPage && (
+            <button
+              onClick={() => setPage('home')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--crx-gold, #D4AF37)',
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '0 0 6px',
+                fontWeight: 600,
+              }}
+            >
+              &larr; Exit to Cerebrexia Portal
+            </button>
+          )}
+          <span style={{ fontSize: 10, letterSpacing: 1.5, color: 'var(--crx-gold, #D4AF37)', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>
+            Cerebrexia '26 Gate Pass Scanner
           </span>
           <h1 className="crx-display" style={{ fontSize: 24, margin: '2px 0 0', color: '#fff' }}>
             GATE SCANNER

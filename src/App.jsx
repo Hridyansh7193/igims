@@ -19,7 +19,7 @@ import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin', 'scanner', 'gate'];
 
 export default function App() {
   const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
@@ -109,7 +109,7 @@ export default function App() {
         <div className="crx-dots" />
         <div className="crx-vignette" />
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
-          <NavBar page={page} setPage={navigateTo} />
+          {page !== 'scanner' && page !== 'gate' && <NavBar page={page} setPage={navigateTo} />}
           {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
           {page === 'events' && <EventsPage setPage={navigateTo} />}
           {page === 'pronites' && <PronitesPage />}
@@ -118,10 +118,11 @@ export default function App() {
           {page === 'contact' && <ContactPage />}
           {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
           {page === 'admin' && <AdminPage setPage={navigateTo} />}
+          {(page === 'scanner' || page === 'gate') && <GateScannerPage setPage={navigateTo} />}
           {isPolicyPage && (
             <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
           )}
-          <Footer setPage={navigateTo} />
+          {page !== 'scanner' && page !== 'gate' && <Footer setPage={navigateTo} />}
         </div>
       </div>
     </AuthProvider>

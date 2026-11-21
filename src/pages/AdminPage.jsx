@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 import {
   adminLogin,
@@ -493,7 +494,20 @@ export default function AdminPage({ setPage }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setPage && setPage('scanner')}
+            className="crx-btn"
+            style={{
+              background: 'rgba(212, 175, 55, 0.15)',
+              border: '1px solid rgba(212, 175, 55, 0.45)',
+              color: 'var(--crx-gold, #D4AF37)',
+              fontSize: 12,
+              gap: 6,
+            }}
+          >
+            <Camera size={13} /> Open Gate Scanner
+          </button>
           <button
             onClick={() => setPage && setPage('home')}
             className="crx-btn"
