@@ -226,16 +226,21 @@ export async function dispatchTicketEmail(ticket, groupSize = 1) {
 }
 
 /**
- * Fetches all tickets issued for a user
+ * Fetches all tickets issued for a user (by user ID or email)
  */
-export async function fetchUserTickets(userId) {
-  if (!userId) return [];
+export async function fetchUserTickets(userId, userEmail = '') {
+  if (!userId && !userEmail) return [];
   try {
-    const { data, error } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    let query = supabase.from('tickets').select('*');
+    if (userId && userEmail) {
+      query = query.or(`user_id.eq.${userId},attendee_email.eq.${userEmail}`);
+    } else if (userId) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.eq('attendee_email', userEmail);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.warn('[ticketService] fetchUserTickets error:', error);

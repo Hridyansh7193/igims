@@ -43,7 +43,7 @@ export default function DashboardPage({ setPage }) {
         fetchParticipantProfile(user.id, user.user_metadata),
         fetchCategorizedRegistrations(user.id),
         Promise.resolve(getRegisteredEvents(user.id, user.user_metadata)),
-        fetchUserTickets(user.id),
+        fetchUserTickets(user.id, user.email),
       ]);
 
       setParticipant(profile);
