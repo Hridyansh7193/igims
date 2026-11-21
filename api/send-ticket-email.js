@@ -5,38 +5,85 @@ import { Resend } from 'resend';
 const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const ADMIN_EMAIL = 'thecerebrexia17@gmail.com';
+
+// Copy recipient specifically configured: cerebrexia01@gmail.com
+const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
+const ARCHIVE_EMAIL = 'thecerebrexia17@gmail.com';
 
 /**
- * Generates high-resolution QR code image as base64 Data URL
+ * Generates high-resolution QR code image as PNG Buffer (for inline attachment)
  */
-async function generateQRDataURL(token) {
+async function generateQRBuffer(token) {
   try {
-    return await QRCode.toDataURL(token, {
+    return await QRCode.toBuffer(token, {
       errorCorrectionLevel: 'H',
       margin: 2,
-      width: 400,
+      width: 450,
       color: {
         dark: '#000000',
         light: '#ffffff',
       },
     });
   } catch (err) {
-    console.error('[QR] Generation error:', err);
+    console.error('[QR] Buffer generation error:', err);
     return null;
   }
 }
 
 /**
- * Generates styled HTML email for attendee pass
+ * Generates high-resolution QR code image as base64 Data URL (fallback)
  */
-function buildTicketEmailHTML({ attendee_name, attendee_college, ticket_number, qr_data_url, role, group_size }) {
+async function generateQRDataURL(token) {
+  try {
+    return await QRCode.toDataURL(token, {
+      errorCorrectionLevel: 'H',
+      margin: 2,
+      width: 450,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    });
+  } catch (err) {
+    console.error('[QR] Data URL generation error:', err);
+    return null;
+  }
+}
+
+/**
+ * Generates styled HTML email for attendee pass (BR or Event)
+ */
+function buildTicketEmailHTML({
+  attendee_name,
+  attendee_college,
+  ticket_number,
+  qr_src,
+  role,
+  group_size,
+  pass_type,
+  event_name,
+  category,
+}) {
+  const isEvent = pass_type === 'EVENT_PASS' || !!event_name;
+  const festivalTitle = "Cerebrexia '26";
+  const badgeLabel = isEvent
+    ? `Official Event Pass &bull; ${event_name}`
+    : (group_size && group_size > 1 ? `Group Registration (${group_size} Passes)` : `Verified Delegate Pass`);
+
+  const greetingLead = isEvent
+    ? `Your registration for <strong>${event_name}</strong> (${category || 'Competitive Event'}) at <strong>${festivalTitle}</strong> is confirmed. Below is your official QR credential for campus access and event reporting.`
+    : `Your Basic Registration (BR) for <strong>${festivalTitle}</strong> is confirmed! Below is your official entry pass with scannable QR code valid across all 4 festival days (17, 18, 19, and 20 December 2026).`;
+
+  const accessLevel = isEvent
+    ? `${event_name} Participation &amp; Campus Access`
+    : `Full Pronites &amp; Star Celebrity Nights (All 4 Days: 17, 18, 19, 20 Dec)`;
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Your Cerebrexia '26 Official Entry Pass</title>
+  <title>${festivalTitle} Entry Pass — ${ticket_number}</title>
   <style>
     body { margin: 0; padding: 0; background-color: #0b0406; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4ede4; }
     .container { max-width: 600px; margin: 30px auto; background: #13070b; border: 1px solid #b3123a; border-radius: 16px; overflow: hidden; }
@@ -67,22 +114,22 @@ function buildTicketEmailHTML({ attendee_name, attendee_college, ticket_number, 
     </div>
 
     <div class="content">
-      <div class="badge">Official Verified Gate Pass</div>
+      <div class="badge">${badgeLabel}</div>
       <h2 class="greeting">Hello, ${attendee_name}!</h2>
       <p style="font-size: 14px; line-height: 1.6; color: #d4c5b9; margin: 0 0 16px;">
-        Your Basic Registration (BR) for <strong>Cerebrexia '26</strong> is confirmed. Below is your official entry pass with QR code valid for all 4 festival days (17, 18, 19, and 20 December 2026).
+        ${greetingLead}
       </p>
 
       <!-- QR Card -->
       <div class="qr-card">
-        <img class="qr-img" src="${qr_data_url}" alt="Gate Pass QR Code" />
+        <img class="qr-img" src="${qr_src}" alt="Pass QR Code" />
         <div class="ticket-id">${ticket_number}</div>
         <p style="font-size: 11px; color: #555; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 0.8px;">
-          Scannable once per day &bull; Dec 17&ndash;20, 2026
+          ${isEvent ? 'Gate &amp; Event Verification QR' : 'Scannable once per day &bull; 17, 18, 19, 20 Dec 2026'}
         </p>
       </div>
 
-      <!-- Attendee Details -->
+      <!-- Pass Details Table -->
       <table class="info-table">
         <tr>
           <td class="info-label">Pass Holder</td>
@@ -94,28 +141,39 @@ function buildTicketEmailHTML({ attendee_name, attendee_college, ticket_number, 
         </tr>
         <tr>
           <td class="info-label">Access Level</td>
-          <td class="info-value">Pronites &amp; Star Nights (4 Days)</td>
+          <td class="info-value">${accessLevel}</td>
         </tr>
+        ${isEvent ? `
+        <tr>
+          <td class="info-label">Registered Event</td>
+          <td class="info-value">${event_name} ${category ? `(${category})` : ''}</td>
+        </tr>
+        ` : `
         <tr>
           <td class="info-label">Registration</td>
           <td class="info-value">${group_size && group_size > 1 ? `Group Registration (${group_size} Passes)` : 'Single Pass'}</td>
         </tr>
+        `}
+        <tr>
+          <td class="info-label">Festival Dates</td>
+          <td class="info-value">17, 18, 19, and 20 December 2026</td>
+        </tr>
       </table>
 
-      <!-- Gate Rules -->
+      <!-- Gate Guidelines -->
       <div class="instructions">
         <h4>Gate Entry Guidelines</h4>
         <ul>
-          <li><strong>Single Entry Per Day:</strong> This QR code permits entry once on each of the 4 days (17, 18, 19, and 20 December). Once scanned on any day, it cannot be reused until the next day.</li>
+          <li><strong>Single Entry Per Day:</strong> This QR code permits entry once on each of the 4 festival days (17, 18, 19, and 20 December). Once scanned on any day, it cannot be reused until the next day.</li>
           <li><strong>Identity Verification:</strong> You must present your valid physical College Identity Card matching the name on this pass at the gate.</li>
-          <li><strong>Do Not Share:</strong> Duplicate scans or screenshots shared with others will be rejected by the scanner system.</li>
+          <li><strong>Do Not Share:</strong> Duplicate scans or screenshots shared with others will be rejected by the gate scanner.</li>
         </ul>
       </div>
     </div>
 
     <div class="footer">
       <p style="margin: 0 0 6px;">Indira Gandhi Institute of Medical Sciences &bull; Sheikhpura, Patna &ndash; 800014</p>
-      <p style="margin: 0;">For queries or support: thecerebrexia17@gmail.com</p>
+      <p style="margin: 0;">For queries or support: thecerebrexia17@gmail.com &bull; Official Fest Portal: igims-sand.vercel.app</p>
     </div>
   </div>
 </body>
@@ -124,7 +182,7 @@ function buildTicketEmailHTML({ attendee_name, attendee_college, ticket_number, 
 }
 
 /**
- * API handler: Dispatches QR Pass email to attendee and copies to admin
+ * API handler: Dispatches QR Pass email to attendee and copies cerebrexia01@gmail.com
  */
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -138,21 +196,49 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required ticket details' });
   }
 
+  const isEvent = ticket.pass_type === 'EVENT_PASS' || !!(ticket.metadata && ticket.metadata.event_name);
+  const eventName = ticket.metadata?.event_name || '';
+  const category = ticket.metadata?.category || '';
+
+  const qrBuffer = await generateQRBuffer(ticket.qr_token);
   const qrDataUrl = await generateQRDataURL(ticket.qr_token);
-  if (!qrDataUrl) {
+
+  if (!qrBuffer && !qrDataUrl) {
     return res.status(500).json({ error: 'Failed to generate QR Code' });
   }
 
-  const emailHtml = buildTicketEmailHTML({
+  // Generate HTML with inline CID for email clients that block base64
+  const emailHtmlCid = buildTicketEmailHTML({
     attendee_name: ticket.attendee_name,
     attendee_college: ticket.attendee_college,
     ticket_number: ticket.ticket_number,
-    qr_data_url: qrDataUrl,
+    qr_src: 'cid:gate_pass_qr',
     role: ticket.role,
     group_size: group_size || 1,
+    pass_type: ticket.pass_type,
+    event_name: eventName,
+    category: category,
   });
 
-  const emailSubject = `Cerebrexia '26 Entry Pass & QR Code — ${ticket.ticket_number} (${ticket.attendee_name})`;
+  // Fallback HTML with data URL
+  const emailHtmlDataUrl = buildTicketEmailHTML({
+    attendee_name: ticket.attendee_name,
+    attendee_college: ticket.attendee_college,
+    ticket_number: ticket.ticket_number,
+    qr_src: qrDataUrl,
+    role: ticket.role,
+    group_size: group_size || 1,
+    pass_type: ticket.pass_type,
+    event_name: eventName,
+    category: category,
+  });
+
+  const emailSubject = isEvent
+    ? `Cerebrexia '26 Event Pass: ${eventName} — ${ticket.ticket_number} (${ticket.attendee_name})`
+    : `Cerebrexia '26 Entry Pass & QR Code — ${ticket.ticket_number} (${ticket.attendee_name})`;
+
+  // Copy recipients: cerebrexia01@gmail.com + archive copy to thecerebrexia17@gmail.com
+  const bccRecipients = Array.from(new Set([COPY_EMAIL, ARCHIVE_EMAIL])).filter(Boolean);
 
   // Method 1: Try Gmail SMTP if credentials provided
   if (GMAIL_APP_PASSWORD) {
@@ -165,20 +251,27 @@ export default async function handler(req, res) {
         },
       });
 
-      // Send to Attendee and BCC admin copy
-      const info = await transporter.sendMail({
+      const mailOptions = {
         from: `"Cerebrexia '26 IGIMS" <${GMAIL_USER}>`,
         to: ticket.attendee_email,
-        bcc: ADMIN_EMAIL, // copy sent to thecerebrexia17@gmail.com
+        bcc: bccRecipients,
         subject: emailSubject,
-        html: emailHtml,
-      });
+        html: emailHtmlCid,
+        attachments: qrBuffer ? [
+          {
+            filename: `Pass-${ticket.ticket_number}.png`,
+            content: qrBuffer,
+            cid: 'gate_pass_qr',
+          },
+        ] : [],
+      };
 
-      console.log('[send-ticket-email] Sent via Gmail SMTP:', info.messageId);
+      const info = await transporter.sendMail(mailOptions);
+      console.log('[send-ticket-email] Sent via Gmail SMTP from', GMAIL_USER, 'to', ticket.attendee_email, 'BCC:', bccRecipients, 'MessageId:', info.messageId);
       return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
     } catch (smtpErr) {
       console.error('[send-ticket-email] Gmail SMTP error:', smtpErr);
-      // Fallback to Resend if available
+      // Fall through to Resend if available
     }
   }
 
@@ -187,11 +280,17 @@ export default async function handler(req, res) {
     try {
       const resend = new Resend(RESEND_API_KEY);
       const resendRes = await resend.emails.send({
-        from: 'Cerebrexia <noreply@cerebrexia.in>',
+        from: `Cerebrexia '26 <${GMAIL_USER}>`,
         to: [ticket.attendee_email],
-        bcc: [ADMIN_EMAIL],
+        bcc: bccRecipients,
         subject: emailSubject,
-        html: emailHtml,
+        html: emailHtmlDataUrl,
+        attachments: qrBuffer ? [
+          {
+            filename: `Pass-${ticket.ticket_number}.png`,
+            content: qrBuffer.toString('base64'),
+          },
+        ] : [],
       });
 
       console.log('[send-ticket-email] Sent via Resend:', resendRes);
@@ -205,7 +304,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     success: true,
     provider: 'unconfigured_mock',
-    message: 'QR generated successfully. To dispatch live emails, add GMAIL_APP_PASSWORD to environment variables.',
+    message: 'QR generated successfully. To dispatch live emails from ' + GMAIL_USER + ' and copy ' + COPY_EMAIL + ', set GMAIL_APP_PASSWORD in environment variables.',
     qr_data_url: qrDataUrl,
   });
 }

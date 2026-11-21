@@ -10,23 +10,23 @@ function createSecureToken() {
 }
 
 /**
- * Generates human-friendly ticket numbers e.g. CRX26-BR-7842
+ * Generates human-friendly ticket numbers e.g. CRX26-BR-7842 or CRX26-EV-7842
  */
-function createTicketNumber(suffix = '') {
+function createTicketNumber(prefix = 'BR', suffix = '') {
   const num = Math.floor(1000 + Math.random() * 9000);
-  return `CRX26-BR-${num}${suffix ? `-${suffix}` : ''}`;
+  return `CRX26-${prefix}-${num}${suffix ? `-${suffix}` : ''}`;
 }
 
 /**
  * Issues tickets in Supabase for single or group registrations upon payment confirmation,
- * and triggers individual email dispatch with QR code to each attendee (copying admin).
+ * and triggers individual email dispatch with QR code to each attendee (copying cerebrexia01@gmail.com).
  */
 export async function issueTicketsForBasicRegistration(userId, basicReg, paymentDetails = {}) {
   if (!userId || !basicReg) return [];
 
   const registrationType = basicReg.registration_type || 'SINGLE';
   const groupMembers = Array.isArray(basicReg.group_members) ? basicReg.group_members : [];
-  const baseTicketNum = createTicketNumber();
+  const baseTicketNum = createTicketNumber('BR');
 
   const ticketsToInsert = [];
 
@@ -98,7 +98,7 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
     savedTickets = ticketsToInsert.map(t => ({ ...t, id: 'local_' + Date.now() }));
   }
 
-  // 2. Dispatch email for each ticket asynchronously
+  // 2. Dispatch email for each ticket asynchronously from thecerebrexia17@gmail.com with copy to cerebrexia01@gmail.com
   savedTickets.forEach((ticket) => {
     if (ticket.attendee_email) {
       dispatchTicketEmail(ticket, ticketsToInsert.length).catch((e) => {
@@ -108,6 +108,104 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
   });
 
   return savedTickets;
+}
+
+/**
+ * Issues an official QR event pass in Supabase when an attendee registers for an event,
+ * and immediately dispatches the pass email from thecerebrexia17@gmail.com with a copy to cerebrexia01@gmail.com.
+ */
+export async function issueTicketForEventRegistration(userId, eventName, categoryKey = 'Cultural', additionalData = {}) {
+  if (!userId || !eventName) return null;
+
+  try {
+    // 1. Check if an active ticket for this event already exists for this user to avoid duplicates
+    const { data: existing } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('pass_type', 'EVENT_PASS')
+      .contains('metadata', { event_name: eventName })
+      .maybeSingle();
+
+    if (existing) {
+      console.info(`[ticketService] Ticket already exists for ${eventName}:`, existing.ticket_number);
+      return existing;
+    }
+
+    // 2. Fetch attendee details from participants profile or auth session
+    let attendeeName = 'Cerebrexia Participant';
+    let attendeeEmail = '';
+    let attendeePhone = '';
+    let attendeeCollege = '';
+
+    const { data: profile } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (profile) {
+      attendeeName = `${profile.first_name || ''} ${profile.last_name || profile.surname || ''}`.trim() || attendeeName;
+      attendeeEmail = profile.email || profile.user_email || '';
+      attendeePhone = profile.phone_number || '';
+      attendeeCollege = profile.college_name || '';
+    }
+
+    if (!attendeeEmail) {
+      const { data: authData } = await supabase.auth.getUser();
+      attendeeEmail = authData?.user?.email || '';
+      if (!attendeeName || attendeeName === 'Cerebrexia Participant') {
+        attendeeName = authData?.user?.user_metadata?.full_name || authData?.user?.user_metadata?.name || 'Cerebrexia Participant';
+      }
+    }
+
+    const ticketNumber = createTicketNumber('EV');
+    const qrToken = createSecureToken();
+
+    const ticketRecord = {
+      ticket_number: ticketNumber,
+      user_id: userId,
+      attendee_name: attendeeName,
+      attendee_email: attendeeEmail,
+      attendee_phone: attendeePhone,
+      attendee_college: attendeeCollege,
+      role: 'PARTICIPANT',
+      qr_token: qrToken,
+      pass_type: 'EVENT_PASS',
+      payment_status: 'PAID',
+      metadata: {
+        event_name: eventName,
+        category: categoryKey,
+        ...additionalData,
+      },
+    };
+
+    let savedTicket = null;
+    const { data: inserted, error: insertErr } = await supabase
+      .from('tickets')
+      .insert([ticketRecord])
+      .select()
+      .maybeSingle();
+
+    if (insertErr) {
+      console.warn('[ticketService] Event ticket insert warning:', insertErr);
+      savedTicket = { ...ticketRecord, id: 'local_ev_' + Date.now() };
+    } else {
+      savedTicket = inserted || ticketRecord;
+    }
+
+    // 3. Dispatch pass email with QR code (sent from thecerebrexia17@gmail.com, copy to cerebrexia01@gmail.com)
+    if (savedTicket.attendee_email) {
+      dispatchTicketEmail(savedTicket, 1).catch((err) => {
+        console.warn('[ticketService] Event ticket email dispatch error:', err);
+      });
+    }
+
+    return savedTicket;
+  } catch (err) {
+    console.error('[ticketService] issueTicketForEventRegistration error:', err);
+    return null;
+  }
 }
 
 /**

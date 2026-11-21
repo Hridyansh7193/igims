@@ -70,10 +70,10 @@ export default async function handler(req, res) {
       });
     }
 
-    if (ticket.payment_status !== 'PAID') {
+    if (!['PAID', 'CONFIRMED'].includes(ticket.payment_status)) {
       return res.status(200).json({
         status: 'UNPAID',
-        message: `Ticket payment is ${ticket.payment_status || 'PENDING'}. Not eligible for entry.`,
+        message: `Ticket status is ${ticket.payment_status || 'PENDING'}. Not eligible for entry.`,
         attendee: ticket,
       });
     }

@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { issueTicketsForBasicRegistration } from './ticketService.js';
+import { issueTicketsForBasicRegistration, issueTicketForEventRegistration } from './ticketService.js';
 
 /**
  * Normalizes participant profile to ensure backward and forward compatibility
@@ -428,6 +428,11 @@ export async function addRegisteredEvent(userId, eventName, userMetadata, catego
         category      : categoryKey || 'Cultural',
       }, { onConflict: 'user_id,event_name' });
     }
+
+    // Automatically issue Event QR ticket and email to attendee with copy to cerebrexia01@gmail.com
+    issueTicketForEventRegistration(userId, eventName, isSport ? 'Sports' : (categoryKey || 'Cultural')).catch((tktErr) => {
+      console.warn('[eventsService] Event ticket issuance warning:', tktErr);
+    });
   } catch (dbErr) {
     console.warn('[eventsService] categorized table insert notice:', dbErr);
   }
