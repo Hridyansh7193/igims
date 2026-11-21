@@ -444,6 +444,12 @@ export default function DashboardPage({ setPage }) {
                         type="text"
                         value={promoCodeInput}
                         onChange={(e) => { setPromoCodeInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleApplyPromo(e);
+                          }
+                        }}
                         placeholder="ENTER PROMO CODE"
                         style={{
                           width: '100%',
@@ -799,6 +805,12 @@ export default function DashboardPage({ setPage }) {
                                 type="text"
                                 value={promoCodeInput}
                                 onChange={(e) => { setPromoCodeInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleApplyPromo(e);
+                                  }
+                                }}
                                 placeholder="ENTER PROMO CODE"
                                 style={{
                                   width: '100%',

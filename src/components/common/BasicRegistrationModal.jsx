@@ -313,7 +313,7 @@ export default function BasicRegistrationModal({
 
   // Coupon Code Validation Handler
   const handleApplyPromo = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setPromoError(null);
     setPromoMessage(null);
 
@@ -1798,7 +1798,7 @@ export default function BasicRegistrationModal({
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleApplyPromo} style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+              <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <div style={{ position: 'relative', flex: 1 }}>
                     <Tag size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
@@ -1806,6 +1806,12 @@ export default function BasicRegistrationModal({
                       type="text"
                       value={promoInput}
                       onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyPromo(e);
+                        }
+                      }}
                       placeholder="ENTER PROMO CODE (e.g. CRX20)"
                       style={{
                         ...inp,
@@ -1816,7 +1822,8 @@ export default function BasicRegistrationModal({
                     />
                   </div>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleApplyPromo}
                     disabled={applyingPromo || !promoInput.trim()}
                     className="crx-btn gold"
                     style={{
@@ -1841,7 +1848,7 @@ export default function BasicRegistrationModal({
                     {promoMessage}
                   </p>
                 )}
-              </form>
+              </div>
             )}
           </div>
 

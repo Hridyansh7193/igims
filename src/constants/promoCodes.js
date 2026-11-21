@@ -53,9 +53,108 @@ export function calculateDefaultGroupOffer(groupSize = 1, pricePerPerson = PRICE
 export const calculateGroupTierDiscount = calculateDefaultGroupOffer;
 
 /**
- * Active Promo Codes Map (Currently empty to disable all coupons)
+ * Active Built-in Promo Codes Catalog
  */
-export const PROMO_CODES = {};
+export const PROMO_CODES = {
+  CRX20: {
+    code: 'CRX20',
+    type: 'percent',
+    value: 20,
+    label: '20% Fest Discount',
+    description: '20% off on each payable Basic Registration',
+  },
+  CRX10: {
+    code: 'CRX10',
+    type: 'percent',
+    value: 10,
+    label: '10% Fest Discount',
+    description: '10% off on each payable Basic Registration',
+  },
+  CRX25: {
+    code: 'CRX25',
+    type: 'percent',
+    value: 25,
+    label: '25% Fest Discount',
+    description: '25% off on each payable Basic Registration',
+  },
+  CRX26: {
+    code: 'CRX26',
+    type: 'percent',
+    value: 10,
+    label: "10% Fest Code",
+    description: '10% off on each payable Basic Registration',
+  },
+  EARLYBIRD: {
+    code: 'EARLYBIRD',
+    type: 'percent',
+    value: 15,
+    label: '15% Early Bird Discount',
+    description: '15% off on each payable Basic Registration',
+  },
+  RUSH20: {
+    code: 'RUSH20',
+    type: 'percent',
+    value: 20,
+    label: '20% Rush Deal Discount',
+    description: '20% off on each payable Basic Registration',
+  },
+  RUSH10: {
+    code: 'RUSH10',
+    type: 'percent',
+    value: 10,
+    label: '10% Rush Discount',
+    description: '10% off on each payable Basic Registration',
+  },
+  RUSH30: {
+    code: 'RUSH30',
+    type: 'percent',
+    value: 30,
+    label: '30% Flash Rush Discount',
+    description: '30% off on each payable Basic Registration',
+  },
+  RUSH50: {
+    code: 'RUSH50',
+    type: 'percent',
+    value: 50,
+    label: '50% Mega Rush Deal',
+    description: '50% off on each payable Basic Registration',
+  },
+  CEREBREXIA: {
+    code: 'CEREBREXIA',
+    type: 'percent',
+    value: 10,
+    label: '10% Festival Celebration Code',
+    description: '10% off on each payable Basic Registration',
+  },
+  CEREBREXIA26: {
+    code: 'CEREBREXIA26',
+    type: 'percent',
+    value: 10,
+    label: "10% Cerebrexia '26 Fest Code",
+    description: '10% off on each payable Basic Registration',
+  },
+  VIP50: {
+    code: 'VIP50',
+    type: 'percent',
+    value: 50,
+    label: '50% VIP Delegate Discount',
+    description: '50% off on each payable Basic Registration',
+  },
+  VIP100: {
+    code: 'VIP100',
+    type: 'percent',
+    value: 100,
+    label: '100% Complimentary VIP BR',
+    description: '100% complimentary VIP registration',
+  },
+  IGIMS50: {
+    code: 'IGIMS50',
+    type: 'percent',
+    value: 50,
+    label: '50% IGIMS Host College Deal',
+    description: '50% off on each payable Basic Registration',
+  },
+};
 
 /**
  * Inactive Promo Codes Catalog (Preserved safely for future reactivation)
