@@ -280,7 +280,7 @@ export function validatePromoCode(inputCode, { payableMembers = 1, payableSubtot
     };
   }
 
-  const promo = PROMO_CODES[code] || INACTIVE_PROMO_CODES[code];
+  const promo = PROMO_CODES[code];
   if (promo && promo.type === 'percent') {
     const discountPercent = Number(promo.value) || 0;
     const discountPerBR = Math.round((2000 * discountPercent) / 100);
