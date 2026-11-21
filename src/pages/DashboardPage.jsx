@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw,
   Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard,
-  MapPin, Ticket, Trophy, Music, Sparkles
+  MapPin, Ticket, Trophy, Music, Sparkles, Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -15,6 +15,7 @@ import {
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
 import { fetchUserTickets } from '../lib/ticketService';
+import { validatePromoCodeOnline } from '../lib/promoService';
 import TicketCard from '../components/common/TicketCard';
 
 export default function DashboardPage({ setPage }) {
@@ -33,6 +34,13 @@ export default function DashboardPage({ setPage }) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [dashboardPaymentId, setDashboardPaymentId] = useState('');
   const [paying, setPaying] = useState(false);
+
+  // Promo code state
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState(null);
+  const [promoMessage, setPromoMessage] = useState(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -134,11 +142,78 @@ export default function DashboardPage({ setPage }) {
     loadData();
   };
 
-  const handlePayNow = () => {
+  const baseFee = 2000;
+  const discountAmount = appliedPromo ? Math.round((baseFee * (appliedPromo.value || 0)) / 100) : 0;
+  const finalPayable = Math.max(0, baseFee - discountAmount);
+
+  const handleApplyPromo = async (e) => {
+    if (e) e.preventDefault();
+    setPromoError(null);
+    setPromoMessage(null);
+    const cleanCode = promoCodeInput.trim().toUpperCase();
+    if (!cleanCode) {
+      setPromoError('Please enter a promo code.');
+      return;
+    }
+
+    setValidatingPromo(true);
+    try {
+      const res = await validatePromoCodeOnline(cleanCode, {
+        payableMembers: 1,
+        payableSubtotal: baseFee,
+      });
+
+      if (res.valid) {
+        setAppliedPromo(res.promo);
+        setPromoMessage(res.message);
+        setPromoError(null);
+        setPromoCodeInput('');
+      } else {
+        setAppliedPromo(null);
+        setPromoError(res.message || 'Invalid or expired promo code.');
+        setPromoMessage(null);
+      }
+    } catch (err) {
+      setPromoError('Could not verify promo code. Check connection.');
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCodeInput('');
+    setPromoError(null);
+    setPromoMessage(null);
+  };
+
+  const handlePayNow = async () => {
+    // If 100% discount, immediately unlock pass without launching payment gateway
+    if (finalPayable === 0) {
+      setPaying(true);
+      try {
+        await markBasicRegistrationPaid(user.id, {
+          razorpay_payment_id: `free_${appliedPromo?.code || 'vip'}_${Date.now()}`,
+          razorpay_order_id: `order_free_${Date.now()}`,
+          method: 'PROMO_100_FREE',
+          promo_code: appliedPromo?.code || null,
+          discount_amount: discountAmount,
+          final_amount: 0,
+        });
+        await loadData();
+        setShowPaymentModal(false);
+      } catch (err) {
+        console.error('[Dashboard] Error activating free pass:', err);
+      } finally {
+        setPaying(false);
+      }
+      return;
+    }
+
     setPaying(true);
     openRazorpayCheckout({
-      amount: 2000,
-      description: "Cerebrexia '26 | Basic Registration (BR)",
+      amount: finalPayable,
+      description: `Cerebrexia '26 | Basic Registration (BR)${appliedPromo ? ` [${appliedPromo.code}]` : ''}`,
       prefill: {
         name: participant ? `${participant.first_name || ''} ${participant.surname || ''}`.trim() : '',
         email: user?.email || '',
@@ -146,7 +221,12 @@ export default function DashboardPage({ setPage }) {
       },
       onSuccess: async (rzpRes) => {
         try {
-          await markBasicRegistrationPaid(user.id, rzpRes);
+          await markBasicRegistrationPaid(user.id, {
+            ...rzpRes,
+            promo_code: appliedPromo?.code || null,
+            discount_amount: discountAmount,
+            final_amount: finalPayable,
+          });
           await loadData();
           setShowPaymentModal(false);
         } catch (err) {
@@ -314,7 +394,7 @@ export default function DashboardPage({ setPage }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: 18,
+                marginBottom: 16,
               }}
             >
               <div>
@@ -323,51 +403,135 @@ export default function DashboardPage({ setPage }) {
                 </span>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#fca5a5' }}>
                   {basicReg ? 'Basic Registration (BR)' : 'Festival delegate registration'}
+                  {appliedPromo && ` • ${appliedPromo.code} (${appliedPromo.value}% OFF)`}
                 </p>
               </div>
-              <span style={{ fontSize: 26, fontWeight: 800, color: '#fff' }}>
-                ₹2000
-              </span>
+              <div style={{ textAlign: 'right' }}>
+                {discountAmount > 0 && (
+                  <span style={{ fontSize: 13, textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', display: 'block' }}>
+                    ₹2000
+                  </span>
+                )}
+                <span style={{ fontSize: 26, fontWeight: 800, color: finalPayable === 0 ? '#22c55e' : '#fff' }}>
+                  {finalPayable === 0 ? 'FREE' : `₹${finalPayable.toLocaleString('en-IN')}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Promo Code Input in Modal */}
+            <div style={{ marginBottom: 16 }}>
+              {appliedPromo ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: 8, padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CheckCircle2 size={13} color="#22c55e" />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{appliedPromo.code}</span>
+                    <span style={{ fontSize: 11, color: '#86efac' }}>({appliedPromo.value}% OFF &bull; -₹{discountAmount})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemovePromo}
+                    style={{ background: 'none', border: 'none', color: '#fca5a5', fontSize: 11, cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <Tag size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
+                      <input
+                        type="text"
+                        value={promoCodeInput}
+                        onChange={(e) => { setPromoCodeInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                        placeholder="ENTER PROMO CODE"
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px 8px 30px',
+                          borderRadius: 8,
+                          background: 'rgba(0,0,0,0.5)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          letterSpacing: 0.8,
+                          textTransform: 'uppercase',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleApplyPromo}
+                      disabled={validatingPromo || !promoCodeInput.trim()}
+                      className="crx-btn"
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: 11,
+                        background: 'rgba(212, 175, 55, 0.15)',
+                        border: '1px solid rgba(212, 175, 55, 0.4)',
+                        color: 'var(--crx-gold, #D4AF37)',
+                        fontWeight: 700,
+                        borderRadius: 8,
+                      }}
+                    >
+                      {validatingPromo ? '...' : 'APPLY'}
+                    </button>
+                  </div>
+                  {promoError && (
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: '#f87171' }}>{promoError}</p>
+                  )}
+                  {promoMessage && !promoError && (
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: '#34d399' }}>{promoMessage}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Direct Gateway Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-              <a
-                href={RAZORPAY_PAYMENT_PAGE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="crx-btn gold"
-                style={{
-                  width: '100%',
-                  justifyContent: 'center',
-                  padding: '12px',
-                  fontSize: 13,
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <CreditCard size={16} />
-                PAY ₹2000 VIA RAZORPAY.ME &rarr;
-              </a>
+              {finalPayable > 0 && (
+                <a
+                  href={RAZORPAY_PAYMENT_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="crx-btn gold"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '12px',
+                    fontSize: 13,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <CreditCard size={16} />
+                  PAY VIA RAZORPAY.ME &rarr;
+                </a>
+              )}
 
               <button
                 type="button"
                 onClick={handlePayNow}
                 disabled={paying}
-                className="crx-btn"
+                className="crx-btn gold"
                 style={{
                   width: '100%',
                   justifyContent: 'center',
-                  padding: '10px',
-                  fontSize: 12,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  padding: '11px',
+                  fontSize: 12.5,
+                  fontWeight: 700,
                   color: '#fff',
                 }}
               >
-                {paying ? 'LAUNCHING GATEWAY...' : 'LAUNCH RAZORPAY POPUP'}
+                {paying
+                  ? 'LAUNCHING GATEWAY...'
+                  : finalPayable === 0
+                  ? 'ACTIVATE FREE PASS (100% OFF)'
+                  : `PAY ₹${finalPayable.toLocaleString('en-IN')} VIA POPUP GATEWAY`}
               </button>
             </div>
 
@@ -606,6 +770,81 @@ export default function DashboardPage({ setPage }) {
                 </div>
 
                 <div>
+                  {!isPaid && (
+                    <div style={{ marginBottom: 14 }}>
+                      <span style={{ display: 'block', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--muted)', fontWeight: 700, marginBottom: 6 }}>
+                        Have a promo code?
+                      </span>
+                      {appliedPromo ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: 8, padding: '8px 12px', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <CheckCircle2 size={13} color="#22c55e" />
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{appliedPromo.code}</span>
+                            <span style={{ fontSize: 11, color: '#86efac' }}>({appliedPromo.value}% OFF &bull; -₹{discountAmount})</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemovePromo}
+                            style={{ background: 'none', border: 'none', color: '#fca5a5', fontSize: 11, cursor: 'pointer', fontWeight: 700 }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <div style={{ position: 'relative', flex: 1 }}>
+                              <Tag size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
+                              <input
+                                type="text"
+                                value={promoCodeInput}
+                                onChange={(e) => { setPromoCodeInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                                placeholder="ENTER PROMO CODE"
+                                style={{
+                                  width: '100%',
+                                  padding: '8px 10px 8px 28px',
+                                  borderRadius: 8,
+                                  background: 'rgba(0,0,0,0.5)',
+                                  border: '1px solid rgba(255,255,255,0.15)',
+                                  color: '#fff',
+                                  fontSize: 11.5,
+                                  fontFamily: 'monospace',
+                                  letterSpacing: 0.8,
+                                  textTransform: 'uppercase',
+                                  outline: 'none',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleApplyPromo}
+                              disabled={validatingPromo || !promoCodeInput.trim()}
+                              className="crx-btn"
+                              style={{
+                                padding: '6px 14px',
+                                fontSize: 11,
+                                background: 'rgba(212, 175, 55, 0.15)',
+                                border: '1px solid rgba(212, 175, 55, 0.4)',
+                                color: 'var(--crx-gold, #D4AF37)',
+                                fontWeight: 700,
+                                borderRadius: 8,
+                              }}
+                            >
+                              {validatingPromo ? '...' : 'APPLY'}
+                            </button>
+                          </div>
+                          {promoError && (
+                            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#f87171' }}>{promoError}</p>
+                          )}
+                          {promoMessage && !promoError && (
+                            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#34d399' }}>{promoMessage}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {!isPaid ? (
                     <button
                       className="crx-btn gold"
@@ -614,7 +853,11 @@ export default function DashboardPage({ setPage }) {
                       disabled={paying}
                     >
                       <CreditCard size={15} />
-                      {paying ? 'LAUNCHING GATEWAY...' : 'PAY ₹2000 & UNLOCK PASS'}
+                      {paying
+                        ? 'LAUNCHING GATEWAY...'
+                        : finalPayable === 0
+                        ? 'CLAIM FREE PASS (100% OFF)'
+                        : `PAY ₹${finalPayable.toLocaleString('en-IN')} & UNLOCK PASS`}
                     </button>
                   ) : !basicReg ? (
                     <button
