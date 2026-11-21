@@ -258,7 +258,11 @@ export async function fetchUserTickets(userId, userEmail = '') {
  */
 export async function checkinTicketAtGate(qrToken, gateVolunteer = 'Gate Volunteer', dayOverride = null) {
   try {
-    const res = await fetch('/api/gate-checkin', {
+    const endpoint = typeof window !== 'undefined' && (window.location.protocol === 'file:' || !window.location.origin.includes('vercel.app'))
+      ? 'https://igims-sand.vercel.app/api/gate-checkin'
+      : '/api/gate-checkin';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

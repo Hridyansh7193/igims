@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import GlobalStyle from './styles/GlobalStyle';
 import DynamicBackground from './components/common/DynamicBackground';
 import IntroAnimation from './components/common/IntroAnimation';
@@ -17,9 +18,11 @@ import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'scanner'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard'];
 
 export default function App() {
+  const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+
   const getInitialPage = () => {
     if (typeof window !== 'undefined' && window.location.hash) {
       const h = window.location.hash.replace('#', '').toLowerCase();
@@ -58,24 +61,26 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [page]);
 
-  useEffect(() => {
-    // Force scroll to top on initial load, bypassing browser's attempt to restore scroll
-    window.scrollTo(0, 0);
-    const timer = setTimeout(() => window.scrollTo(0, 0), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleIntroComplete = useCallback(() => {
     setIntroComplete(true);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('crx_intro_seen', '1');
-    }
     setShowTitleSponsor(true);
   }, []);
 
   const handleWipeStart = useCallback(() => {
     setRevealHeroTitle(true);
   }, []);
+
+  // When running inside the dedicated Android Volunteer APK, directly launch the Gate Scanner
+  if (isNativeApp) {
+    return (
+      <AuthProvider>
+        <div className="crx-root">
+          <GlobalStyle />
+          <GateScannerPage />
+        </div>
+      </AuthProvider>
+    );
+  }
 
   const isPolicyPage = POLICY_ROUTES.includes(page);
 
@@ -84,8 +89,8 @@ export default function App() {
       <div className="crx-root">
         <GlobalStyle />
 
-        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation or gate scanner) */}
-        {!introComplete && !isPolicyPage && page !== 'scanner' && (
+        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation) */}
+        {!introComplete && !isPolicyPage && (
           <IntroAnimation
             onComplete={handleIntroComplete}
             onWipeStart={handleWipeStart}
@@ -94,34 +99,27 @@ export default function App() {
         )}
 
         {/* Title Sponsor Pop-up (Pops up right after starting animation ends and website loads) */}
-        {showTitleSponsor && page !== 'scanner' && (
+        {showTitleSponsor && (
           <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
         )}
 
-        {/* Gate Scanner standalone view for APK / Volunteers */}
-        {page === 'scanner' ? (
-          <GateScannerPage />
-        ) : (
-          <>
-            <DynamicBackground />
-            <div className="crx-dots" />
-            <div className="crx-vignette" />
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
-              <NavBar page={page} setPage={navigateTo} />
-              {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
-              {page === 'events' && <EventsPage setPage={navigateTo} />}
-              {page === 'pronites' && <PronitesPage />}
-              {page === 'accommodation' && <AccommodationPage />}
-              {page === 'about' && <AboutPage />}
-              {page === 'contact' && <ContactPage />}
-              {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
-              {isPolicyPage && (
-                <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
-              )}
-              <Footer setPage={navigateTo} />
-            </div>
-          </>
-        )}
+        <DynamicBackground />
+        <div className="crx-dots" />
+        <div className="crx-vignette" />
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+          <NavBar page={page} setPage={navigateTo} />
+          {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
+          {page === 'events' && <EventsPage setPage={navigateTo} />}
+          {page === 'pronites' && <PronitesPage />}
+          {page === 'accommodation' && <AccommodationPage />}
+          {page === 'about' && <AboutPage />}
+          {page === 'contact' && <ContactPage />}
+          {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
+          {isPolicyPage && (
+            <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
+          )}
+          <Footer setPage={navigateTo} />
+        </div>
       </div>
     </AuthProvider>
   );

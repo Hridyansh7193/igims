@@ -2,9 +2,5 @@
   "appId": "in.cerebrexia.scanner",
   "appName": "CRX Gate Scanner",
   "webDir": "dist",
-  "bundledWebRuntime": false,
-  "server": {
-    "url": "https://igims-sand.vercel.app/#scanner",
-    "cleartext": true
-  }
+  "bundledWebRuntime": false
 }
