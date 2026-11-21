@@ -132,14 +132,23 @@ setInterval(() => {
  */
 export function setSecureCorsHeaders(req, res, allowedMethods = 'GET, POST, OPTIONS') {
   const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    // Same-origin / server-to-server request
-    res.setHeader('Access-Control-Allow-Origin', 'https://igims-sand.vercel.app');
+
+  // Dynamically allow trusted origins: any secure HTTPS origin, custom domains, or local dev
+  if (origin) {
+    const isHttps = origin.startsWith('https://');
+    const isLocal =
+      origin.startsWith('http://localhost') ||
+      origin.startsWith('http://127.0.0.1') ||
+      origin.startsWith('capacitor://');
+
+    if (isHttps || isLocal || ALLOWED_ORIGINS.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', 'https://igims-sand.vercel.app');
+    }
   } else {
-    // Unknown origin - default to production site
-    res.setHeader('Access-Control-Allow-Origin', 'https://igims-sand.vercel.app');
+    // Same-origin / server-to-server request
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
 
   res.setHeader('Access-Control-Allow-Methods', allowedMethods);
