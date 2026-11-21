@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
 
 // Copy recipient specifically configured: cerebrexia01@gmail.com
 const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
@@ -220,7 +221,7 @@ export default async function handler(req, res) {
     category: category,
   });
 
-  // Fallback HTML with data URL
+  // Fallback HTML with data URL (ideal for Resend web views)
   const emailHtmlDataUrl = buildTicketEmailHTML({
     attendee_name: ticket.attendee_name,
     attendee_college: ticket.attendee_college,
@@ -240,7 +241,35 @@ export default async function handler(req, res) {
   // Copy recipients: cerebrexia01@gmail.com + archive copy to thecerebrexia17@gmail.com
   const bccRecipients = Array.from(new Set([COPY_EMAIL, ARCHIVE_EMAIL])).filter(Boolean);
 
-  // Method 1: Try Gmail SMTP if credentials provided
+  // Method 1: Priority: Try Resend if configured
+  if (RESEND_API_KEY) {
+    try {
+      const resend = new Resend(RESEND_API_KEY);
+      const resendPayload = {
+        from: RESEND_FROM_EMAIL,
+        to: [ticket.attendee_email],
+        bcc: bccRecipients,
+        reply_to: GMAIL_USER,
+        subject: emailSubject,
+        html: emailHtmlDataUrl,
+        attachments: qrBuffer ? [
+          {
+            filename: `Pass-${ticket.ticket_number}.png`,
+            content: qrBuffer.toString('base64'),
+          },
+        ] : [],
+      };
+
+      const resendRes = await resend.emails.send(resendPayload);
+      console.log('[send-ticket-email] Successfully sent via Resend:', resendRes);
+      return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
+    } catch (resendErr) {
+      console.error('[send-ticket-email] Resend error:', resendErr);
+      // Fall through to Gmail SMTP if Resend fails or domain not verified yet
+    }
+  }
+
+  // Method 2: Try Gmail SMTP if credentials provided
   if (GMAIL_APP_PASSWORD) {
     try {
       const transporter = nodemailer.createTransport({
@@ -271,40 +300,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
     } catch (smtpErr) {
       console.error('[send-ticket-email] Gmail SMTP error:', smtpErr);
-      // Fall through to Resend if available
     }
   }
 
-  // Method 2: Fallback to Resend if configured
-  if (RESEND_API_KEY) {
-    try {
-      const resend = new Resend(RESEND_API_KEY);
-      const resendRes = await resend.emails.send({
-        from: `Cerebrexia '26 <${GMAIL_USER}>`,
-        to: [ticket.attendee_email],
-        bcc: bccRecipients,
-        subject: emailSubject,
-        html: emailHtmlDataUrl,
-        attachments: qrBuffer ? [
-          {
-            filename: `Pass-${ticket.ticket_number}.png`,
-            content: qrBuffer.toString('base64'),
-          },
-        ] : [],
-      });
-
-      console.log('[send-ticket-email] Sent via Resend:', resendRes);
-      return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
-    } catch (resendErr) {
-      console.error('[send-ticket-email] Resend error:', resendErr);
-    }
-  }
-
-  // If neither provider is authenticated yet, return graceful status with QR data
+  // If neither provider is configured, return graceful status with QR data
   return res.status(200).json({
     success: true,
     provider: 'unconfigured_mock',
-    message: 'QR generated successfully. To dispatch live emails from ' + GMAIL_USER + ' and copy ' + COPY_EMAIL + ', set GMAIL_APP_PASSWORD in environment variables.',
+    message: 'QR pass generated. To dispatch live emails, add RESEND_API_KEY (or GMAIL_APP_PASSWORD) in Vercel environment variables.',
     qr_data_url: qrDataUrl,
   });
 }
