@@ -238,18 +238,60 @@ export default async function handler(req, res) {
     ? `Cerebrexia '26 Event Pass: ${eventName} — ${ticket.ticket_number} (${ticket.attendee_name})`
     : `Cerebrexia '26 Entry Pass & QR Code — ${ticket.ticket_number} (${ticket.attendee_name})`;
 
-  // Copy recipients: cerebrexia01@gmail.com + archive copy to thecerebrexia17@gmail.com
-  const bccRecipients = Array.from(new Set([COPY_EMAIL, ARCHIVE_EMAIL])).filter(Boolean);
+  const gmailUser = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
+  const gmailPass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  const resendKey = process.env.RESEND_API_KEY || '';
+  const resendFrom = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
+  const copyEmail = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
+  const archiveEmail = 'thecerebrexia17@gmail.com';
 
-  // Method 1: Priority: Try Resend if configured
-  if (RESEND_API_KEY) {
+  // Copy recipients: cerebrexia01@gmail.com + archive copy to thecerebrexia17@gmail.com
+  const bccRecipients = Array.from(new Set([copyEmail, archiveEmail])).filter(Boolean);
+
+  // Method 1: Priority: Try Gmail SMTP if credentials provided (sends genuinely from thecerebrexia17@gmail.com)
+  if (gmailPass) {
     try {
-      const resend = new Resend(RESEND_API_KEY);
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: gmailUser,
+          pass: gmailPass,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Cerebrexia '26 IGIMS" <${gmailUser}>`,
+        to: ticket.attendee_email,
+        bcc: bccRecipients,
+        subject: emailSubject,
+        html: emailHtmlCid,
+        attachments: qrBuffer ? [
+          {
+            filename: `Pass-${ticket.ticket_number}.png`,
+            content: qrBuffer,
+            cid: 'gate_pass_qr',
+          },
+        ] : [],
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('[send-ticket-email] Sent via Gmail SMTP from', gmailUser, 'to', ticket.attendee_email, 'BCC:', bccRecipients, 'MessageId:', info.messageId);
+      return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
+    } catch (smtpErr) {
+      console.error('[send-ticket-email] Gmail SMTP error:', smtpErr);
+      // Fall through to Resend if available
+    }
+  }
+
+  // Method 2: Try Resend if configured
+  if (resendKey) {
+    try {
+      const resend = new Resend(resendKey);
       const resendPayload = {
-        from: RESEND_FROM_EMAIL,
+        from: resendFrom,
         to: [ticket.attendee_email],
         bcc: bccRecipients,
-        reply_to: GMAIL_USER,
+        reply_to: gmailUser,
         subject: emailSubject,
         html: emailHtmlDataUrl,
         attachments: qrBuffer ? [
@@ -265,41 +307,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
     } catch (resendErr) {
       console.error('[send-ticket-email] Resend error:', resendErr);
-      // Fall through to Gmail SMTP if Resend fails or domain not verified yet
-    }
-  }
-
-  // Method 2: Try Gmail SMTP if credentials provided
-  if (GMAIL_APP_PASSWORD) {
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: GMAIL_USER,
-          pass: GMAIL_APP_PASSWORD,
-        },
-      });
-
-      const mailOptions = {
-        from: `"Cerebrexia '26 IGIMS" <${GMAIL_USER}>`,
-        to: ticket.attendee_email,
-        bcc: bccRecipients,
-        subject: emailSubject,
-        html: emailHtmlCid,
-        attachments: qrBuffer ? [
-          {
-            filename: `Pass-${ticket.ticket_number}.png`,
-            content: qrBuffer,
-            cid: 'gate_pass_qr',
-          },
-        ] : [],
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      console.log('[send-ticket-email] Sent via Gmail SMTP from', GMAIL_USER, 'to', ticket.attendee_email, 'BCC:', bccRecipients, 'MessageId:', info.messageId);
-      return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
-    } catch (smtpErr) {
-      console.error('[send-ticket-email] Gmail SMTP error:', smtpErr);
     }
   }
 
