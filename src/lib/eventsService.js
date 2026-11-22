@@ -2,6 +2,31 @@ import { supabase } from './supabaseClient.js';
 import { issueTicketsForBasicRegistration, issueTicketForEventRegistration } from './ticketService.js';
 
 /**
+ * Automatically synchronizes candidate and registration updates to Google Sheets in the background
+ */
+export async function triggerGoogleSheetsSync(type, data) {
+  try {
+    const isCustomOrVercel = typeof window !== 'undefined' && (
+      window.location.origin.includes('cerebrexiaigims.com') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
+      ? 'https://www.cerebrexiaigims.com/api/sync-google-sheets'
+      : '/api/sync-google-sheets';
+
+    const localWebhook = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('crx_sheets_webhook_url') : undefined;
+    const defaultWebhook = 'https://script.google.com/macros/s/AKfycbzAlhq0qIZSd_QJOHsiLi9QLsUKGmIXnLfjCBHZvyb1Iln02pb2bqC7yAykEpBchSg4mA/exec';
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'SYNC_RECORD', type, data, webhookUrl: localWebhook || defaultWebhook }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (_) {}
+}
+
+/**
  * Normalizes participant profile to ensure backward and forward compatibility
  * between UI field names (surname, city_of_college) and PostgreSQL columns (last_name, college_city).
  */
@@ -132,7 +157,11 @@ export async function saveParticipantProfile(userId, email, formData) {
         .select()
         .maybeSingle();
 
-      if (!error && data) return normalizeProfile(data);
+      if (!error && data) {
+        const norm = normalizeProfile(data);
+        triggerGoogleSheetsSync('ALL_PARTICIPANTS', norm);
+        return norm;
+      }
     } else {
       const { data, error } = await supabase
         .from('participants')
@@ -140,13 +169,19 @@ export async function saveParticipantProfile(userId, email, formData) {
         .select()
         .maybeSingle();
 
-      if (!error && data) return normalizeProfile(data);
+      if (!error && data) {
+        const norm = normalizeProfile(data);
+        triggerGoogleSheetsSync('ALL_PARTICIPANTS', norm);
+        return norm;
+      }
     }
   } catch (dbErr) {
     console.warn('[eventsService] participants table db notice:', dbErr);
   }
 
-  return normalizeProfile(payload);
+  const norm = normalizeProfile(payload);
+  triggerGoogleSheetsSync('ALL_PARTICIPANTS', norm);
+  return norm;
 }
 
 /**
@@ -247,6 +282,7 @@ export async function saveBasicRegistration(userId, email, formData, checkoutMet
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: data } }));
       }
+      triggerGoogleSheetsSync('BR', data);
       return { profile, basicRegistration: data };
     }
 
@@ -271,6 +307,7 @@ export async function saveBasicRegistration(userId, email, formData, checkoutMet
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: { ...brRecord, ...coreData } } }));
         }
+        triggerGoogleSheetsSync('BR', { ...brRecord, ...coreData });
         return { profile, basicRegistration: { ...brRecord, ...coreData } };
       }
     }
@@ -282,6 +319,7 @@ export async function saveBasicRegistration(userId, email, formData, checkoutMet
     window.dispatchEvent(new CustomEvent('crx_registrations_updated', { detail: { basic: brRecord } }));
   }
 
+  triggerGoogleSheetsSync('BR', brRecord);
   return { profile, basicRegistration: brRecord };
 }
 
@@ -357,6 +395,7 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
 
     if (brRecord) {
       await issueTicketsForBasicRegistration(userId, brRecord, paymentDetails);
+      triggerGoogleSheetsSync('BR', { ...brRecord, payment_status: 'PAID', razorpay_payment_id: paymentId });
     }
   } catch (tktErr) {
     console.warn('[eventsService] Ticket issuance error:', tktErr);
@@ -458,6 +497,13 @@ export async function addRegisteredEvent(userId, eventName, userMetadata, catego
     issueTicketForEventRegistration(userId, eventName, isSport ? 'Sports' : (categoryKey || 'Cultural')).catch((tktErr) => {
       console.warn('[eventsService] Event ticket issuance warning:', tktErr);
     });
+
+    triggerGoogleSheetsSync(isSport ? 'SPORTS' : 'CULTURAL', {
+      event_name: eventName,
+      category: isSport ? 'Sports' : (categoryKey || 'Cultural'),
+      user_id: userId,
+      candidate_id: participantId,
+    });
   } catch (dbErr) {
     console.warn('[eventsService] categorized table insert notice:', dbErr);
   }
@@ -505,6 +551,19 @@ export async function saveEventFormResponse(userId, { eventName, categoryKey, fo
     { onConflict: 'user_id,event_name' }
   );
   if (error) throw error;
+
+  const isSportEv = categoryKey?.toLowerCase() === 'sports';
+  triggerGoogleSheetsSync(isSportEv ? 'SPORTS' : 'CULTURAL', {
+    event_name: eventName,
+    category: categoryKey,
+    form_slug: formSlug,
+    form_label: formLabel,
+    form_title: formTitle,
+    form_answers: answers,
+    user_id: userId,
+    candidate_id: participantId,
+  });
+
   return true;
 }
 
