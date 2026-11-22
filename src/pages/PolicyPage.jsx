@@ -154,7 +154,7 @@ export default function PolicyPage({ initialTab = 'terms', setPage }) {
             <p style={{ margin: 0, lineHeight: 1.7 }}>
               Indira Gandhi Institute of Medical Sciences (IGIMS)<br />
               Sheikhpura, Patna, Bihar &ndash; 800014, India.<br />
-              Email: <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a>
+              Email: <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a>
             </p>
           </div>
           <div>
@@ -344,7 +344,7 @@ function PrivacyContent() {
         <p style={{ margin: '8px 0 0', color: 'var(--cream)' }}>
           <strong>Cerebrexia Secretariat &middot; Privacy Inquiries</strong><br />
           IGIMS Campus, Sheikhpura, Patna &ndash; 800014, Bihar<br />
-          Email: <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a>
+          Email: <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a>
         </p>
       </section>
     </article>
@@ -411,7 +411,7 @@ function RefundContent() {
           </ul>
         </div>
         <p>
-          Send these details to <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a> with the subject line: <code>[Payment Discrepancy] &ndash; Your Registered Email</code>.
+          Send these details to <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a> with the subject line: <code>[Payment Discrepancy] &ndash; Your Registered Email</code>.
         </p>
       </section>
 
