@@ -1,12 +1,10 @@
 name: Build Android Gate Scanner APK
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -56,25 +54,4 @@ jobs:
         with:
           name: Cerebrexia-Gate-Scanner-APK
           path: ./Cerebrexia-Gate-Scanner.apk
-          retention-days: 30
-
-      - name: Create or Update GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: scanner-apk-v1.0
-          name: "Cerebrexia '26 Gate Scanner APK"
-          body: |
-            ### Official Cerebrexia '26 Gate Scanner App (Android)
-            
-            This APK is for festival gate volunteers and security personnel to scan and verify attendee passes across all 4 festival days (17, 18, 19, and 20 December 2026).
-
-            #### Features:
-            * High-speed live camera QR code scanner with flash/torch support.
-            * Strictly enforces 1 entry per day per QR code at database level.
-            * Visual green (Entry Granted) and red (Already Entered Today) screens with audible feedback.
-            * Live scan counter and manual search fallback.
-
-            **Direct Download:** Click `Cerebrexia-Gate-Scanner.apk` below to download and install.
-          files: ./Cerebrexia-Gate-Scanner.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          retention-days: 7

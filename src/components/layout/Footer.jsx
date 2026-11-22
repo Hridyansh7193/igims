@@ -253,8 +253,6 @@ export default function Footer({ setPage }) {
           <button onClick={() => setPage('refunds')} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11.5, padding: 0 }}>Refunds</button>
           <span>&middot;</span>
           <button onClick={() => setPage('pricing')} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11.5, padding: 0 }}>Pricing</button>
-          <span>&middot;</span>
-          <button onClick={() => setPage('admin')} style={{ background: 'none', border: 'none', color: 'rgba(212, 175, 55, 0.7)', cursor: 'pointer', fontSize: 11.5, padding: 0, fontWeight: 600 }}>Admin</button>
         </div>
       </div>
     </footer>
