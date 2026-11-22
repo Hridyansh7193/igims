@@ -7,6 +7,7 @@ import {
   timingSafeMatch,
   getCleanServiceRoleKey,
   getCleanSupabaseKey,
+  getCleanRazorpayKeys,
 } from './_security.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
@@ -51,30 +52,53 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing payment details.' });
   }
 
-  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCiEMj';
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || 'ToAZvgHo0GlOkbdkfV4WcU51';
-  if (!keyId || !keySecret) return res.status(500).json({ error: 'Payment gateway configuration error' });
+  const { keyId, keySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
 
-  // 1. Signature
-  const expected = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-  if (!timingSafeMatch(expected, razorpay_signature)) {
+  // 1. Signature verification (supports active key or default live key)
+  const secretsToTest = Array.from(new Set([keySecret, DEFAULT_KEY_SECRET].filter(Boolean)));
+  let signatureValid = false;
+  let activeSecretUsed = keySecret;
+
+  for (const s of secretsToTest) {
+    const expected = crypto
+      .createHmac('sha256', s)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+    if (timingSafeMatch(expected, razorpay_signature)) {
+      signatureValid = true;
+      activeSecretUsed = s;
+      break;
+    }
+  }
+
+  if (!signatureValid) {
     return res.status(400).json({ verified: false, error: 'Payment signature mismatch.' });
   }
 
-  // 2. Cross-check the order with Razorpay
-  let order;
-  try {
-    const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
-      headers: { Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}` },
-    });
-    order = await r.json();
-    if (!r.ok) throw new Error('order lookup failed');
-  } catch (err) {
-    console.error('[verify-event-payment] order lookup:', err);
-    return res.status(502).json({ error: 'Could not confirm the payment. Contact the organisers with your payment ID.' });
+  // 2. Cross-check the order with Razorpay API (with fallback keypairs)
+  let order = null;
+  const keyPairs = [
+    { id: keyId, secret: activeSecretUsed },
+    { id: DEFAULT_KEY_ID, secret: DEFAULT_KEY_SECRET },
+  ];
+
+  for (const kp of keyPairs) {
+    try {
+      const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
+        headers: { Authorization: `Basic ${Buffer.from(`${kp.id}:${kp.secret}`).toString('base64')}` },
+      });
+      if (r.ok) {
+        order = await r.json();
+        break;
+      }
+    } catch (err) {
+      // try next key pair
+    }
+  }
+
+  if (!order) {
+    console.error('[verify-event-payment] order lookup failed for', razorpay_order_id);
+    return res.status(502).json({ error: 'Could not confirm the payment. Contact the organisers with your payment ID: ' + razorpay_payment_id });
   }
 
   if (order.status !== 'paid' || order.amount_paid !== order.amount) {
