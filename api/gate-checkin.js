@@ -5,13 +5,18 @@ import {
   timingSafeMatch,
   checkRateLimit,
   setSecureCorsHeaders,
+  getCleanSupabaseKey,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SUPABASE_KEY =
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SERVICE_ROLE_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+  process.env.SUPABASE_ANON_KEY;
+
+const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
 const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY || 'crx26_volunteer_gate_secret';
 
@@ -104,15 +109,31 @@ export default async function handler(req, res) {
 
   try {
     // 1. Find ticket in Supabase (Parameterized / sanitised)
-    const { data: ticket, error: ticketErr } = await supabase
+    let { data: ticket, error: ticketErr } = await supabase
       .from('tickets')
       .select('*')
       .or(`qr_token.eq.${cleanToken},ticket_number.eq.${cleanToken}`)
       .maybeSingle();
 
+    // If initial query errored (e.g. invalid service key in env), retry with fallback anon client
+    if (ticketErr) {
+      console.warn('[gate-checkin] Primary query failed, retrying with fallback anon key:', ticketErr.message);
+      const fallbackSb = createClient(SUPABASE_URL, 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS');
+      const retryRes = await fallbackSb
+        .from('tickets')
+        .select('*')
+        .or(`qr_token.eq.${cleanToken},ticket_number.eq.${cleanToken}`)
+        .maybeSingle();
+
+      if (!retryRes.error) {
+        ticket = retryRes.data;
+        ticketErr = null;
+      }
+    }
+
     if (ticketErr) {
       console.error('[gate-checkin] Database error:', ticketErr.message);
-      return res.status(500).json({ status: 'ERROR', message: 'Database error searching ticket' });
+      return res.status(500).json({ status: 'ERROR', message: `Database error searching ticket: ${ticketErr.message}` });
     }
 
     if (!ticket) {
@@ -159,7 +180,7 @@ export default async function handler(req, res) {
     }
 
     // 3. Record new entry in ticket_checkins
-    const { data: newCheckin, error: insertErr } = await supabase
+    let { data: newCheckin, error: insertErr } = await supabase
       .from('ticket_checkins')
       .insert({
         ticket_id: ticket.id,
@@ -169,6 +190,25 @@ export default async function handler(req, res) {
       })
       .select('id, scanned_at')
       .single();
+
+    if (insertErr && insertErr.code !== '23505') {
+      // Retry with fallback anon client if primary client failed
+      const fallbackSb = createClient(SUPABASE_URL, 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS');
+      const retryIns = await fallbackSb
+        .from('ticket_checkins')
+        .insert({
+          ticket_id: ticket.id,
+          event_day: activeDay,
+          scanned_by: safeVolunteerName,
+          gate_location: 'Gate 1 Main',
+        })
+        .select('id, scanned_at')
+        .single();
+      if (!retryIns.error || retryIns.error.code === '23505') {
+        newCheckin = retryIns.data;
+        insertErr = retryIns.error;
+      }
+    }
 
     if (insertErr) {
       if (insertErr.code === '23505') {

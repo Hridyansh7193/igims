@@ -1,11 +1,20 @@
 export const ACCOMMODATION_FACTS = [
   { label: 'Event', value: "Cerebrexia '26" },
-  { label: 'Dates', value: '27 – 30 Nov' },
-  { label: 'Price', value: '₹150 for both boys and girls' },
+  { label: 'Dates', value: '17 – 20 Dec' },
+  { label: 'Price', value: '₹150 / day per person' },
   { label: 'Stay', value: 'Girls: Lodgings · Boys: Hostel Rooms' },
   { label: 'Campus', value: 'Closed campus · Safe & secure environment' },
   { label: 'Access', value: '24x7 accessibility' },
 ];
+
+export const ACCOMMODATION_DATES = [
+  { id: '2026-12-17', dateStr: '17 Dec', label: 'Day 1 · 17 Dec', fullDate: '17 December 2026' },
+  { id: '2026-12-18', dateStr: '18 Dec', label: 'Day 2 · 18 Dec', fullDate: '18 December 2026' },
+  { id: '2026-12-19', dateStr: '19 Dec', label: 'Day 3 · 19 Dec', fullDate: '19 December 2026' },
+  { id: '2026-12-20', dateStr: '20 Dec', label: 'Day 4 · 20 Dec', fullDate: '20 December 2026' },
+];
+
+export const PRICE_PER_DAY = 150;
 
 export const ACCOMMODATION_BOYS = {
   title: 'For Boys',
@@ -45,9 +54,9 @@ export const ACCOMMODATION_GUIDELINES = [
 ];
 
 export const ACCOMMODATION_CONTACTS = [
-  { name: 'Avinash', phone: '8210223381' },
-  { name: 'Shruti', phone: '9572068244' },
-  { name: 'Aniket Anand', phone: '9931660037' },
+  { name: 'Ankit kumar', phone: '8405060345' },
+  { name: 'Mritunjay', phone: '7903660938' },
+  { name: 'Swati singh', phone: '6200337540' },
 ];
 
 export const ACCOMMODATION_INSTAGRAM = '@igimsfest';
@@ -59,7 +68,7 @@ export const ACCOMMODATION_STEPS = [
   },
   {
     title: 'Register for accommodation',
-    text: 'Register for your stay at ₹150, available for both boys and girls, for 27 – 30 Nov.',
+    text: 'Register for your stay at ₹150/day, available for both boys and girls, for 17 – 20 Dec.',
   },
   {
     title: 'Arrival',

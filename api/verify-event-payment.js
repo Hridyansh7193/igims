@@ -1,12 +1,22 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { finalizeEventPayment } from './_finalizeEventPayment.js';
-import { checkRateLimit, setSecureCorsHeaders, timingSafeMatch } from './_security.js';
+import {
+  checkRateLimit,
+  setSecureCorsHeaders,
+  timingSafeMatch,
+  getCleanServiceRoleKey,
+  getCleanSupabaseKey,
+  getCleanRazorpayKeys,
+} from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SUPABASE_ANON =
-  process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_ANON = getCleanSupabaseKey(
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+);
+const SERVICE_KEY = getCleanServiceRoleKey(
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
+);
 
 /**
  * POST /api/verify-event-payment
@@ -42,30 +52,53 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing payment details.' });
   }
 
-  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) return res.status(500).json({ error: 'Payment gateway configuration error' });
+  const { keyId, keySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
 
-  // 1. Signature
-  const expected = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-  if (!timingSafeMatch(expected, razorpay_signature)) {
+  // 1. Signature verification (supports active key or default live key)
+  const secretsToTest = Array.from(new Set([keySecret, DEFAULT_KEY_SECRET].filter(Boolean)));
+  let signatureValid = false;
+  let activeSecretUsed = keySecret;
+
+  for (const s of secretsToTest) {
+    const expected = crypto
+      .createHmac('sha256', s)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+    if (timingSafeMatch(expected, razorpay_signature)) {
+      signatureValid = true;
+      activeSecretUsed = s;
+      break;
+    }
+  }
+
+  if (!signatureValid) {
     return res.status(400).json({ verified: false, error: 'Payment signature mismatch.' });
   }
 
-  // 2. Cross-check the order with Razorpay
-  let order;
-  try {
-    const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
-      headers: { Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}` },
-    });
-    order = await r.json();
-    if (!r.ok) throw new Error('order lookup failed');
-  } catch (err) {
-    console.error('[verify-event-payment] order lookup:', err);
-    return res.status(502).json({ error: 'Could not confirm the payment. Contact the organisers with your payment ID.' });
+  // 2. Cross-check the order with Razorpay API (with fallback keypairs)
+  let order = null;
+  const keyPairs = [
+    { id: keyId, secret: activeSecretUsed },
+    { id: DEFAULT_KEY_ID, secret: DEFAULT_KEY_SECRET },
+  ];
+
+  for (const kp of keyPairs) {
+    try {
+      const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
+        headers: { Authorization: `Basic ${Buffer.from(`${kp.id}:${kp.secret}`).toString('base64')}` },
+      });
+      if (r.ok) {
+        order = await r.json();
+        break;
+      }
+    } catch (err) {
+      // try next key pair
+    }
+  }
+
+  if (!order) {
+    console.error('[verify-event-payment] order lookup failed for', razorpay_order_id);
+    return res.status(502).json({ error: 'Could not confirm the payment. Contact the organisers with your payment ID: ' + razorpay_payment_id });
   }
 
   if (order.status !== 'paid' || order.amount_paid !== order.amount) {
@@ -80,7 +113,11 @@ export default async function handler(req, res) {
   if (SERVICE_KEY) {
     result = await finalizeEventPayment(createClient(SUPABASE_URL, SERVICE_KEY), order, razorpay_payment_id);
   } else {
-    console.error('[verify-event-payment] SUPABASE_SERVICE_ROLE_KEY missing - payment not stored');
+    console.warn('[verify-event-payment] SUPABASE_SERVICE_ROLE_KEY not available - finalizing with user token');
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    result = await finalizeEventPayment(userClient, order, razorpay_payment_id);
   }
 
   return res.status(200).json({

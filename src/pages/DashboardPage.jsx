@@ -253,7 +253,6 @@ export default function DashboardPage({ setPage }) {
       },
       onFallbackPrompt: () => {
         setPaying(false);
-        setShowPaymentModal(true);
       },
     });
   };

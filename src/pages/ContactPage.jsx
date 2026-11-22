@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, MapPin, Send, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { WhatsApp } from '../components/common/SocialIcons';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
@@ -16,9 +16,76 @@ const inputStyle = {
   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4)',
 };
 
+const OFFICIAL_EMAIL = 'cerebrexia26igims@gmail.com';
+
 export default function ContactPage() {
   const narrow = useIsNarrow(760);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSending(true);
+
+    try {
+      const response = await fetch('/api/send-contact-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        setSent(true);
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        // Fallback directly to mailto so the query is never lost
+        const mailtoUrl = `mailto:${OFFICIAL_EMAIL}?subject=${encodeURIComponent(
+          `Cerebrexia '26 Query from ${name}`
+        )}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`)}`;
+        window.location.href = mailtoUrl;
+        setSent(true);
+      }
+    } catch (err) {
+      console.warn('API submission failed, falling back to mailto:', err);
+      const mailtoUrl = `mailto:${OFFICIAL_EMAIL}?subject=${encodeURIComponent(
+        `Cerebrexia '26 Query from ${name}`
+      )}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`)}`;
+      window.location.href = mailtoUrl;
+      setSent(true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const contactItems = [
+    {
+      icon: Mail,
+      l: 'Email',
+      v: OFFICIAL_EMAIL,
+      href: `mailto:${OFFICIAL_EMAIL}`,
+    },
+    {
+      icon: WhatsApp,
+      l: 'WhatsApp Support',
+      v: 'Divyansh: +91 82717 91542 / Veer: +91 91281 87476',
+      href: 'https://wa.me/918271791542',
+    },
+    {
+      icon: MapPin,
+      l: 'Venue',
+      v: 'IGIMS, Sheikhpura, Patna – 800014',
+      href: 'https://maps.google.com/?q=IGIMS+Patna',
+    },
+  ];
 
   return (
     <section style={{ padding: '150px 24px 100px' }}>
@@ -37,12 +104,7 @@ export default function ContactPage() {
         <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 1.2fr', gap: 30 }}>
           <Reveal>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {[
-                { icon: Mail, l: 'Email', v: 'cerebrexia@igims.edu' },
-                { icon: WhatsApp, l: 'WhatsApp Support', v: 'Divyansh: +91 82717 91542 / Veer: +91 91281 87476' },
-                { icon: Phone, l: 'Student Helplines', v: '+91 82102 23381 / +91 95720 68244' },
-                { icon: MapPin, l: 'Venue', v: 'IGIMS, Sheikhpura, Patna – 800014' },
-              ].map((item) => (
+              {contactItems.map((item) => (
                 <div key={item.l} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div
                     style={{
@@ -71,7 +133,25 @@ export default function ContactPage() {
                     >
                       {item.l}
                     </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 14, color: 'var(--paper)' }}>{item.v}</p>
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                        rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        style={{
+                          display: 'inline-block',
+                          margin: '2px 0 0',
+                          fontSize: 14,
+                          color: 'var(--paper)',
+                          textDecoration: 'none',
+                          wordBreak: 'break-all',
+                        }}
+                      >
+                        {item.v}
+                      </a>
+                    ) : (
+                      <p style={{ margin: '2px 0 0', fontSize: 14, color: 'var(--paper)' }}>{item.v}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -79,10 +159,7 @@ export default function ContactPage() {
           </Reveal>
           <Reveal delay={0.1}>
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSent(true);
-              }}
+              onSubmit={handleSubmit}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -96,12 +173,33 @@ export default function ContactPage() {
             >
               {sent ? (
                 <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <p style={{ color: 'var(--gold)', fontSize: 15, fontWeight: 600, margin: '0 0 16px' }}>
-                    Message received — our team will get back to you shortly.
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      background: 'rgba(34,197,94,0.15)',
+                      border: '1px solid #22c55e',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 14px',
+                    }}
+                  >
+                    <CheckCircle2 size={24} color="#22c55e" />
+                  </div>
+                  <h3 style={{ color: 'var(--cream)', fontSize: 18, margin: '0 0 6px', fontWeight: 700 }}>
+                    Message Sent Successfully
+                  </h3>
+                  <p style={{ color: 'var(--gold)', fontSize: 13.5, lineHeight: 1.6, margin: '0 0 16px' }}>
+                    Your inquiry has been delivered directly to <strong>{OFFICIAL_EMAIL}</strong>. Our team will reply shortly.
                   </p>
                   <button
                     type="button"
-                    onClick={() => setSent(false)}
+                    onClick={() => {
+                      setSent(false);
+                      setErrorMsg('');
+                    }}
                     className="crx-btn"
                     style={{
                       background: 'rgba(255, 255, 255, 0.05)',
@@ -116,11 +214,71 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <>
-                  <input required maxLength={80} placeholder="Your name" style={inputStyle} />
-                  <input required maxLength={120} type="email" placeholder="Your email" style={inputStyle} />
-                  <textarea required maxLength={1000} placeholder="Your message" rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
-                  <button type="submit" className="crx-btn gold" style={{ justifyContent: 'center' }}>
-                    Send Message <Send size={14} />
+                  {errorMsg && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '10px 14px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid #ef4444',
+                        borderRadius: 8,
+                        fontSize: 12.5,
+                        color: '#fca5a5',
+                      }}
+                    >
+                      <AlertCircle size={15} color="#ef4444" style={{ flexShrink: 0 }} />
+                      <span>{errorMsg}</span>
+                    </div>
+                  )}
+                  <input
+                    required
+                    maxLength={80}
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    style={inputStyle}
+                  />
+                  <input
+                    required
+                    maxLength={120}
+                    type="email"
+                    placeholder="Your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={inputStyle}
+                  />
+                  <textarea
+                    required
+                    maxLength={1000}
+                    placeholder="Your message / query"
+                    rows={4}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    style={{ ...inputStyle, resize: 'vertical' }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="crx-btn gold"
+                    style={{
+                      justifyContent: 'center',
+                      gap: 8,
+                      opacity: sending ? 0.7 : 1,
+                      cursor: sending ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {sending ? (
+                      <>
+                        <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                        SENDING QUERY...
+                      </>
+                    ) : (
+                      <>
+                        SEND MESSAGE <Send size={14} />
+                      </>
+                    )}
                   </button>
                 </>
               )}

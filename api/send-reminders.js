@@ -4,8 +4,8 @@ import crypto from 'crypto';
 
 // ── Environment ──────────────────────────────────────────────────────────────
 const CRON_SECRET          = process.env.CRON_SECRET;
-const SUPABASE_URL         = process.env.VITE_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL         = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
 const RESEND_API_KEY       = process.env.RESEND_API_KEY;
 const FROM_ADDRESS         = process.env.REMINDER_FROM || 'Cerebrexia <noreply@cerebrexia.in>';
 const APP_URL              = (process.env.APP_URL || 'https://www.cerebrexiaigims.com').replace(/\/$/, '');

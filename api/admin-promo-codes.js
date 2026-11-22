@@ -7,13 +7,18 @@ import {
   verifyToken,
   checkRateLimit,
   setSecureCorsHeaders,
+  getCleanSupabaseKey,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SUPABASE_KEY =
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SERVICE_ROLE_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+  process.env.SUPABASE_ANON_KEY;
+
+const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'admin').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'cerebrexia2026';

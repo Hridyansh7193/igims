@@ -37,8 +37,8 @@ export default async function handler(req, res) {
 
   const safeReceipt = sanitizeAlphaNumDash(String(receipt || `rcpt_${Date.now()}`)).slice(0, 40);
 
-  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCiEMj';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || 'ToAZvgHo0GlOkbdkfV4WcU51';
 
   if (!keyId || !keySecret) {
     console.error('[create-razorpay-order] Razorpay credentials missing in server environment');

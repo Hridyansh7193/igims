@@ -154,7 +154,7 @@ export default function PolicyPage({ initialTab = 'terms', setPage }) {
             <p style={{ margin: 0, lineHeight: 1.7 }}>
               Indira Gandhi Institute of Medical Sciences (IGIMS)<br />
               Sheikhpura, Patna, Bihar &ndash; 800014, India.<br />
-              Email: <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a>
+              Email: <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a>
             </p>
           </div>
           <div>
@@ -344,7 +344,7 @@ function PrivacyContent() {
         <p style={{ margin: '8px 0 0', color: 'var(--cream)' }}>
           <strong>Cerebrexia Secretariat &middot; Privacy Inquiries</strong><br />
           IGIMS Campus, Sheikhpura, Patna &ndash; 800014, Bihar<br />
-          Email: <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a>
+          Email: <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a>
         </p>
       </section>
     </article>
@@ -411,7 +411,7 @@ function RefundContent() {
           </ul>
         </div>
         <p>
-          Send these details to <a href="mailto:cerebrexia@igims.edu" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia@igims.edu</a> with the subject line: <code>[Payment Discrepancy] &ndash; Your Registered Email</code>.
+          Send these details to <a href="mailto:cerebrexia26igims@gmail.com" style={{ color: 'var(--gold)', textDecoration: 'none' }}>cerebrexia26igims@gmail.com</a> with the subject line: <code>[Payment Discrepancy] &ndash; Your Registered Email</code>.
         </p>
       </section>
 
@@ -470,10 +470,10 @@ function PricingContent() {
               Hostel Accommodation (Optional)
             </span>
             <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--cream)', margin: '6px 0 8px' }}>
-              ₹150
+              ₹150 / day
             </div>
             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-              4-day campus stay (27 &ndash; 30 Nov) in secured Boys' Hostel rooms or Girls' Lodgings with 24x7 security, water, and Wi-Fi access.
+              Campus stay (17 &ndash; 20 Dec) in secured Boys' Hostel rooms or Girls' Lodgings with 24x7 security, water, and Wi-Fi access.
             </p>
           </div>
         </div>
@@ -504,7 +504,7 @@ function PricingContent() {
           <p style={{ margin: '0 0 6px', color: 'var(--cream)', fontWeight: 600 }}>Collection Counter Details:</p>
           <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
             Location: Central Registration Counter, Administrative Block, IGIMS Campus, Sheikhpura, Patna.<br />
-            Operating Timings: 8:30 AM &ndash; 7:00 PM throughout the festival days (27 &ndash; 30 Nov).<br />
+            Operating Timings: 8:30 AM &ndash; 7:00 PM throughout the festival days (17 &ndash; 20 Dec).<br />
             Requirement: Present your digital QR credential on your mobile screen along with your college identity card.
           </p>
         </div>
