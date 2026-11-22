@@ -1,12 +1,21 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { finalizeEventPayment } from './_finalizeEventPayment.js';
-import { checkRateLimit, setSecureCorsHeaders, timingSafeMatch } from './_security.js';
+import {
+  checkRateLimit,
+  setSecureCorsHeaders,
+  timingSafeMatch,
+  getCleanServiceRoleKey,
+  getCleanSupabaseKey,
+} from './_security.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SUPABASE_ANON =
-  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
+const SUPABASE_ANON = getCleanSupabaseKey(
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+);
+const SERVICE_KEY = getCleanServiceRoleKey(
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
+);
 
 /**
  * POST /api/verify-event-payment
@@ -80,7 +89,11 @@ export default async function handler(req, res) {
   if (SERVICE_KEY) {
     result = await finalizeEventPayment(createClient(SUPABASE_URL, SERVICE_KEY), order, razorpay_payment_id);
   } else {
-    console.error('[verify-event-payment] SUPABASE_SERVICE_ROLE_KEY missing - payment not stored');
+    console.warn('[verify-event-payment] SUPABASE_SERVICE_ROLE_KEY not available - finalizing with user token');
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    result = await finalizeEventPayment(userClient, order, razorpay_payment_id);
   }
 
   return res.status(200).json({

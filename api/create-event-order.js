@@ -1,11 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
-import { sanitizeAlphaNumDash, checkRateLimit, setSecureCorsHeaders } from './_security.js';
+import {
+  sanitizeAlphaNumDash,
+  checkRateLimit,
+  setSecureCorsHeaders,
+  getCleanServiceRoleKey,
+  getCleanSupabaseKey,
+} from './_security.js';
 import { computeFee } from './_eventFees.js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
-const SUPABASE_ANON =
-  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+const SERVICE_KEY = getCleanServiceRoleKey(
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
+);
+const SUPABASE_ANON = getCleanSupabaseKey(
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+);
 
 /**
  * POST /api/create-event-order

@@ -158,3 +158,37 @@ export function setSecureCorsHeaders(req, res, allowedMethods = 'GET, POST, OPTI
   res.setHeader('Access-Control-Max-Age', '86400');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 }
+
+/**
+ * Validates and cleans a Supabase API key, falling back to public anon key if placeholder/invalid
+ */
+export function getCleanSupabaseKey(preferredKey) {
+  const clean = (k) => (typeof k === 'string' ? k.trim().replace(/^["']|["']$/g, '') : '');
+  const p = clean(preferredKey);
+  if (
+    p &&
+    !p.toLowerCase().includes('your_') &&
+    !p.toLowerCase().includes('placeholder') &&
+    (p.startsWith('sb_secret_') || p.startsWith('sb_publishable_') || p.startsWith('ey'))
+  ) {
+    return p;
+  }
+  return 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+}
+
+/**
+ * Validates and cleans a service role key specifically, returning null if placeholder/invalid
+ */
+export function getCleanServiceRoleKey(key) {
+  const clean = (k) => (typeof k === 'string' ? k.trim().replace(/^["']|["']$/g, '') : '');
+  const s = clean(key);
+  if (
+    s &&
+    !s.toLowerCase().includes('your_') &&
+    !s.toLowerCase().includes('placeholder') &&
+    (s.startsWith('sb_secret_') || s.startsWith('ey'))
+  ) {
+    return s;
+  }
+  return null;
+}
