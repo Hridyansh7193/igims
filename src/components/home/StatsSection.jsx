@@ -40,8 +40,8 @@ export default function StatsSection() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: narrow ? '1fr 1fr' : 'repeat(4, 1fr)',
-            gap: 28,
+            gridTemplateColumns: narrow ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)',
+            gap: narrow ? 16 : 28,
           }}
         >
           {STATS.map((s, i) => (
@@ -62,9 +62,12 @@ export default function StatsSection() {
                 <span
                   className="crx-stat-badge"
                   style={{
-                    fontSize: '0.82rem',
-                    padding: '7px 16px',
-                    letterSpacing: '0.06em',
+                    fontSize: narrow ? '0.74rem' : '0.82rem',
+                    padding: narrow ? '6px 10px' : '7px 16px',
+                    letterSpacing: narrow ? '0.04em' : '0.06em',
+                    whiteSpace: narrow ? 'normal' : undefined,
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
                   }}
                 >
                   {s.label}

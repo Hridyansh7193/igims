@@ -453,7 +453,7 @@ export default function EventsPage({ setPage }) {
                       {ev.cat}
                     </Sticker>
 
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', background: 'linear-gradient(0deg, rgba(10,5,5,0.98) 0%, rgba(10,5,5,0.7) 60%, transparent 100%)' }}>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: narrow ? '12px 10px' : '14px', background: 'linear-gradient(0deg, rgba(10,5,5,0.98) 0%, rgba(10,5,5,0.7) 60%, transparent 100%)' }}>
                       <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{ev.name}</p>
 
                       <div style={{ display: 'flex', flexDirection: narrow ? 'column' : 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -462,12 +462,15 @@ export default function EventsPage({ setPage }) {
                         className='crx-btn'
                         aria-label={`View guidelines for ${ev.name}`}
                         style={{
-                          flex: narrow ? '1 1 auto' : '0 0 auto',
+                          flex: narrow ? '0 0 auto' : '0 0 auto',
+                          width: narrow ? '100%' : undefined,
+                          minWidth: 0,
+                          boxSizing: 'border-box',
                           justifyContent: 'center',
-                          fontSize: 10,
-                          padding: '8px 10px',
+                          fontSize: narrow ? 9.5 : 10,
+                          padding: narrow ? '8px 6px' : '8px 10px',
                           gap: 4,
-                          letterSpacing: 0.5,
+                          letterSpacing: narrow ? 0.3 : 0.5,
                           whiteSpace: 'nowrap',
                           background: 'rgba(255,255,255,0.05)',
                           border: '1px solid rgba(255,255,255,0.18)',
@@ -483,12 +486,14 @@ export default function EventsPage({ setPage }) {
                         disabled={loadingInitial}
                         className='crx-btn'
                         style={{
-                          flex: '1 1 130px',
+                          flex: narrow ? '0 0 auto' : '1 1 130px',
+                          width: narrow ? '100%' : undefined,
                           minWidth: 0,
+                          boxSizing: 'border-box',
                           whiteSpace: 'nowrap',
                           justifyContent: 'center',
-                          fontSize: 10.5,
-                          padding: '8px 12px',
+                          fontSize: narrow ? 9.5 : 10.5,
+                          padding: narrow ? '8px 6px' : '8px 12px',
                           background: isRegistered
                             ? 'rgba(34,197,94,0.15)'
                             : user && profile
@@ -501,9 +506,9 @@ export default function EventsPage({ setPage }) {
                           boxShadow: isRegistered
                             ? '0 0 12px rgba(34,197,94,0.15)'
                             : '0 0 10px rgba(220,38,38,0.08)',
-                          letterSpacing: 1,
+                          letterSpacing: narrow ? 0.3 : 1,
                           cursor: 'pointer',
-                          gap: 6,
+                          gap: narrow ? 4 : 6,
                         }}
                       >
                         {loadingInitial ? (
@@ -513,10 +518,10 @@ export default function EventsPage({ setPage }) {
                             <Check size={12} color="#86efac" /> REGISTERED
                           </>
                         ) : !user ? (
-                          'SIGN IN TO REGISTER'
+                          narrow ? 'SIGN IN' : 'SIGN IN TO REGISTER'
                         ) : profile ? (
                           <>
-                            <Sparkles size={11} color="#fca5a5" /> 1-CLICK REGISTER
+                            <Sparkles size={11} color="#fca5a5" /> {narrow ? 'REGISTER' : '1-CLICK REGISTER'}
                           </>
                         ) : (
                           'REGISTER'

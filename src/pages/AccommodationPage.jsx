@@ -100,7 +100,7 @@ export default function AccommodationPage() {
               <Sticker tone="gold" rotate={-2} style={{ marginBottom: 16 }}>
                 Staying on Campus
               </Sticker>
-              <h1 className="crx-display" style={{ fontSize: 'clamp(36px,7vw,72px)', color: 'var(--cream)', margin: '0 0 12px' }}>
+              <h1 className="crx-display" style={{ fontSize: 'clamp(min(36px, 9.3vw), 7vw, 72px)', color: 'var(--cream)', margin: '0 0 12px' }}>
                 ACCOMMODATION
               </h1>
               <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0, lineHeight: 1.7 }}>

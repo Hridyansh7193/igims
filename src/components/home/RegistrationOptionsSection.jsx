@@ -56,7 +56,7 @@ export default function RegistrationOptionsSection({ setPage }) {
               <h2
                 className="crx-display"
                 style={{
-                  fontSize: 'clamp(28px, 5vw, 44px)',
+                  fontSize: 'clamp(min(28px, 8vw), 5vw, 44px)',
                   color: 'var(--crx-text-primary)',
                   margin: '0 0 12px',
                   letterSpacing: '0.5px',
