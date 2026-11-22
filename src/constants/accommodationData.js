@@ -1,11 +1,20 @@
 export const ACCOMMODATION_FACTS = [
   { label: 'Event', value: "Cerebrexia '26" },
-  { label: 'Dates', value: '27 – 30 Nov' },
-  { label: 'Price', value: '₹150 for both boys and girls' },
+  { label: 'Dates', value: '17 – 20 Dec' },
+  { label: 'Price', value: '₹150 / day per person' },
   { label: 'Stay', value: 'Girls: Lodgings · Boys: Hostel Rooms' },
   { label: 'Campus', value: 'Closed campus · Safe & secure environment' },
   { label: 'Access', value: '24x7 accessibility' },
 ];
+
+export const ACCOMMODATION_DATES = [
+  { id: '2026-12-17', dateStr: '17 Dec', label: 'Day 1 · 17 Dec', fullDate: '17 December 2026' },
+  { id: '2026-12-18', dateStr: '18 Dec', label: 'Day 2 · 18 Dec', fullDate: '18 December 2026' },
+  { id: '2026-12-19', dateStr: '19 Dec', label: 'Day 3 · 19 Dec', fullDate: '19 December 2026' },
+  { id: '2026-12-20', dateStr: '20 Dec', label: 'Day 4 · 20 Dec', fullDate: '20 December 2026' },
+];
+
+export const PRICE_PER_DAY = 150;
 
 export const ACCOMMODATION_BOYS = {
   title: 'For Boys',
@@ -45,9 +54,9 @@ export const ACCOMMODATION_GUIDELINES = [
 ];
 
 export const ACCOMMODATION_CONTACTS = [
-  { name: 'Avinash', phone: '8210223381' },
-  { name: 'Shruti', phone: '9572068244' },
-  { name: 'Aniket Anand', phone: '9931660037' },
+  { name: 'Ankit kumar', phone: '8405060345' },
+  { name: 'Mritunjay', phone: '7903660938' },
+  { name: 'Swati singh', phone: '6200337540' },
 ];
 
 export const ACCOMMODATION_INSTAGRAM = '@igimsfest';
@@ -58,15 +67,15 @@ export const ACCOMMODATION_STEPS = [
     text: 'BR is mandatory — no accommodation is provided without availing Basic Registration.',
   },
   {
-    title: 'Register for accommodation',
-    text: 'Register for your stay at ₹150, available for both boys and girls, for 27 – 30 Nov.',
+    title: 'Select Dates & Pay ₹150/Day',
+    text: 'Choose your stay dates (17, 18, 19, or 20 Dec) at ₹150/day and book instantly via Razorpay.',
   },
   {
-    title: 'Arrival',
-    text: 'Carry your college ID card or Aadhaar card at all times. Meal timings and schedule are shared on arrival / during registration.',
+    title: 'Instant Booking Pass',
+    text: 'Receive your verified digital accommodation voucher with confirmed room allocation details.',
   },
   {
-    title: 'Need help?',
-    text: 'Reach out to the accommodation team using the contact numbers below.',
+    title: 'Arrival on Campus',
+    text: 'Carry your college ID or Aadhaar card for check-in at the accommodation desk.',
   },
 ];
