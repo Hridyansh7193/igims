@@ -34,7 +34,7 @@ export async function payForEvent({ slug, eventName, selection, form, prefill = 
       amount: order.amount,
       currency: order.currency || 'INR',
       name: "Cerebrexia '26 | IGIMS Patna",
-      description: eventName.replace(/^[^A-Za-z0-9]+/, ''),
+      description: (eventName || 'Event Entry').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 150),
       prefill: { name: prefill.name || '', email: prefill.email || '', contact: prefill.contact || '' },
       theme: { color: '#C0392B', backdrop_color: 'rgba(10, 5, 8, 0.92)' },
       modal: {

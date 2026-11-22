@@ -56,6 +56,13 @@ export default async function handler(req, res) {
   let keyId = initialKeyId;
   let keySecret = initialKeySecret;
 
+  // Sanitize notes strictly to printable ASCII (32-126) so Razorpay API never throws UTF-8 / emoji error
+  const toAscii = (str, maxLen = 100) =>
+    String(str || '')
+      .replace(/[^\x20-\x7E]/g, '')
+      .trim()
+      .slice(0, maxLen);
+
   const orderPayload = {
     amount: Math.round(fee.amount * 100),
     currency: 'INR',
@@ -64,8 +71,8 @@ export default async function handler(req, res) {
       type: 'event',
       user_id: user.id,
       slug: safeSlug,
-      event_name: String(eventName || '').slice(0, 100),
-      selection: JSON.stringify(selection || {}).slice(0, 200),
+      event_name: toAscii(eventName, 80),
+      selection: toAscii(JSON.stringify(selection || {}), 150),
     },
   };
 
