@@ -86,6 +86,14 @@ const MAP = {
   'magic mask (face painting)': 'magic-mask-face-painting',
 };
 
+
+// Payment is now collected through Razorpay, so the old Google-Form
+// "registration charges & proof of payment (upload screenshot)" questions are dropped.
+// (College-ID uploads are kept.)
+const isPaymentProofField = (f) =>
+  f.type === 'file_upload' && /pay|screenshot/i.test(`${f.label || ''} ${f.help || ''}`);
+const stripPaymentFields = (fields = []) => fields.filter((f) => !isPaymentProofField(f));
+
 /**
  * Returns [{ label, slug, form }] for an event, only including forms that
  * were actually scraped. Empty array => event has no custom form.
@@ -96,7 +104,11 @@ export function getEventForms(eventName) {
   const list = Array.isArray(entry) ? entry : [{ label: null, slug: entry }];
   return list
     .filter((v) => FORMS[v.slug] && (FORMS[v.slug].fields || []).length > 0)
-    .map((v) => ({ label: v.label, slug: v.slug, form: FORMS[v.slug] }));
+    .map((v) => ({
+      label: v.label,
+      slug: v.slug,
+      form: { ...FORMS[v.slug], fields: stripPaymentFields(FORMS[v.slug].fields) },
+    }));
 }
 
 export const hasEventForm = (eventName) => getEventForms(eventName).length > 0;
