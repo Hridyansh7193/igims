@@ -7,7 +7,7 @@ const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
 export const RAZORPAY_KEY_ID =
   import.meta.env.VITE_RAZORPAY_KEY_ID ||
   import.meta.env.RAZORPAY_KEY_ID ||
-  '';
+  'rzp_live_TyVhU8uhXCiEMj';
 export const RAZORPAY_PAYMENT_PAGE_URL =
   import.meta.env.VITE_RAZORPAY_PAYMENT_LINK ||
   import.meta.env.RAZORPAY_PAYMENT_LINK ||
@@ -135,32 +135,17 @@ export async function openRazorpayCheckout({
       const rzp = new window.Razorpay(rzpOptions);
       rzp.on('payment.failed', function (resp) {
         console.error('[Razorpay] Payment Failed:', resp.error);
-        if (onFallbackPrompt) {
-          onFallbackPrompt(resp.error);
-        } else {
-          alert(`Payment issue: ${resp?.error?.description || 'Transaction cancelled or failed.'}`);
-        }
+        alert(`Payment not completed: ${resp?.error?.description || 'Transaction cancelled or failed.'}`);
       });
       rzp.open();
       return;
     } catch (err) {
       console.warn('[Razorpay] Exception opening Razorpay modal:', err);
-      if (onFallbackPrompt) {
-        onFallbackPrompt(err);
-        return;
-      }
+      alert('Could not launch payment gateway. Please check your connection and try again.');
+      return;
     }
   }
 
-  // If Razorpay Key is not set or network blocked, open the interactive gateway prompt
-  if (onFallbackPrompt) {
-    onFallbackPrompt();
-  } else if (onSuccess) {
-    // Standard mock transaction fallback
-    onSuccess({
-      razorpay_payment_id: `pay_rzp_${Date.now()}`,
-      razorpay_order_id: `order_crx_${Date.now()}`,
-      method: 'RAZORPAY_ME',
-    });
-  }
+  // Fallback if Razorpay SDK failed to initialize
+  alert('Could not initialize Razorpay checkout. Please refresh the page and try again.');
 }

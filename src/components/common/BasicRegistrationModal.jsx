@@ -513,8 +513,7 @@ export default function BasicRegistrationModal({
           console.info('[Razorpay] Payment dismissed by user.');
         },
         onFallbackPrompt: () => {
-          // Open interactive simulated Razorpay sheet if live key is not supplied
-          setShowRazorpayFallback(true);
+          console.info('[Razorpay] Payment cancelled or dismissed.');
         },
       });
     } catch (err) {

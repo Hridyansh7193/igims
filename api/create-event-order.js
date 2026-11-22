@@ -42,8 +42,8 @@ export default async function handler(req, res) {
   const fee = computeFee(safeSlug, selection || {});
   if (fee.error) return res.status(400).json({ error: fee.error });
 
-  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
+  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCiEMj';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || 'ToAZvgHo0GlOkbdkfV4WcU51';
   if (!keyId || !keySecret) {
     console.error('[create-event-order] Razorpay credentials missing');
     return res.status(500).json({ error: 'Payment gateway configuration error' });
