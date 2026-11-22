@@ -6,7 +6,7 @@ import { finalizeEventPayment } from './_finalizeEventPayment.js';
 // Razorpay signs the RAW body, so Vercel's body parser must be off.
 export const config = { api: { bodyParser: false } };
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
 
 async function readRaw(req) {
   const chunks = [];
@@ -28,10 +28,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET;
   const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
   if (!webhookSecret || !keyId || !keySecret || !serviceKey) {
     console.error('[razorpay-webhook] missing env (RAZORPAY_WEBHOOK_SECRET / keys / service role)');
     return res.status(500).json({ error: 'Not configured' });

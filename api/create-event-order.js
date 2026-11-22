@@ -2,10 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import { sanitizeAlphaNumDash, checkRateLimit, setSecureCorsHeaders } from './_security.js';
 import { computeFee } from './_eventFees.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
 const SUPABASE_ANON =
-  process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
 
 /**
  * POST /api/create-event-order
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
   if (fee.error) return res.status(400).json({ error: fee.error });
 
   const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET;
   if (!keyId || !keySecret) {
     console.error('[create-event-order] Razorpay credentials missing');
     return res.status(500).json({ error: 'Payment gateway configuration error' });

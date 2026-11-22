@@ -4,8 +4,15 @@
  */
 
 const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
-export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
-export const RAZORPAY_PAYMENT_PAGE_URL = import.meta.env.VITE_RAZORPAY_PAYMENT_LINK || 'https://razorpay.me/@igimscerebrexia2026';
+export const RAZORPAY_KEY_ID =
+  import.meta.env.VITE_RAZORPAY_KEY_ID ||
+  import.meta.env.RAZORPAY_KEY_ID ||
+  '';
+export const RAZORPAY_PAYMENT_PAGE_URL =
+  import.meta.env.VITE_RAZORPAY_PAYMENT_LINK ||
+  import.meta.env.RAZORPAY_PAYMENT_LINK ||
+  import.meta.env.VITE_RAZORPAY_PAYMENT_PAGE_URL ||
+  'https://razorpay.me/@igimscerebrexia2026';
 
 /**
  * Loads the Razorpay checkout.js script asynchronously if not already loaded.
