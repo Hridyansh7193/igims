@@ -67,15 +67,15 @@ export const ACCOMMODATION_STEPS = [
     text: 'BR is mandatory — no accommodation is provided without availing Basic Registration.',
   },
   {
-    title: 'Select Dates & Pay ₹150/Day',
-    text: 'Choose your stay dates (17, 18, 19, or 20 Dec) at ₹150/day and book instantly via Razorpay.',
+    title: 'Register for accommodation',
+    text: 'Register for your stay at ₹150/day, available for both boys and girls, for 17 – 20 Dec.',
   },
   {
-    title: 'Instant Booking Pass',
-    text: 'Receive your verified digital accommodation voucher with confirmed room allocation details.',
+    title: 'Arrival',
+    text: 'Carry your college ID card or Aadhaar card at all times. Meal timings and schedule are shared on arrival / during registration.',
   },
   {
-    title: 'Arrival on Campus',
-    text: 'Carry your college ID or Aadhaar card for check-in at the accommodation desk.',
+    title: 'Need help?',
+    text: 'Reach out to the accommodation team using the contact numbers below.',
   },
 ];

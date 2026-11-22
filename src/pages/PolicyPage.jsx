@@ -470,10 +470,10 @@ function PricingContent() {
               Hostel Accommodation (Optional)
             </span>
             <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--cream)', margin: '6px 0 8px' }}>
-              ₹150
+              ₹150 / day
             </div>
             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-              4-day campus stay (27 &ndash; 30 Nov) in secured Boys' Hostel rooms or Girls' Lodgings with 24x7 security, water, and Wi-Fi access.
+              Campus stay (17 &ndash; 20 Dec) in secured Boys' Hostel rooms or Girls' Lodgings with 24x7 security, water, and Wi-Fi access.
             </p>
           </div>
         </div>
@@ -504,7 +504,7 @@ function PricingContent() {
           <p style={{ margin: '0 0 6px', color: 'var(--cream)', fontWeight: 600 }}>Collection Counter Details:</p>
           <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
             Location: Central Registration Counter, Administrative Block, IGIMS Campus, Sheikhpura, Patna.<br />
-            Operating Timings: 8:30 AM &ndash; 7:00 PM throughout the festival days (27 &ndash; 30 Nov).<br />
+            Operating Timings: 8:30 AM &ndash; 7:00 PM throughout the festival days (17 &ndash; 20 Dec).<br />
             Requirement: Present your digital QR credential on your mobile screen along with your college identity card.
           </p>
         </div>
