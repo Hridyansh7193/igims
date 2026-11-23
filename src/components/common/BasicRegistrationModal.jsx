@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -77,6 +78,21 @@ export default function BasicRegistrationModal({
   });
 
   // Additional Group Members (Index 0 = Member 2, Index 1 = Member 3, etc.)
+  const getBlankMember = (coll = leadForm) => ({
+    first_name: '',
+    surname: '',
+    phone_number: '',
+    email: '',
+    college_name: coll?.college_name || '',
+    city_of_college: coll?.city_of_college || '',
+    state_of_college: coll?.state_of_college || '',
+  });
+
+  const createBlankMembers = (size, coll = leadForm) => {
+    const needed = Math.max(1, (size || groupSize) - 1);
+    return Array.from({ length: needed }, () => getBlankMember(coll));
+  };
+
   const [groupMembers, setGroupMembers] = useState([
     { first_name: '', surname: '', phone_number: '', email: '', college_name: '', city_of_college: '', state_of_college: '' },
   ]);
@@ -121,22 +137,14 @@ export default function BasicRegistrationModal({
     if (regType === 'GROUP') {
       const neededMembersCount = Math.max(1, groupSize - 1);
       setGroupMembers((prev) => {
-        const next = [...prev];
+        const next = Array.isArray(prev) ? [...prev] : [];
         while (next.length < neededMembersCount) {
-          next.push({
-            first_name: '',
-            surname: '',
-            phone_number: '',
-            email: '',
-            college_name: leadForm.college_name || '',
-            city_of_college: leadForm.city_of_college || '',
-            state_of_college: leadForm.state_of_college || '',
-          });
+          next.push(getBlankMember());
         }
         return next.slice(0, neededMembersCount);
       });
     }
-  }, [groupSize, regType, leadForm.college_name, leadForm.city_of_college, leadForm.state_of_college]);
+  }, [groupSize, regType]);
 
   // Clamp activeMemberTab if groupSize decreases
   useEffect(() => {
@@ -194,15 +202,24 @@ export default function BasicRegistrationModal({
               state_of_college: p.college_state || p.state_of_college || prev.state_of_college,
             }));
           }
-          if (br) {
+          if (br && br.payment_status === 'PAID') {
             setExistingBR(br);
             if (br.registration_type === 'GROUP' && br.group_size) {
               setRegType('GROUP');
               setGroupSize(Math.min(MAX_GROUP_SIZE, br.group_size));
               if (Array.isArray(br.group_members) && br.group_members.length > 0) {
-                setGroupMembers(br.group_members);
+                // Filter out LEAD member so they are not duplicated into groupMembers
+                const nonLead = br.group_members.filter((m) => m.role !== 'LEAD');
+                setGroupMembers(nonLead.length > 0 ? nonLead : br.group_members.slice(1));
               }
             }
+          } else {
+            // Unpaid / pending attempts are not active registrations:
+            // Do not treat as existing registration and clear cached pending registration
+            setExistingBR(null);
+            try {
+              localStorage.removeItem('crx_basic_reg_' + user.id);
+            } catch (_) {}
           }
         }
       } catch (err) {
@@ -515,14 +532,23 @@ export default function BasicRegistrationModal({
           }
         },
         onDismiss: () => {
-          console.info('[Razorpay] Payment dismissed by user.');
-          // Clear stale pending data so a fresh order is created if the user
-          // changes group size and re-submits.
+          console.info('[Razorpay] Payment dismissed or cancelled by user.');
           setPendingRegistration(null);
+          // As requested: when user returns from payment without completing it,
+          // reset member details so they must fill in their details again for all candidates
+          if (regType === 'GROUP') {
+            setGroupMembers(createBlankMembers(groupSize));
+            setActiveMemberTab(0);
+          }
+          setError('Payment was not completed. Candidate details have been reset — please re-enter member information to proceed.');
         },
         onFallbackPrompt: () => {
           console.info('[Razorpay] Payment cancelled or dismissed.');
           setPendingRegistration(null);
+          if (regType === 'GROUP') {
+            setGroupMembers(createBlankMembers(groupSize));
+            setActiveMemberTab(0);
+          }
         },
       });
     } catch (err) {
@@ -576,7 +602,10 @@ export default function BasicRegistrationModal({
     m?.college_name?.trim()
   );
   const additionalCompletedCount = groupMembers.filter(isMemberCompleted).length;
-  const totalCompletedCount = (leadCompleted ? 1 : 0) + additionalCompletedCount;
+  const totalCompletedCount = Math.min(
+    groupSize,
+    (leadCompleted ? 1 : 0) + additionalCompletedCount
+  );
 
   // Group size options array: 2 to 50
   const allGroupOptions = Array.from({ length: 49 }, (_, i) => i + 2);
@@ -1195,28 +1224,56 @@ export default function BasicRegistrationModal({
                   </div>
                 </div>
 
-                {/* Bulk Copy Lead College button */}
-                <button
-                  type="button"
-                  onClick={applyLeadCollegeToAll}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    background: bulkCollegeCopied ? 'rgba(34, 197, 94, 0.2)' : 'rgba(212, 175, 106, 0.12)',
-                    border: '1px solid ' + (bulkCollegeCopied ? '#22c55e' : 'rgba(212, 175, 106, 0.35)'),
-                    borderRadius: 8,
-                    padding: '6px 12px',
-                    color: bulkCollegeCopied ? '#22c55e' : 'var(--crx-gold, #D4AF37)',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                  title="Copies lead college name, city, and state to all group members"
-                >
-                  <CheckCheck size={14} />
-                  {bulkCollegeCopied ? 'Copied to all 50 members!' : 'Apply Lead College to All Members'}
-                </button>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {/* Reset Members Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGroupMembers(createBlankMembers(groupSize));
+                      setActiveMemberTab(0);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: 8,
+                      padding: '6px 10px',
+                      color: '#fca5a5',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                    title="Clear member information to enter fresh details"
+                  >
+                    <RefreshCw size={13} />
+                    Reset Members
+                  </button>
+
+                  {/* Bulk Copy Lead College button */}
+                  <button
+                    type="button"
+                    onClick={applyLeadCollegeToAll}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: bulkCollegeCopied ? 'rgba(34, 197, 94, 0.2)' : 'rgba(212, 175, 106, 0.12)',
+                      border: '1px solid ' + (bulkCollegeCopied ? '#22c55e' : 'rgba(212, 175, 106, 0.35)'),
+                      borderRadius: 8,
+                      padding: '6px 12px',
+                      color: bulkCollegeCopied ? '#22c55e' : 'var(--crx-gold, #D4AF37)',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                    title="Copies lead college name, city, and state to all group members"
+                  >
+                    <CheckCheck size={14} />
+                    {bulkCollegeCopied ? 'Copied to all 50 members!' : 'Apply Lead College to All Members'}
+                  </button>
+                </div>
               </div>
 
               {/* Navigation Bar for Selecting Member (Dropdown + Pager) */}
