@@ -24,6 +24,28 @@ function createTicketNumber(prefix = 'BR', suffix = '') {
 export async function issueTicketsForBasicRegistration(userId, basicReg, paymentDetails = {}) {
   if (!userId || !basicReg) return [];
 
+  // 1. Guard against duplicate ticket issuance & duplicate emails (Idempotency)
+  try {
+    let existingQuery = supabase
+      .from('tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('pass_type', 'BASIC_REGISTRATION_PRONITES');
+
+    if (basicReg.id) {
+      existingQuery = existingQuery.eq('basic_registration_id', basicReg.id);
+    }
+
+    const { data: existingTickets } = await existingQuery;
+
+    if (existingTickets && existingTickets.length > 0) {
+      console.info(`[ticketService] Found ${existingTickets.length} existing BR tickets for user ${userId}. Skipping duplicate issuance and email dispatch.`);
+      return existingTickets;
+    }
+  } catch (err) {
+    console.warn('[ticketService] Error checking existing tickets:', err);
+  }
+
   // Fetch participant profile if basicReg does not contain attendee contact info
   let fallbackName = 'Cerebrexia Delegate';
   let fallbackEmail = basicReg.user_email || basicReg.email || '';
@@ -58,20 +80,35 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
   }
 
   const registrationType = basicReg.registration_type || 'SINGLE';
-  const groupMembers = Array.isArray(basicReg.group_members) ? basicReg.group_members : [];
+  const rawGroupMembers = Array.isArray(basicReg.group_members) ? basicReg.group_members : [];
   const baseTicketNum = createTicketNumber('BR');
 
   const ticketsToInsert = [];
 
-  if (registrationType === 'GROUP' && groupMembers.length > 0) {
-    // Generate individual ticket for each member in the group
+  if (registrationType === 'GROUP') {
+    // Strictly cap the ticket count to basicReg.group_size (e.g., exactly 2 tickets for a group of 2)
+    const targetSize = Math.max(1, Number(basicReg.group_size) || (rawGroupMembers.length > 0 ? rawGroupMembers.length : 2));
+    const groupMembers = rawGroupMembers.slice(0, targetSize);
+
+    // If rawGroupMembers had fewer items than targetSize, fill up to targetSize
+    while (groupMembers.length < targetSize) {
+      groupMembers.push({
+        first_name: '',
+        surname: '',
+        phone_number: fallbackPhone,
+        email: fallbackEmail,
+        college_name: fallbackCollege,
+      });
+    }
+
+    // Generate individual ticket for each member in the group (exactly targetSize tickets)
     groupMembers.forEach((member, index) => {
       const isLead = index === 0 || member.role === 'LEAD';
       const ticketNum = `${baseTicketNum}-${String(index + 1).padStart(2, '0')}`;
       const fullName = `${member.first_name || ''} ${member.surname || ''}`.trim() || (isLead ? fallbackName : `Group Member ${index + 1}`);
 
       const memberEmail = (member.email || '').trim().toLowerCase();
-      const attendeeEmail = memberEmail || (isLead ? (fallbackEmail || '').trim().toLowerCase() : '') || '';
+      const attendeeEmail = memberEmail || (isLead ? (fallbackEmail || '').trim().toLowerCase() : '') || fallbackEmail || '';
 
       ticketsToInsert.push({
         ticket_number: ticketNum,
@@ -86,7 +123,7 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
         pass_type: 'BASIC_REGISTRATION_PRONITES',
         payment_status: 'PAID',
         metadata: {
-          group_size: groupMembers.length,
+          group_size: targetSize,
           member_index: index + 1,
           member_role: isLead ? 'LEAD' : `MEMBER_${index + 1}`,
           razorpay_payment_id: paymentDetails.razorpay_payment_id || null,

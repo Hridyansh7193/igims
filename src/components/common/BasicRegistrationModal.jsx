@@ -445,7 +445,7 @@ export default function BasicRegistrationModal({
           state_of_college: leadForm.state_of_college.trim(),
         },
         ...(regType === 'GROUP'
-          ? groupMembers.map((m, idx) => ({
+          ? groupMembers.slice(0, Math.max(0, groupSize - 1)).map((m, idx) => ({
               role: `MEMBER_${idx + 2}`,
               first_name: m.first_name.trim(),
               surname: m.surname.trim(),
