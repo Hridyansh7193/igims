@@ -511,9 +511,13 @@ export default function BasicRegistrationModal({
         },
         onDismiss: () => {
           console.info('[Razorpay] Payment dismissed by user.');
+          // Clear stale pending data so a fresh order is created if the user
+          // changes group size and re-submits.
+          setPendingRegistration(null);
         },
         onFallbackPrompt: () => {
           console.info('[Razorpay] Payment cancelled or dismissed.');
+          setPendingRegistration(null);
         },
       });
     } catch (err) {
@@ -789,7 +793,7 @@ export default function BasicRegistrationModal({
             {/* Single Registration Card */}
             <button
               type="button"
-              onClick={() => { setRegType('SINGLE'); setActiveMemberTab(0); }}
+              onClick={() => { if (!pendingRegistration) { setRegType('SINGLE'); setActiveMemberTab(0); } }}
               style={{
                 background: regType === 'SINGLE'
                   ? 'linear-gradient(135deg, rgba(212, 175, 106, 0.16) 0%, rgba(192, 57, 43, 0.16) 100%)'
@@ -834,7 +838,7 @@ export default function BasicRegistrationModal({
             {/* Group Registration Card */}
             <button
               type="button"
-              onClick={() => setRegType('GROUP')}
+              onClick={() => { if (!pendingRegistration) setRegType('GROUP'); }}
               style={{
                 background: regType === 'GROUP'
                   ? 'linear-gradient(135deg, rgba(212, 175, 106, 0.16) 0%, rgba(192, 57, 43, 0.16) 100%)'
@@ -1027,8 +1031,10 @@ export default function BasicRegistrationModal({
                           <div
                             key={num}
                             onClick={() => {
-                              setGroupSize(num);
-                              setGroupDropdownOpen(false);
+                              if (!pendingRegistration) {
+                                setGroupSize(num);
+                                setGroupDropdownOpen(false);
+                              }
                             }}
                             style={{
                               display: 'flex',
@@ -1078,8 +1084,8 @@ export default function BasicRegistrationModal({
               {/* Quick Stepper Buttons */}
               <button
                 type="button"
-                onClick={() => setGroupSize((prev) => Math.max(2, prev - 1))}
-                disabled={groupSize <= 2}
+                onClick={() => { if (!pendingRegistration) setGroupSize((prev) => Math.max(2, prev - 1)); }}
+                disabled={groupSize <= 2 || !!pendingRegistration}
                 style={{
                   width: 44,
                   height: 44,
@@ -1101,8 +1107,8 @@ export default function BasicRegistrationModal({
 
               <button
                 type="button"
-                onClick={() => setGroupSize((prev) => Math.min(MAX_GROUP_SIZE, prev + 1))}
-                disabled={groupSize >= MAX_GROUP_SIZE}
+                onClick={() => { if (!pendingRegistration) setGroupSize((prev) => Math.min(MAX_GROUP_SIZE, prev + 1)); }}
+                disabled={groupSize >= MAX_GROUP_SIZE || !!pendingRegistration}
                 style={{
                   width: 44,
                   height: 44,
@@ -1134,7 +1140,7 @@ export default function BasicRegistrationModal({
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setGroupSize(n)}
+                    onClick={() => { if (!pendingRegistration) setGroupSize(n); }}
                     style={{
                       background: groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
                       color: groupSize === n ? '#000' : 'rgba(255,255,255,0.85)',
