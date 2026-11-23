@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { issueTicketsForBasicRegistration, issueTicketForEventRegistration } from './ticketService.js';
+import { issueTicketsForBasicRegistration } from './ticketService.js';
 
 /**
  * Automatically synchronizes candidate and registration updates to Google Sheets in the background
@@ -492,11 +492,6 @@ export async function addRegisteredEvent(userId, eventName, userMetadata, catego
         category      : categoryKey || 'Cultural',
       }, { onConflict: 'user_id,event_name' });
     }
-
-    // Automatically issue Event QR ticket and email to attendee with copy to cerebrexia01@gmail.com
-    issueTicketForEventRegistration(userId, eventName, isSport ? 'Sports' : (categoryKey || 'Cultural')).catch((tktErr) => {
-      console.warn('[eventsService] Event ticket issuance warning:', tktErr);
-    });
 
     triggerGoogleSheetsSync(isSport ? 'SPORTS' : 'CULTURAL', {
       event_name: eventName,

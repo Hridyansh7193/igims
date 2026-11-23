@@ -190,103 +190,12 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
 }
 
 /**
- * Issues an official QR event pass in Supabase when an attendee registers for an event,
- * and immediately dispatches the pass email from thecerebrexia17@gmail.com with a copy to cerebrexia01@gmail.com.
+ * Event registration QR codes/emails disabled as requested.
+ * Only Basic Registration (BR) passes are generated and emailed to attendees.
  */
 export async function issueTicketForEventRegistration(userId, eventName, categoryKey = 'Cultural', additionalData = {}) {
-  if (!userId || !eventName) return null;
-
-  try {
-    // 1. Check if an active ticket for this event already exists for this user to avoid duplicates
-    const { data: existing } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('pass_type', 'EVENT_PASS')
-      .contains('metadata', { event_name: eventName })
-      .maybeSingle();
-
-    if (existing) {
-      console.info(`[ticketService] Ticket already exists for ${eventName}:`, existing.ticket_number);
-      return existing;
-    }
-
-    // 2. Fetch attendee details from participants profile or auth session
-    let attendeeName = 'Cerebrexia Participant';
-    let attendeeEmail = '';
-    let attendeePhone = '';
-    let attendeeCollege = '';
-
-    const { data: profile } = await supabase
-      .from('participants')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (profile) {
-      attendeeName = `${profile.first_name || ''} ${profile.last_name || profile.surname || ''}`.trim() || attendeeName;
-      attendeeEmail = profile.email || profile.user_email || '';
-      attendeePhone = profile.phone_number || '';
-      attendeeCollege = profile.college_name || '';
-    }
-
-    if (!attendeeEmail) {
-      const { data: authData } = await supabase.auth.getUser();
-      attendeeEmail = authData?.user?.email || '';
-      if (!attendeeName || attendeeName === 'Cerebrexia Participant') {
-        attendeeName = authData?.user?.user_metadata?.full_name || authData?.user?.user_metadata?.name || 'Cerebrexia Participant';
-      }
-    }
-
-    const ticketNumber = createTicketNumber('EV');
-    const qrToken = createSecureToken();
-
-    const ticketRecord = {
-      ticket_number: ticketNumber,
-      user_id: userId,
-      attendee_name: attendeeName,
-      attendee_email: attendeeEmail,
-      attendee_phone: attendeePhone,
-      attendee_college: attendeeCollege,
-      role: 'PARTICIPANT',
-      qr_token: qrToken,
-      pass_type: 'EVENT_PASS',
-      payment_status: 'PAID',
-      metadata: {
-        event_name: eventName,
-        category: categoryKey,
-        ...additionalData,
-      },
-    };
-
-    let savedTicket = null;
-    const { data: inserted, error: insertErr } = await supabase
-      .from('tickets')
-      .insert([ticketRecord])
-      .select()
-      .maybeSingle();
-
-    if (insertErr) {
-      console.warn('[ticketService] Event ticket insert warning:', insertErr);
-      savedTicket = { ...ticketRecord, id: 'local_ev_' + Date.now() };
-    } else {
-      savedTicket = inserted || ticketRecord;
-    }
-
-    // 3. Dispatch pass email with QR code (sent from thecerebrexia17@gmail.com, copy to cerebrexia01@gmail.com)
-    if (savedTicket.attendee_email) {
-      try {
-        await dispatchTicketEmail(savedTicket, 1);
-      } catch (err) {
-        console.warn('[ticketService] Event ticket email dispatch error:', err);
-      }
-    }
-
-    return savedTicket;
-  } catch (err) {
-    console.error('[ticketService] issueTicketForEventRegistration error:', err);
-    return null;
-  }
+  // No-op: Only Basic Registration (BR) issues QR passes and emails
+  return null;
 }
 
 /**
@@ -321,7 +230,11 @@ export async function dispatchTicketEmail(ticket, groupSize = 1) {
 export async function fetchUserTickets(userId, userEmail = '') {
   if (!userId && !userEmail) return [];
   try {
-    let query = supabase.from('tickets').select('*');
+    let query = supabase
+      .from('tickets')
+      .select('*')
+      .eq('pass_type', 'BASIC_REGISTRATION_PRONITES');
+
     if (userId && userEmail) {
       query = query.or(`user_id.eq.${userId},attendee_email.eq.${userEmail}`);
     } else if (userId) {
