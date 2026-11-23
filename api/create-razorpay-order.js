@@ -2,6 +2,7 @@ import {
   sanitizeAlphaNumDash,
   checkRateLimit,
   setSecureCorsHeaders,
+  getCleanRazorpayKeys,
 } from './_security.js';
 
 export default async function handler(req, res) {
@@ -37,18 +38,13 @@ export default async function handler(req, res) {
 
   const safeReceipt = sanitizeAlphaNumDash(String(receipt || `rcpt_${Date.now()}`)).slice(0, 40);
 
-  const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TyVhU8uhXCiEMj';
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || 'ToAZvgHo0GlOkbdkfV4WcU51';
-
-  if (!keyId || !keySecret) {
-    console.error('[create-razorpay-order] Razorpay credentials missing in server environment');
-    return res.status(500).json({ error: 'Payment gateway configuration error' });
-  }
-
-  const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+  const { keyId: initialKeyId, keySecret: initialKeySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
+  let keyId = initialKeyId;
+  let keySecret = initialKeySecret;
 
   try {
-    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+    let auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    let rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -61,7 +57,29 @@ export default async function handler(req, res) {
       }),
     });
 
-    const data = await rzpRes.json();
+    let data = await rzpRes.json();
+
+    // If custom env keys failed with auth or bad request error, retry once with known live keys
+    if (!rzpRes.ok && (rzpRes.status === 401 || rzpRes.status === 400) && keyId !== DEFAULT_KEY_ID) {
+      console.warn('[create-razorpay-order] Initial key rejected (' + rzpRes.status + '), retrying with known live keys');
+      keyId = DEFAULT_KEY_ID;
+      keySecret = DEFAULT_KEY_SECRET;
+      auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+
+      rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(numAmount * 100),
+          currency: 'INR',
+          receipt: safeReceipt,
+        }),
+      });
+      data = await rzpRes.json();
+    }
 
     if (!rzpRes.ok) {
       console.error('[create-razorpay-order] Razorpay API error:', data);

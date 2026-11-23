@@ -16,6 +16,7 @@ import {
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
 import { fetchUserTickets, issueTicketsForBasicRegistration, dispatchTicketEmail } from '../lib/ticketService';
 import { validatePromoCodeOnline } from '../lib/promoService';
+import { calculateDefaultGroupOffer } from '../constants/promoCodes';
 import TicketCard from '../components/common/TicketCard';
 
 export default function DashboardPage({ setPage }) {
@@ -155,8 +156,16 @@ export default function DashboardPage({ setPage }) {
     loadData();
   };
 
-  const baseFee = 2000;
-  const discountAmount = appliedPromo ? Math.round((baseFee * (appliedPromo.value || 0)) / 100) : 0;
+  // Group vs Single Basic Registration pricing
+  const isGroupBR = basicReg?.registration_type === 'GROUP';
+  const groupCount = isGroupBR ? Math.max(2, Number(basicReg?.group_size) || 2) : 1;
+  const groupOffer = calculateDefaultGroupOffer(groupCount, 2000);
+  const baseFee = isGroupBR ? groupOffer.groupPayable : 2000;
+  const discountAmount = appliedPromo
+    ? (appliedPromo.type === 'percent'
+        ? Math.round((baseFee * (appliedPromo.value || 0)) / 100)
+        : Math.min(baseFee, appliedPromo.value || 0))
+    : (basicReg?.coupon_discount || 0);
   const finalPayable = Math.max(0, baseFee - discountAmount);
 
   const handleApplyPromo = async (e) => {
@@ -172,8 +181,9 @@ export default function DashboardPage({ setPage }) {
     setValidatingPromo(true);
     try {
       const res = await validatePromoCodeOnline(cleanCode, {
-        payableMembers: 1,
+        payableMembers: isGroupBR ? groupOffer.payableMembers : 1,
         payableSubtotal: baseFee,
+        totalMembers: groupCount,
       });
 
       if (res.valid) {
@@ -209,7 +219,7 @@ export default function DashboardPage({ setPage }) {
           razorpay_payment_id: `free_${appliedPromo?.code || 'vip'}_${Date.now()}`,
           razorpay_order_id: `order_free_${Date.now()}`,
           method: 'PROMO_100_FREE',
-          promo_code: appliedPromo?.code || null,
+          promo_code: appliedPromo?.code || basicReg?.promo_code || null,
           discount_amount: discountAmount,
           final_amount: 0,
         });
@@ -226,7 +236,9 @@ export default function DashboardPage({ setPage }) {
     setPaying(true);
     openRazorpayCheckout({
       amount: finalPayable,
-      description: `Cerebrexia '26 | Basic Registration (BR)${appliedPromo ? ` [${appliedPromo.code}]` : ''}`,
+      description: isGroupBR
+        ? `Cerebrexia '26 — Group Basic Registration (BR) (${groupCount} Members)`
+        : `Cerebrexia '26 | Basic Registration (BR)${appliedPromo ? ` [${appliedPromo.code}]` : ''}`,
       prefill: {
         name: participant ? `${participant.first_name || ''} ${participant.surname || ''}`.trim() : '',
         email: user?.email || '',
@@ -236,7 +248,7 @@ export default function DashboardPage({ setPage }) {
         try {
           await markBasicRegistrationPaid(user.id, {
             ...rzpRes,
-            promo_code: appliedPromo?.code || null,
+            promo_code: appliedPromo?.code || basicReg?.promo_code || null,
             discount_amount: discountAmount,
             final_amount: finalPayable,
           });
@@ -435,14 +447,16 @@ export default function DashboardPage({ setPage }) {
                   Delegate Fee
                 </span>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#fca5a5' }}>
-                  {basicReg ? 'Basic Registration (BR)' : 'Festival delegate registration'}
+                  {isGroupBR
+                    ? `Group Registration (${groupCount} Members${groupOffer.freeMembers > 0 ? ` • ${groupOffer.freeMembers} Free` : ''})`
+                    : basicReg ? 'Basic Registration (BR)' : 'Festival delegate registration'}
                   {appliedPromo && ` • ${appliedPromo.code} (${appliedPromo.value}% OFF)`}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                {discountAmount > 0 && (
+                {(discountAmount > 0 || groupOffer.groupDiscount > 0) && (
                   <span style={{ fontSize: 13, textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', display: 'block' }}>
-                    ₹2000
+                    ₹{(groupOffer.baseTotal || baseFee).toLocaleString('en-IN')}
                   </span>
                 )}
                 <span style={{ fontSize: 26, fontWeight: 800, color: finalPayable === 0 ? '#22c55e' : '#fff' }}>
@@ -787,7 +801,9 @@ export default function DashboardPage({ setPage }) {
                       <div>
                         <span style={{ fontSize: 11, color: 'var(--muted)', display: 'block' }}>Pass Type</span>
                         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cream)' }}>
-                          {basicReg.registration_type === 'GROUP' ? `Group Pass (${basicReg.group_size || 2} Members)` : 'Single Pass'}
+                          {isGroupBR
+                            ? `Group Pass (${groupCount} Members${groupOffer.freeMembers > 0 ? ` • ${groupOffer.freeMembers} Free` : ''})`
+                            : 'Single Pass'}
                         </span>
                       </div>
                       <button

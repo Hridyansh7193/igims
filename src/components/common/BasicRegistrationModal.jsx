@@ -111,6 +111,11 @@ export default function BasicRegistrationModal({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  // Clear any stale pending registration if group size or regType changes
+  useEffect(() => {
+    setPendingRegistration(null);
+  }, [groupSize, regType]);
+
   // Sync groupMembers array length when groupSize changes (supporting up to 50)
   useEffect(() => {
     if (regType === 'GROUP') {
@@ -793,7 +798,7 @@ export default function BasicRegistrationModal({
             {/* Single Registration Card */}
             <button
               type="button"
-              onClick={() => { if (!pendingRegistration) { setRegType('SINGLE'); setActiveMemberTab(0); } }}
+              onClick={() => { setRegType('SINGLE'); setActiveMemberTab(0); }}
               style={{
                 background: regType === 'SINGLE'
                   ? 'linear-gradient(135deg, rgba(212, 175, 106, 0.16) 0%, rgba(192, 57, 43, 0.16) 100%)'
@@ -838,7 +843,7 @@ export default function BasicRegistrationModal({
             {/* Group Registration Card */}
             <button
               type="button"
-              onClick={() => { if (!pendingRegistration) setRegType('GROUP'); }}
+              onClick={() => setRegType('GROUP')}
               style={{
                 background: regType === 'GROUP'
                   ? 'linear-gradient(135deg, rgba(212, 175, 106, 0.16) 0%, rgba(192, 57, 43, 0.16) 100%)'
@@ -1031,10 +1036,8 @@ export default function BasicRegistrationModal({
                           <div
                             key={num}
                             onClick={() => {
-                              if (!pendingRegistration) {
-                                setGroupSize(num);
-                                setGroupDropdownOpen(false);
-                              }
+                              setGroupSize(num);
+                              setGroupDropdownOpen(false);
                             }}
                             style={{
                               display: 'flex',
@@ -1084,8 +1087,8 @@ export default function BasicRegistrationModal({
               {/* Quick Stepper Buttons */}
               <button
                 type="button"
-                onClick={() => { if (!pendingRegistration) setGroupSize((prev) => Math.max(2, prev - 1)); }}
-                disabled={groupSize <= 2 || !!pendingRegistration}
+                onClick={() => setGroupSize((prev) => Math.max(2, prev - 1))}
+                disabled={groupSize <= 2}
                 style={{
                   width: 44,
                   height: 44,
@@ -1107,8 +1110,8 @@ export default function BasicRegistrationModal({
 
               <button
                 type="button"
-                onClick={() => { if (!pendingRegistration) setGroupSize((prev) => Math.min(MAX_GROUP_SIZE, prev + 1)); }}
-                disabled={groupSize >= MAX_GROUP_SIZE || !!pendingRegistration}
+                onClick={() => setGroupSize((prev) => Math.min(MAX_GROUP_SIZE, prev + 1))}
+                disabled={groupSize >= MAX_GROUP_SIZE}
                 style={{
                   width: 44,
                   height: 44,
@@ -1140,7 +1143,7 @@ export default function BasicRegistrationModal({
                   <button
                     key={n}
                     type="button"
-                    onClick={() => { if (!pendingRegistration) setGroupSize(n); }}
+                    onClick={() => setGroupSize(n)}
                     style={{
                       background: groupSize === n ? 'var(--crx-gold, #D4AF37)' : 'rgba(255,255,255,0.06)',
                       color: groupSize === n ? '#000' : 'rgba(255,255,255,0.85)',
