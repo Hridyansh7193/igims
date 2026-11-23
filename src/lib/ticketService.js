@@ -126,7 +126,9 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
           group_size: targetSize,
           member_index: index + 1,
           member_role: isLead ? 'LEAD' : `MEMBER_${index + 1}`,
-          razorpay_payment_id: paymentDetails.razorpay_payment_id || null,
+          razorpay_payment_id: paymentDetails.razorpay_payment_id || basicReg.razorpay_payment_id || null,
+          razorpay_order_id: paymentDetails.razorpay_order_id || basicReg.razorpay_order_id || null,
+          promo_code: paymentDetails.promo_code || basicReg.promo_code || null,
         },
       });
     });
@@ -147,7 +149,9 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
       payment_status: 'PAID',
       metadata: {
         group_size: 1,
-        razorpay_payment_id: paymentDetails.razorpay_payment_id || null,
+        razorpay_payment_id: paymentDetails.razorpay_payment_id || basicReg.razorpay_payment_id || null,
+        razorpay_order_id: paymentDetails.razorpay_order_id || basicReg.razorpay_order_id || null,
+        promo_code: paymentDetails.promo_code || basicReg.promo_code || null,
       },
     });
   }

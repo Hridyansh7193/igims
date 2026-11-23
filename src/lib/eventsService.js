@@ -228,8 +228,8 @@ export async function saveBasicRegistration(userId, email, formData, checkoutMet
   const registrationType  = checkoutMeta.registration_type || 'SINGLE';
   const groupSize         = Number(checkoutMeta.group_size) || (registrationType === 'GROUP' ? (checkoutMeta.group_members?.length || 2) : 1);
   const groupMembers      = checkoutMeta.group_members || [];
-  const promoCode         = checkoutMeta.promo_code || null;
-  const discountAmount    = Number(checkoutMeta.discount_amount) || 0;
+  const promoCode         = checkoutMeta.promo_code || checkoutMeta.coupon_code || null;
+  const discountAmount    = Number(checkoutMeta.discount_amount) || Number(checkoutMeta.coupon_discount) || 0;
   const calculatedSubtotal= groupSize * 2000;
   const finalAmount       = typeof checkoutMeta.final_amount === 'number'
     ? checkoutMeta.final_amount
@@ -330,6 +330,13 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
   if (!userId) return null;
   const paymentId = paymentDetails.razorpay_payment_id || `pay_${Date.now()}`;
   const orderId = paymentDetails.razorpay_order_id || null;
+  const promoCode = paymentDetails.promo_code || paymentDetails.coupon_code || null;
+  const discountAmount = paymentDetails.discount_amount != null && !isNaN(Number(paymentDetails.discount_amount))
+    ? Number(paymentDetails.discount_amount)
+    : null;
+  const finalAmount = paymentDetails.final_amount != null && !isNaN(Number(paymentDetails.final_amount))
+    ? Number(paymentDetails.final_amount)
+    : null;
 
   try {
     const local = localStorage.getItem('crx_basic_reg_' + userId);
@@ -338,29 +345,94 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
       parsed.payment_status = 'PAID';
       parsed.razorpay_payment_id = paymentId;
       if (orderId) parsed.razorpay_order_id = orderId;
+      if (promoCode) parsed.promo_code = promoCode;
+      if (discountAmount !== null) parsed.discount_amount = discountAmount;
+      if (finalAmount !== null) parsed.final_amount = finalAmount;
       localStorage.setItem('crx_basic_reg_' + userId, JSON.stringify(parsed));
     }
   } catch (_) {}
 
+  // 1. Update basic_registrations table in database
   try {
-    await supabase.from('basic_registrations')
-      .update({
-        payment_status: 'PAID',
-        razorpay_payment_id: paymentId,
-        updated_at: new Date().toISOString(),
-      })
+    const updatePayload = {
+      payment_status: 'PAID',
+      razorpay_payment_id: paymentId,
+      updated_at: new Date().toISOString(),
+    };
+    if (orderId) updatePayload.razorpay_order_id = orderId;
+    if (promoCode) updatePayload.promo_code = promoCode;
+    if (discountAmount !== null) updatePayload.discount_amount = discountAmount;
+    if (finalAmount !== null) updatePayload.final_amount = finalAmount;
+
+    const { error: updateErr } = await supabase
+      .from('basic_registrations')
+      .update(updatePayload)
       .eq('user_id', userId);
+
+    if (updateErr) {
+      console.warn('[eventsService] Extended update notice, falling back to core columns:', updateErr.message);
+      await supabase
+        .from('basic_registrations')
+        .update({
+          payment_status: 'PAID',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+    }
   } catch (err) {
     console.warn('[eventsService] markBasicRegistrationPaid db notice:', err);
   }
 
+  // 2. Increment promo_codes usage count if a promo code was used
+  if (promoCode) {
+    try {
+      const { data: promoData } = await supabase
+        .from('promo_codes')
+        .select('id, times_used')
+        .eq('code', promoCode)
+        .maybeSingle();
+
+      if (promoData) {
+        await supabase
+          .from('promo_codes')
+          .update({
+            times_used: (promoData.times_used || 0) + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', promoData.id);
+      }
+    } catch (promoErr) {
+      console.warn('[eventsService] promo usage increment notice:', promoErr);
+    }
+  }
+
+  // 3. Mark participant profile as PAID
   try {
     await supabase.from('participants')
       .update({ payment_status: 'PAID', updated_at: new Date().toISOString() })
       .eq('user_id', userId);
   } catch (_) {}
 
-  // Automatically issue QR tickets and dispatch emails to attendee + admin
+  // 4. Update auth user_metadata
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const existingMeta = authData?.user?.user_metadata?.basic_registration || {};
+    await supabase.auth.updateUser({
+      data: {
+        basic_registration: {
+          ...existingMeta,
+          payment_status: 'PAID',
+          razorpay_payment_id: paymentId,
+          ...(orderId ? { razorpay_order_id: orderId } : {}),
+          ...(promoCode ? { promo_code: promoCode } : {}),
+          ...(discountAmount !== null ? { discount_amount: discountAmount } : {}),
+          ...(finalAmount !== null ? { final_amount: finalAmount } : {}),
+        },
+      },
+    });
+  } catch (_) {}
+
+  // 5. Automatically issue QR tickets (BASIC_REGISTRATION_PRONITES only) and dispatch emails
   try {
     let brRecord = null;
     const { data: dbBr } = await supabase
@@ -394,8 +466,20 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
     }
 
     if (brRecord) {
-      await issueTicketsForBasicRegistration(userId, brRecord, paymentDetails);
-      triggerGoogleSheetsSync('BR', { ...brRecord, payment_status: 'PAID', razorpay_payment_id: paymentId });
+      const enrichedPayment = {
+        ...paymentDetails,
+        razorpay_payment_id: paymentId,
+        razorpay_order_id: orderId || brRecord.razorpay_order_id,
+        promo_code: promoCode || brRecord.promo_code,
+      };
+      await issueTicketsForBasicRegistration(userId, brRecord, enrichedPayment);
+      triggerGoogleSheetsSync('BR', {
+        ...brRecord,
+        payment_status: 'PAID',
+        razorpay_payment_id: paymentId,
+        razorpay_order_id: orderId || brRecord.razorpay_order_id,
+        promo_code: promoCode || brRecord.promo_code,
+      });
     }
   } catch (tktErr) {
     console.warn('[eventsService] Ticket issuance error:', tktErr);

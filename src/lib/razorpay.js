@@ -64,6 +64,7 @@ export async function openRazorpayCheckout({
   amount = 2000,
   description = "Basic Registration (BR)",
   prefill = {},
+  notes = {},
   onSuccess,
   onDismiss,
   onFallbackPrompt,
@@ -92,7 +93,7 @@ export async function openRazorpayCheckout({
     const orderRes = await fetch('/api/create-razorpay-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({ amount, notes }),
     });
     if (orderRes.ok) {
       const orderData = await orderRes.json();
@@ -117,6 +118,9 @@ export async function openRazorpayCheckout({
           name: prefill.name || '',
           email: prefill.email || '',
           contact: prefill.contact || '',
+        },
+        notes: {
+          ...notes,
         },
         theme: {
           color: '#C0392B',

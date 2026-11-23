@@ -14,7 +14,7 @@ import {
   fetchCategorizedRegistrations, markBasicRegistrationPaid
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
-import { fetchUserTickets, issueTicketsForBasicRegistration, dispatchTicketEmail } from '../lib/ticketService';
+import { fetchUserTickets, dispatchTicketEmail } from '../lib/ticketService';
 import { validatePromoCodeOnline } from '../lib/promoService';
 import { calculateDefaultGroupOffer } from '../constants/promoCodes';
 import TicketCard from '../components/common/TicketCard';
@@ -245,6 +245,15 @@ export default function DashboardPage({ setPage }) {
         email: user?.email || '',
         contact: participant?.phone_number || '',
       },
+      notes: {
+        type: 'basic_registration',
+        user_id: user?.id || '',
+        registration_type: isGroupBR ? 'GROUP' : 'SINGLE',
+        group_size: String(groupCount),
+        promo_code: appliedPromo?.code || basicReg?.promo_code || '',
+        discount_amount: String(discountAmount),
+        final_amount: String(finalPayable),
+      },
       onSuccess: async (rzpRes) => {
         try {
           await markBasicRegistrationPaid(user.id, {
@@ -279,6 +288,9 @@ export default function DashboardPage({ setPage }) {
         razorpay_payment_id: confirmedId,
         razorpay_order_id: `order_crx_${Date.now()}`,
         method: dashboardPaymentId.trim() ? 'RAZORPAY_ME_VERIFIED' : 'RAZORPAY_GATEWAY',
+        promo_code: appliedPromo?.code || basicReg?.promo_code || null,
+        discount_amount: discountAmount,
+        final_amount: finalPayable,
       });
       await loadData();
       setShowPaymentModal(false);

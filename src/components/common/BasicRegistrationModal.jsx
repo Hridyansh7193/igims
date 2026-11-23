@@ -465,6 +465,7 @@ export default function BasicRegistrationModal({
         free_members: freeMembers,
         group_members: allMembersData,
         group_discount: groupDiscount,
+        promo_code: appliedPromo ? appliedPromo.code : null,
         coupon_code: appliedPromo ? appliedPromo.code : null,
         coupon_discount: couponDiscount,
         discount_amount: totalSavings,
@@ -494,10 +495,19 @@ export default function BasicRegistrationModal({
         await markBasicRegistrationPaid(user.id, {
           razorpay_payment_id: `free_${appliedPromo?.code || 'vip'}_${Date.now()}`,
           razorpay_order_id: `free_ord_${Date.now()}`,
+          promo_code: appliedPromo ? appliedPromo.code : null,
+          discount_amount: totalSavings,
+          final_amount: 0,
         });
         setLoading(false);
         if (onSuccess) {
-          onSuccess(saveRes.profile, saveRes.basicRegistration);
+          onSuccess(saveRes.profile, {
+            ...saveRes.basicRegistration,
+            payment_status: 'PAID',
+            promo_code: appliedPromo ? appliedPromo.code : null,
+            discount_amount: totalSavings,
+            final_amount: 0,
+          });
         } else {
           onClose();
         }
@@ -516,12 +526,34 @@ export default function BasicRegistrationModal({
           email: user?.email || '',
           contact: leadForm.phone_number,
         },
+        notes: {
+          type: 'basic_registration',
+          user_id: user?.id || '',
+          registration_type: regType,
+          group_size: String(totalMemberCount),
+          promo_code: appliedPromo ? appliedPromo.code : '',
+          discount_amount: String(totalSavings),
+          final_amount: String(finalPayable),
+        },
         onSuccess: async (rzpRes) => {
           setLoading(true);
           try {
-            await markBasicRegistrationPaid(user.id, rzpRes);
+            await markBasicRegistrationPaid(user.id, {
+              ...rzpRes,
+              promo_code: appliedPromo ? appliedPromo.code : null,
+              discount_amount: totalSavings,
+              final_amount: finalPayable,
+            });
             if (onSuccess) {
-              onSuccess(saveRes.profile, { ...saveRes.basicRegistration, payment_status: 'PAID' });
+              onSuccess(saveRes.profile, {
+                ...saveRes.basicRegistration,
+                payment_status: 'PAID',
+                promo_code: appliedPromo ? appliedPromo.code : null,
+                discount_amount: totalSavings,
+                final_amount: finalPayable,
+                razorpay_payment_id: rzpRes?.razorpay_payment_id,
+                razorpay_order_id: rzpRes?.razorpay_order_id,
+              });
             } else {
               onClose();
             }
@@ -567,11 +599,17 @@ export default function BasicRegistrationModal({
         razorpay_payment_id: confirmedRzpId,
         razorpay_order_id: `order_crx_${Date.now()}`,
         method: enteredPaymentId.trim() ? 'RAZORPAY_ME_VERIFIED' : 'RAZORPAY_GATEWAY',
+        promo_code: appliedPromo ? appliedPromo.code : null,
+        discount_amount: totalSavings,
+        final_amount: finalPayable,
       });
       if (onSuccess && pendingRegistration) {
         onSuccess(pendingRegistration.profile, {
           ...pendingRegistration.basicRegistration,
           payment_status: 'PAID',
+          promo_code: appliedPromo ? appliedPromo.code : null,
+          discount_amount: totalSavings,
+          final_amount: finalPayable,
           razorpay_payment_id: confirmedRzpId,
         });
       } else {

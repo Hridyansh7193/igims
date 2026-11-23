@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many order requests. Please wait a minute.' });
   }
 
-  const { amount = 2000, currency = 'INR', receipt } = req.body || {};
+  const { amount = 2000, currency = 'INR', receipt, notes } = req.body || {};
 
   // Strict amount validation (OWASP A04: Insecure Design & Price Tampering)
   const numAmount = Number(amount);
@@ -37,6 +37,25 @@ export default async function handler(req, res) {
   }
 
   const safeReceipt = sanitizeAlphaNumDash(String(receipt || `rcpt_${Date.now()}`)).slice(0, 40);
+
+  // Sanitize notes strictly to printable ASCII (32-126) so Razorpay API never throws UTF-8 / emoji error
+  const toAscii = (str, maxLen = 100) =>
+    String(str || '')
+      .replace(/[^\x20-\x7E]/g, '')
+      .trim()
+      .slice(0, maxLen);
+
+  let safeNotes = undefined;
+  if (notes && typeof notes === 'object') {
+    safeNotes = {};
+    for (const [k, v] of Object.entries(notes)) {
+      if (typeof k === 'string' && v != null) {
+        const cleanKey = toAscii(k, 40);
+        const cleanVal = toAscii(v, 250);
+        if (cleanKey) safeNotes[cleanKey] = cleanVal;
+      }
+    }
+  }
 
   const { keyId: initialKeyId, keySecret: initialKeySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
   let keyId = initialKeyId;
@@ -54,6 +73,7 @@ export default async function handler(req, res) {
         amount: Math.round(numAmount * 100), // convert to paise
         currency: 'INR',
         receipt: safeReceipt,
+        ...(safeNotes ? { notes: safeNotes } : {}),
       }),
     });
 
@@ -76,6 +96,7 @@ export default async function handler(req, res) {
           amount: Math.round(numAmount * 100),
           currency: 'INR',
           receipt: safeReceipt,
+          ...(safeNotes ? { notes: safeNotes } : {}),
         }),
       });
       data = await rzpRes.json();
