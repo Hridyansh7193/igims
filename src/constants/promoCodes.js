@@ -42,9 +42,13 @@ export function calculateDefaultGroupOffer(groupSize = 1, pricePerPerson = PRICE
     totalMembers: count,
     freeMembers,
     payableMembers,
+    free: freeMembers,
+    payable: payableMembers,
     baseTotal,
     groupDiscount,
+    discountAmount: groupDiscount,
     groupPayable,
+    payableTotal: groupPayable,
     pricePerPerson,
   };
 }

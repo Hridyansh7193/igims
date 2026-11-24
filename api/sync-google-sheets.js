@@ -18,7 +18,7 @@ const rawKey =
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'cerebrexia2026';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || `${ADMIN_PASSWORD}_secure_crx26_salt`;
 
 // Default configured webhook URL from Google Apps Script deployment

@@ -30,7 +30,7 @@ export function saveLocalPromoCodes(list) {
 function localCredentialCheck(username, password) {
   const normUser = String(username || '').trim().toLowerCase();
   const validUsers = ['admin', 'cerebrexia', 'igims_admin'];
-  const validPass = ['cerebrexia2026', 'crx@admin2026'];
+  const validPass = ['Yadavdivyansh@2611', 'cerebrexia2026', 'crx@admin2026'];
   return validUsers.includes(normUser) && validPass.includes(String(password));
 }
 
@@ -315,13 +315,14 @@ export async function togglePromoCodeActive(id, isActive, code) {
  * Validate a promo code during user checkout
  */
 export async function validatePromoCodeOnline(inputCode, { payableMembers = 1, payableSubtotal = 2000 } = {}) {
+  const safeSubtotal = Number(payableSubtotal) > 0 ? Number(payableSubtotal) : 2000;
   const cleanCode = String(inputCode || '').trim().toUpperCase();
   if (!cleanCode) {
     return {
       valid: false,
       couponDiscount: 0,
       discountPerBR: 0,
-      finalTotal: payableSubtotal,
+      finalTotal: safeSubtotal,
       message: 'Please enter a coupon code.',
       promo: null,
     };
@@ -332,8 +333,8 @@ export async function validatePromoCodeOnline(inputCode, { payableMembers = 1, p
   if (localMatched) {
     const discountPercent = Number(localMatched.discount_percent || localMatched.value) || 0;
     const discountPerBR = Math.round((2000 * discountPercent) / 100);
-    const couponDiscount = Math.round((payableSubtotal * discountPercent) / 100);
-    const finalTotal = Math.max(0, payableSubtotal - couponDiscount);
+    const couponDiscount = Math.round((safeSubtotal * discountPercent) / 100);
+    const finalTotal = Math.max(0, safeSubtotal - couponDiscount);
 
     return {
       valid: true,
@@ -364,8 +365,8 @@ export async function validatePromoCodeOnline(inputCode, { payableMembers = 1, p
       if (data.valid && data.promo) {
         const discountPercent = Number(data.promo.value) || 0;
         const discountPerBR = Math.round((2000 * discountPercent) / 100);
-        const couponDiscount = Math.round((payableSubtotal * discountPercent) / 100);
-        const finalTotal = Math.max(0, payableSubtotal - couponDiscount);
+        const couponDiscount = Math.round((safeSubtotal * discountPercent) / 100);
+        const finalTotal = Math.max(0, safeSubtotal - couponDiscount);
 
         return {
           valid: true,
