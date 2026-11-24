@@ -121,6 +121,8 @@ export default function BookingPortalPage({ setPage }) {
   const [missingLoading, setMissingLoading] = useState(false);
   const [missingMessage, setMissingMessage] = useState(null);
   const [missingError, setMissingError] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncMessage, setSyncMessage] = useState(null);
 
   // Calculate Group Offer and Pricing
   const totalDelegates = regType === 'SINGLE' ? 1 : Math.max(1, Number(groupSize) || 1);
@@ -446,6 +448,32 @@ export default function BookingPortalPage({ setPage }) {
       setMissingError(err.message);
     } finally {
       setMissingLoading(false);
+    }
+  };
+
+  // Handle Sync All Historical Reconciliations
+  const handleSyncAllReconciliations = async () => {
+    setSyncLoading(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch('/api/portal-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-token': session?.token || '',
+        },
+        body: JSON.stringify({ action: 'sync-all-reconciliations' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSyncMessage(data.message || 'All historical payments synced successfully!');
+      } else {
+        setSyncMessage(`Notice: ${data.error || 'Failed to sync'}`);
+      }
+    } catch (err) {
+      setSyncMessage('Error syncing: ' + err.message);
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -1316,7 +1344,35 @@ export default function BookingPortalPage({ setPage }) {
               >
                 + Issue Missing Pass
               </button>
+
+              <button
+                type="button"
+                onClick={handleSyncAllReconciliations}
+                disabled={syncLoading}
+                className="crx-btn"
+                style={{ padding: '0 16px', fontSize: 12, minHeight: 44, color: '#86efac', borderColor: 'rgba(34, 197, 94, 0.4)' }}
+                title="Sync all historical tickets into payment reconciliation table"
+              >
+                <RefreshCw size={12} className={syncLoading ? 'spin' : ''} />
+                {syncLoading ? 'SYNCING...' : '🔄 Sync Database'}
+              </button>
             </form>
+
+            {syncMessage && (
+              <div
+                style={{
+                  background: 'rgba(34, 197, 94, 0.15)',
+                  border: '1px solid rgba(34, 197, 94, 0.35)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  color: '#86efac',
+                  fontSize: 12,
+                  marginTop: 14,
+                }}
+              >
+                ✓ {syncMessage}
+              </div>
+            )}
 
             {searchError && (
               <div

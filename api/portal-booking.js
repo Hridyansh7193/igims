@@ -569,6 +569,90 @@ export default async function handler(req, res) {
     });
   }
 
+  // 8. ACTION: SYNC ALL HISTORICAL RECONCILIATIONS
+  if (req.method === 'POST' && req.body?.action === 'sync-all-reconciliations') {
+    try {
+      const { data: tickets, error: tErr } = await supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (tErr) {
+        return res.status(500).json({ error: tErr.message });
+      }
+
+      const paymentMap = new Map();
+      for (const t of tickets || []) {
+        if (t.pass_type && !t.pass_type.includes('BASIC') && !t.pass_type.includes('CONCERT')) continue;
+        const payId = (t.metadata?.razorpay_payment_id || '').trim();
+        const groupKey = payId || `unlinked_${t.ticket_number}`;
+
+        if (!paymentMap.has(groupKey)) {
+          paymentMap.set(groupKey, {
+            razorpay_payment_id: payId || `unlinked_${t.ticket_number}`,
+            razorpay_order_id: t.metadata?.razorpay_order_id || null,
+            lead_name: t.attendee_name || 'Attendee',
+            lead_email: t.attendee_email || '',
+            lead_phone: t.attendee_phone || '',
+            lead_college: t.attendee_college || '',
+            tickets: [],
+            attendee_names: [],
+            attendee_emails: [],
+            promo_code: t.metadata?.promo_code || null,
+            source: t.metadata?.source || (payId ? 'RAZORPAY_WEB' : 'UNLINKED'),
+            created_at: t.created_at || new Date().toISOString(),
+          });
+        }
+
+        const group = paymentMap.get(groupKey);
+        group.tickets.push(t);
+        group.attendee_names.push(t.attendee_name || 'Delegate');
+        group.attendee_emails.push(t.attendee_email || '');
+        if (!group.promo_code && t.metadata?.promo_code) group.promo_code = t.metadata.promo_code;
+        if (!group.razorpay_order_id && t.metadata?.razorpay_order_id) group.razorpay_order_id = t.metadata.razorpay_order_id;
+      }
+
+      const recordsToUpsert = [];
+      for (const group of paymentMap.values()) {
+        recordsToUpsert.push({
+          razorpay_payment_id: group.razorpay_payment_id,
+          razorpay_order_id: group.razorpay_order_id,
+          lead_name: group.lead_name,
+          lead_email: group.lead_email,
+          lead_phone: group.lead_phone,
+          lead_college: group.lead_college,
+          ticket_count: group.tickets.length,
+          ticket_numbers: group.tickets.map((t) => t.ticket_number),
+          attendee_names: group.attendee_names,
+          attendee_emails: group.attendee_emails,
+          amount_paid: group.tickets.length * 2000,
+          promo_code: group.promo_code,
+          payment_status: 'PAID',
+          source: group.source,
+          created_at: group.created_at,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      const { data: upsertData, error: upsertErr } = await supabase
+        .from('payment_reconciliations')
+        .upsert(recordsToUpsert, { onConflict: 'razorpay_payment_id' })
+        .select();
+
+      if (upsertErr) {
+        return res.status(500).json({ error: upsertErr.message });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully synced ${recordsToUpsert.length} payments covering ${tickets?.length || 0} tickets!`,
+        count: upsertData?.length || recordsToUpsert.length,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   res.setHeader('Allow', 'GET, POST');
   return res.status(405).json({ error: 'Method Not Allowed' });
 }
