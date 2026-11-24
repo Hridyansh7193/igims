@@ -1946,7 +1946,7 @@ export default function BookingPortalPage({ setPage }) {
                       className="crx-btn gold"
                       style={{ flex: 2, justifyContent: 'center', fontSize: 12, fontWeight: 700 }}
                     >
-                      {missingLoading ? 'ISSUING PASS...' : 'GENERATE & EMAIL PASS &rarr;'}
+                      {missingLoading ? 'ISSUING PASS...' : 'GENERATE & EMAIL PASS →'}
                     </button>
                   </div>
                 </form>

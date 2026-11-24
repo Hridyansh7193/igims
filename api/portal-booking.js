@@ -167,7 +167,7 @@ export default async function handler(req, res) {
 
       ticketsToInsert.push({
         ticket_number: tktNum,
-        user_id: deskCandidateUserId,
+        user_id: null, // Null satisfies auth.users FK constraint for desk bookings
         attendee_name: fullName,
         attendee_email: email,
         attendee_phone: phone,
@@ -482,11 +482,27 @@ export default async function handler(req, res) {
 
     const tktNum = createTicketNumber('BR');
     const secureToken = createSecureToken();
-    const candidateUserId = crypto.randomUUID();
+
+    // Look up if this attendee already has an authenticated user_id in tickets
+    let validUserId = null;
+    try {
+      const cleanEmail = String(attendee_email).trim().toLowerCase();
+      const { data: matchedTkt } = await supabase
+        .from('tickets')
+        .select('user_id')
+        .ilike('attendee_email', cleanEmail)
+        .not('user_id', 'is', null)
+        .limit(1)
+        .maybeSingle();
+
+      if (matchedTkt?.user_id) {
+        validUserId = matchedTkt.user_id;
+      }
+    } catch (_) {}
 
     const newTicket = {
       ticket_number: tktNum,
-      user_id: candidateUserId,
+      user_id: validUserId, // NULL if no auth user, which satisfies foreign key constraint
       attendee_name: String(attendee_name).trim(),
       attendee_email: String(attendee_email).trim().toLowerCase(),
       attendee_phone: String(attendee_phone).trim(),
