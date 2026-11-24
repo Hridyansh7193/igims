@@ -244,6 +244,32 @@ export default async function handler(req, res) {
 
       const ticketsList = savedTickets || ticketsToInsert;
 
+      // Upsert to payment_reconciliations table for instant fraud verification
+      if (razorpay_payment_id) {
+        try {
+          await supabase.from('payment_reconciliations').upsert(
+            {
+              razorpay_payment_id: razorpay_payment_id,
+              razorpay_order_id: razorpay_order_id,
+              lead_name: portalBookingRecord.lead_name,
+              lead_email: portalBookingRecord.lead_email,
+              lead_phone: portalBookingRecord.lead_phone,
+              lead_college: portalBookingRecord.lead_college,
+              ticket_count: totalCount,
+              ticket_numbers: generatedTicketNumbers,
+              attendee_names: candidates.map((c) => `${c.first_name || ''} ${c.surname || ''}`.trim()),
+              attendee_emails: candidates.map((c) => (c.email || portalBookingRecord.lead_email || '').trim().toLowerCase()),
+              amount_paid: Number(final_amount) || 0,
+              promo_code: promo_code || null,
+              payment_status: 'PAID',
+              source: 'BOOKING_PORTAL',
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'razorpay_payment_id' }
+          );
+        } catch (_) {}
+      }
+
       // 4. Increment promo_codes usage if applied
       if (promo_code) {
         try {
@@ -326,6 +352,204 @@ export default async function handler(req, res) {
     } catch (err) {
       return res.status(500).json({ error: 'Failed to fetch bookings' });
     }
+  }
+
+  // 5. ACTION: SEARCH RECONCILIATION & TICKETS (Fraud verification & pass lookup)
+  if (req.method === 'POST' && req.body?.action === 'search-reconciliation') {
+    const rawQ = String(req.body?.query || '').trim();
+    if (!rawQ) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    const cleanQ = rawQ.toLowerCase();
+
+    // 1. Search payment_reconciliations table
+    let reconciliations = [];
+    try {
+      const { data: recData } = await supabase
+        .from('payment_reconciliations')
+        .select('*')
+        .or(`razorpay_payment_id.ilike.%${cleanQ}%,lead_email.ilike.%${cleanQ}%,lead_phone.ilike.%${cleanQ}%,lead_name.ilike.%${cleanQ}%`);
+      if (recData && recData.length > 0) {
+        reconciliations = recData;
+      }
+    } catch (_) {}
+
+    // 2. Search tickets table directly (matches ticket_number, email, phone, name)
+    let tickets = [];
+    try {
+      const { data: tktData } = await supabase
+        .from('tickets')
+        .select('*')
+        .or(`ticket_number.ilike.%${cleanQ}%,attendee_email.ilike.%${cleanQ}%,attendee_phone.ilike.%${cleanQ}%,attendee_name.ilike.%${cleanQ}%`)
+        .order('created_at', { ascending: false });
+      if (tktData && tktData.length > 0) {
+        tickets = tktData;
+      }
+    } catch (_) {}
+
+    // 3. If query looks like a payment ID or order ID, also scan tickets metadata
+    if (cleanQ.startsWith('pay_') || cleanQ.startsWith('order_')) {
+      try {
+        const { data: metaTkts } = await supabase
+          .from('tickets')
+          .select('*')
+          .filter('metadata->>razorpay_payment_id', 'eq', rawQ);
+        if (metaTkts && metaTkts.length > 0) {
+          const existingIds = new Set(tickets.map((t) => t.id));
+          metaTkts.forEach((t) => {
+            if (!existingIds.has(t.id)) tickets.push(t);
+          });
+        }
+      } catch (_) {}
+    }
+
+    return res.status(200).json({
+      success: true,
+      query: rawQ,
+      reconciliations,
+      tickets,
+      found: reconciliations.length > 0 || tickets.length > 0,
+    });
+  }
+
+  // 6. ACTION: RESEND TICKET EMAIL (With optional email correction)
+  if (req.method === 'POST' && req.body?.action === 'resend-pass') {
+    const { ticket_number, email_override } = req.body;
+    if (!ticket_number) {
+      return res.status(400).json({ error: 'Ticket number is required' });
+    }
+
+    const { data: ticket, error: tErr } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('ticket_number', ticket_number.trim())
+      .maybeSingle();
+
+    if (tErr || !ticket) {
+      return res.status(404).json({ error: `Ticket not found in database: ${ticket_number}` });
+    }
+
+    const targetEmail = (email_override || ticket.attendee_email || '').trim().toLowerCase();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      return res.status(400).json({ error: 'Invalid recipient email address' });
+    }
+
+    // If an email correction was provided, update it in the tickets table
+    if (email_override && email_override.trim().toLowerCase() !== (ticket.attendee_email || '').trim().toLowerCase()) {
+      try {
+        await supabase
+          .from('tickets')
+          .update({ attendee_email: targetEmail, updated_at: new Date().toISOString() })
+          .eq('id', ticket.id);
+        ticket.attendee_email = targetEmail;
+      } catch (_) {}
+    }
+
+    const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : 'https://www.cerebrexiaigims.com');
+    try {
+      const emailRes = await fetch(`${origin}/api/send-ticket-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket, group_size: 1 }),
+      });
+      const emailJson = await emailRes.json();
+      return res.status(200).json({
+        success: true,
+        message: `Official QR pass re-sent successfully to ${targetEmail}`,
+        email_result: emailJson,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to send email: ' + err.message });
+    }
+  }
+
+  // 7. ACTION: ISSUE MISSING PASS FOR VERIFIED PAYMENT
+  if (req.method === 'POST' && req.body?.action === 'issue-missing-pass') {
+    const {
+      razorpay_payment_id,
+      attendee_name,
+      attendee_email,
+      attendee_phone = '',
+      attendee_college = '',
+      promo_code = null,
+      amount_paid = 2000,
+    } = req.body;
+
+    if (!razorpay_payment_id || !attendee_name || !attendee_email) {
+      return res.status(400).json({ error: 'Payment ID, Attendee Name, and Email are required.' });
+    }
+
+    const tktNum = createTicketNumber('BR');
+    const secureToken = createSecureToken();
+    const candidateUserId = crypto.randomUUID();
+
+    const newTicket = {
+      ticket_number: tktNum,
+      user_id: candidateUserId,
+      attendee_name: String(attendee_name).trim(),
+      attendee_email: String(attendee_email).trim().toLowerCase(),
+      attendee_phone: String(attendee_phone).trim(),
+      attendee_college: String(attendee_college).trim(),
+      role: 'SINGLE',
+      qr_token: secureToken,
+      pass_type: 'BASIC_REGISTRATION_PRONITES',
+      payment_status: 'PAID',
+      metadata: {
+        source: 'MANUAL_VERIFIED_RECONCILIATION',
+        verified_by: operatorName,
+        razorpay_payment_id: String(razorpay_payment_id).trim(),
+        promo_code: promo_code || null,
+      },
+    };
+
+    const { data: savedTicket, error: insErr } = await supabase
+      .from('tickets')
+      .insert([newTicket])
+      .select()
+      .maybeSingle();
+
+    if (insErr) {
+      return res.status(500).json({ error: 'Could not create ticket: ' + insErr.message });
+    }
+
+    // Upsert to reconciliation table
+    try {
+      await supabase.from('payment_reconciliations').upsert(
+        {
+          razorpay_payment_id: String(razorpay_payment_id).trim(),
+          lead_name: String(attendee_name).trim(),
+          lead_email: String(attendee_email).trim().toLowerCase(),
+          lead_phone: String(attendee_phone).trim(),
+          lead_college: String(attendee_college).trim(),
+          ticket_count: 1,
+          ticket_numbers: [tktNum],
+          attendee_names: [String(attendee_name).trim()],
+          attendee_emails: [String(attendee_email).trim().toLowerCase()],
+          amount_paid: Number(amount_paid) || 2000,
+          promo_code: promo_code || null,
+          payment_status: 'PAID',
+          source: 'MANUAL_VERIFIED_RECONCILIATION',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'razorpay_payment_id' }
+      );
+    } catch (_) {}
+
+    // Send email
+    const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : 'https://www.cerebrexiaigims.com');
+    try {
+      await fetch(`${origin}/api/send-ticket-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket: savedTicket || newTicket, group_size: 1 }),
+      });
+    } catch (_) {}
+
+    return res.status(200).json({
+      success: true,
+      ticket: savedTicket || newTicket,
+      message: `Pass ${tktNum} issued and emailed to ${attendee_email}!`,
+    });
   }
 
   res.setHeader('Allow', 'GET, POST');

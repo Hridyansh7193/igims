@@ -18,6 +18,11 @@ import {
   Minus,
   RefreshCw,
   Search,
+  ShieldCheck,
+  ShieldAlert,
+  Check,
+  ExternalLink,
+  Edit2,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { openRazorpayCheckout } from '../lib/razorpay';
@@ -92,6 +97,30 @@ export default function BookingPortalPage({ setPage }) {
   // History State
   const [historyList, setHistoryList] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Verification & Fraud Check State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState(null);
+  const [searchError, setSearchError] = useState(null);
+  const [resendingMap, setResendingMap] = useState({});
+  const [resendStatusMap, setResendStatusMap] = useState({});
+  const [editEmailMap, setEditEmailMap] = useState({});
+  const [showEditEmailMap, setShowEditEmailMap] = useState({});
+  const [verifyQRs, setVerifyQRs] = useState({});
+  const [showMissingModal, setShowMissingModal] = useState(false);
+  const [missingForm, setMissingForm] = useState({
+    razorpay_payment_id: '',
+    attendee_name: '',
+    attendee_email: '',
+    attendee_phone: '',
+    attendee_college: '',
+    promo_code: '',
+    amount_paid: 2000,
+  });
+  const [missingLoading, setMissingLoading] = useState(false);
+  const [missingMessage, setMissingMessage] = useState(null);
+  const [missingError, setMissingError] = useState(null);
 
   // Calculate Group Offer and Pricing
   const totalDelegates = regType === 'SINGLE' ? 1 : groupSize;
@@ -233,6 +262,148 @@ export default function BookingPortalPage({ setPage }) {
       fetchHistory();
     }
   }, [activeTab]);
+
+  // Handle Search for Reconciliation
+  const handleSearchReconciliation = async (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchError('Please enter a Razorpay Payment ID, Email, Phone, Name, or Ticket Number.');
+      return;
+    }
+    setSearchLoading(true);
+    setSearchError(null);
+    setSearchResult(null);
+    try {
+      const res = await fetch('/api/portal-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-token': session?.token || '',
+        },
+        body: JSON.stringify({
+          action: 'search-reconciliation',
+          query: searchQuery.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSearchError(data.error || 'Search failed. Please try again.');
+        return;
+      }
+      setSearchResult(data);
+
+      // Generate QRs for any tickets found
+      if (Array.isArray(data.tickets) && data.tickets.length > 0) {
+        const qrs = {};
+        for (const t of data.tickets) {
+          if (t.qr_token) {
+            try {
+              qrs[t.ticket_number] = await QRCode.toDataURL(t.qr_token, {
+                width: 300,
+                margin: 2,
+                color: { dark: '#000000', light: '#ffffff' },
+              });
+            } catch (_) {}
+          }
+        }
+        setVerifyQRs(qrs);
+      }
+    } catch (err) {
+      setSearchError('Error performing search: ' + err.message);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle Resend Pass Email
+  const handleResendPassEmail = async (ticketNumber) => {
+    if (!ticketNumber) return;
+    const emailOverride = (editEmailMap[ticketNumber] || '').trim();
+    setResendingMap((prev) => ({ ...prev, [ticketNumber]: true }));
+    setResendStatusMap((prev) => ({ ...prev, [ticketNumber]: null }));
+    try {
+      const res = await fetch('/api/portal-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-token': session?.token || '',
+        },
+        body: JSON.stringify({
+          action: 'resend-pass',
+          ticket_number: ticketNumber,
+          email_override: emailOverride || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setResendStatusMap((prev) => ({
+          ...prev,
+          [ticketNumber]: { success: false, message: data.error || 'Failed to resend pass email.' },
+        }));
+      } else {
+        setResendStatusMap((prev) => ({
+          ...prev,
+          [ticketNumber]: { success: true, message: data.message || 'Pass email re-sent successfully!' },
+        }));
+        // Update ticket email in searchResult view if overridden
+        if (emailOverride && searchResult?.tickets) {
+          setSearchResult((prev) => ({
+            ...prev,
+            tickets: prev.tickets.map((t) =>
+              t.ticket_number === ticketNumber ? { ...t, attendee_email: emailOverride } : t
+            ),
+          }));
+        }
+      }
+    } catch (err) {
+      setResendStatusMap((prev) => ({
+        ...prev,
+        [ticketNumber]: { success: false, message: err.message },
+      }));
+    } finally {
+      setResendingMap((prev) => ({ ...prev, [ticketNumber]: false }));
+    }
+  };
+
+  // Handle Issue Missing Pass for Confirmed Payment
+  const handleIssueMissingPass = async (e) => {
+    if (e) e.preventDefault();
+    if (!missingForm.razorpay_payment_id.trim() || !missingForm.attendee_name.trim() || !missingForm.attendee_email.trim()) {
+      setMissingError('Please fill in Payment ID, Attendee Name, and Email.');
+      return;
+    }
+    setMissingLoading(true);
+    setMissingError(null);
+    setMissingMessage(null);
+    try {
+      const res = await fetch('/api/portal-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-token': session?.token || '',
+        },
+        body: JSON.stringify({
+          action: 'issue-missing-pass',
+          ...missingForm,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMissingError(data.error || 'Failed to issue missing pass.');
+      } else {
+        setMissingMessage(data.message || 'Missing pass issued and emailed successfully!');
+        setSearchQuery(missingForm.razorpay_payment_id.trim());
+        setTimeout(() => {
+          setShowMissingModal(false);
+          handleSearchReconciliation();
+        }, 1200);
+      }
+    } catch (err) {
+      setMissingError(err.message);
+    } finally {
+      setMissingLoading(false);
+    }
+  };
 
   // Construct Candidates Array
   const compileCandidates = () => {
@@ -864,6 +1035,25 @@ export default function BookingPortalPage({ setPage }) {
             >
               Bookings Log
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('verify')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                background: activeTab === 'verify' ? 'var(--crx-gold, #D4AF37)' : 'transparent',
+                color: activeTab === 'verify' ? '#070204' : '#fff',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <ShieldCheck size={14} /> Verify & Resend Pass
+            </button>
           </div>
 
           <button
@@ -966,6 +1156,757 @@ export default function BookingPortalPage({ setPage }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ----------------- TAB: VERIFY & RESEND PASS (FRAUD CHECK) ----------------- */}
+      {activeTab === 'verify' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
+          {/* Top Verification & Fraud Search Card */}
+          <div
+            style={{
+              background: 'linear-gradient(145deg, rgba(24, 7, 13, 0.95) 0%, rgba(12, 4, 7, 0.98) 100%)',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
+              borderRadius: 20,
+              padding: 24,
+              boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <ShieldCheck size={22} color="var(--crx-gold, #D4AF37)" />
+              <h2 className="crx-display" style={{ fontSize: 18, color: '#fff', margin: 0, letterSpacing: 1 }}>
+                FRAUD VERIFICATION & PASS LOOKUP DESK
+              </h2>
+            </div>
+
+            {/* Fraud Rule Alert Banner */}
+            <div
+              style={{
+                background: 'rgba(212, 175, 55, 0.08)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRadius: 14,
+                padding: '14px 18px',
+                marginBottom: 20,
+                fontSize: 12,
+                color: 'var(--cream)',
+                lineHeight: 1.6,
+              }}
+            >
+              <strong style={{ color: 'var(--crx-gold, #D4AF37)', display: 'block', marginBottom: 4, fontSize: 13 }}>
+                🛡️ 3-SECOND FRAUD VERIFICATION PROTOCOL:
+              </strong>
+              <ol style={{ margin: '4px 0 0', paddingLeft: 18, color: 'rgba(255,255,255,0.85)' }}>
+                <li>
+                  <strong>Ask for the Razorpay Payment ID:</strong> Legitimate UPI/Card receipts always show a Payment ID starting with <code style={{ color: '#fcd34d', background: 'rgba(0,0,0,0.5)', padding: '1px 5px', borderRadius: 4 }}>pay_...</code> (or 12-digit UPI UTR / RRN).
+                </li>
+                <li>
+                  <strong>Search Database Below:</strong> Enter their Payment ID or Email. If genuine, their official BR tickets and QR code appear instantly with a 1-click &quot;Resend Pass Email&quot; button.
+                </li>
+                <li>
+                  <strong>If Not Found:</strong> Cross-check your <strong>Razorpay Dashboard</strong> (dashboard.razorpay.com). If status is NOT <span style={{ color: '#86efac', fontWeight: 700 }}>Captured</span>, the payment was never received or failed. If status IS <span style={{ color: '#86efac', fontWeight: 700 }}>Captured</span> (e.g. user internet timed out during redirect), click &quot;Issue Missing Pass&quot; to email them on the spot.
+                </li>
+              </ol>
+            </div>
+
+            {/* Search Input Bar */}
+            <form onSubmit={handleSearchReconciliation} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 280 }}>
+                <Search
+                  size={16}
+                  style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Enter Razorpay Payment ID (pay_...), Email, Phone, Name, or Ticket #..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px 12px 40px',
+                    borderRadius: 10,
+                    background: 'rgba(0,0,0,0.6)',
+                    border: '1px solid rgba(212, 175, 55, 0.35)',
+                    color: '#fff',
+                    fontSize: 13,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={searchLoading}
+                className="crx-btn gold"
+                style={{ padding: '0 24px', fontSize: 13, fontWeight: 700, minHeight: 44 }}
+              >
+                {searchLoading ? (
+                  <>
+                    <RefreshCw size={14} className="spin" /> SEARCHING...
+                  </>
+                ) : (
+                  <>
+                    <Search size={14} /> VERIFY / SEARCH
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMissingForm({
+                    razorpay_payment_id: searchQuery.startsWith('pay_') ? searchQuery : '',
+                    attendee_name: '',
+                    attendee_email: searchQuery.includes('@') ? searchQuery : '',
+                    attendee_phone: '',
+                    attendee_college: '',
+                    promo_code: '',
+                    amount_paid: 2000,
+                  });
+                  setShowMissingModal(true);
+                }}
+                className="crx-btn"
+                style={{ padding: '0 16px', fontSize: 12, minHeight: 44 }}
+              >
+                + Issue Missing Pass
+              </button>
+            </form>
+
+            {searchError && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  color: '#fca5a5',
+                  fontSize: 12,
+                  marginTop: 16,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                <span>{searchError}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Search Results Display */}
+          {searchResult && (
+            <div>
+              {searchResult.found ? (
+                <div>
+                  {/* Verified Header Badge */}
+                  <div
+                    style={{
+                      background: 'rgba(34, 197, 94, 0.12)',
+                      border: '1px solid rgba(34, 197, 94, 0.4)',
+                      borderRadius: 16,
+                      padding: '14px 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                      marginBottom: 20,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <CheckCircle2 size={24} color="#22c55e" />
+                      <div>
+                        <strong style={{ color: '#86efac', fontSize: 15, display: 'block' }}>
+                          GENUINE PAYMENT &amp; TICKETS VERIFIED IN DATABASE
+                        </strong>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+                          Query &quot;{searchResult.query}&quot; matched {searchResult.tickets?.length || 0} active ticket(s) and{' '}
+                          {searchResult.reconciliations?.length || 0} payment transaction record(s).
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        background: '#22c55e',
+                        color: '#070204',
+                        fontWeight: 800,
+                        fontSize: 11,
+                        padding: '4px 10px',
+                        borderRadius: 20,
+                        letterSpacing: 1,
+                      }}
+                    >
+                      STATUS: PAID &amp; CONFIRMED
+                    </span>
+                  </div>
+
+                  {/* Reconciliations Card (If matched) */}
+                  {searchResult.reconciliations && searchResult.reconciliations.length > 0 && (
+                    <div
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(24, 7, 13, 0.95) 0%, rgba(12, 4, 7, 0.98) 100%)',
+                        border: '1px solid rgba(212, 175, 55, 0.25)',
+                        borderRadius: 16,
+                        padding: 20,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <h4 style={{ fontSize: 13, color: 'var(--crx-gold, #D4AF37)', margin: '0 0 12px', letterSpacing: 1 }}>
+                        TRANSACTION DETAILS:
+                      </h4>
+                      {searchResult.reconciliations.map((rec) => (
+                        <div
+                          key={rec.id || rec.razorpay_payment_id}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: 12,
+                            fontSize: 12,
+                            background: 'rgba(0,0,0,0.4)',
+                            padding: 12,
+                            borderRadius: 10,
+                            marginBottom: 8,
+                          }}
+                        >
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Payment ID:</span>
+                            <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{rec.razorpay_payment_id}</strong>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Lead Name:</span>
+                            <span style={{ color: '#fff' }}>{rec.lead_name}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Lead Email:</span>
+                            <span style={{ color: '#fff' }}>{rec.lead_email}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Promo Code:</span>
+                            <span style={{ color: rec.promo_code ? '#fcd34d' : 'var(--muted)', fontWeight: 700 }}>
+                              {rec.promo_code || 'None'}
+                            </span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Pass Count:</span>
+                            <span style={{ color: 'var(--crx-gold, #D4AF37)', fontWeight: 700 }}>{rec.ticket_count} Pass(es)</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>Date Paid:</span>
+                            <span style={{ color: 'var(--cream)' }}>
+                              {rec.created_at ? new Date(rec.created_at).toLocaleString('en-IN') : '-'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Grid of Matched Passes */}
+                  <h3 className="crx-display" style={{ fontSize: 16, color: '#fff', margin: '0 0 14px', letterSpacing: 1 }}>
+                    ISSUED BASIC REGISTRATION (BR) PASSES ({searchResult.tickets?.length || 0}):
+                  </h3>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+                    {(searchResult.tickets || []).map((t) => {
+                      const qrUrl = verifyQRs[t.ticket_number];
+                      const isResending = !!resendingMap[t.ticket_number];
+                      const resendStatus = resendStatusMap[t.ticket_number];
+                      const isEditingEmail = !!showEditEmailMap[t.ticket_number];
+                      const currentOverride = editEmailMap[t.ticket_number] ?? t.attendee_email ?? '';
+
+                      const downloadQr = () => {
+                        if (!qrUrl) return;
+                        const a = document.createElement('a');
+                        a.href = qrUrl;
+                        a.download = `Cerebrexia26-Pass-${t.ticket_number}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      };
+
+                      return (
+                        <div
+                          key={t.ticket_number}
+                          style={{
+                            background: 'linear-gradient(145deg, rgba(24, 7, 13, 0.95) 0%, rgba(12, 4, 7, 0.98) 100%)',
+                            border: '1px solid rgba(212, 175, 55, 0.3)',
+                            borderRadius: 16,
+                            padding: 18,
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color: 'var(--crx-gold, #D4AF37)',
+                                background: 'rgba(212, 175, 55, 0.15)',
+                                padding: '2px 8px',
+                                borderRadius: 8,
+                              }}
+                            >
+                              {t.role || 'DELEGATE'}
+                            </span>
+                            <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#86efac', fontWeight: 700 }}>
+                              ✓ OFFICIAL BR
+                            </span>
+                          </div>
+
+                          <strong style={{ fontSize: 16, color: '#fff', marginBottom: 2 }}>{t.attendee_name}</strong>
+                          <span style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+                            {t.attendee_college || 'Cerebrexia Delegate'}
+                          </span>
+
+                          <div style={{ background: '#fff', borderRadius: 10, padding: 8, margin: '0 auto 12px', width: 140 }}>
+                            {qrUrl ? (
+                              <img src={qrUrl} alt={t.ticket_number} style={{ width: 140, height: 140, display: 'block' }} />
+                            ) : (
+                              <div style={{ width: 140, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 11 }}>
+                                QR Ready
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            style={{
+                              background: 'rgba(0,0,0,0.5)',
+                              border: '1px solid rgba(212, 175, 55, 0.25)',
+                              borderRadius: 8,
+                              padding: '8px 10px',
+                              textAlign: 'center',
+                              marginBottom: 12,
+                            }}
+                          >
+                            <span style={{ fontSize: 10, color: 'var(--muted)', display: 'block' }}>OFFICIAL TICKET NUMBER</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: 'var(--crx-gold, #D4AF37)' }}>
+                              {t.ticket_number}
+                            </span>
+                          </div>
+
+                          {/* Email Display & Edit */}
+                          <div style={{ marginBottom: 12 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Delivery Email:</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShowEditEmailMap((prev) => ({
+                                    ...prev,
+                                    [t.ticket_number]: !prev[t.ticket_number],
+                                  }))
+                                }
+                                style={{ background: 'none', border: 'none', color: 'var(--crx-gold, #D4AF37)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
+                              >
+                                <Edit2 size={10} /> {isEditingEmail ? 'Close' : 'Fix Typo'}
+                              </button>
+                            </div>
+
+                            {isEditingEmail ? (
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <input
+                                  type="email"
+                                  value={currentOverride}
+                                  onChange={(e) =>
+                                    setEditEmailMap((prev) => ({
+                                      ...prev,
+                                      [t.ticket_number]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="Enter correct email"
+                                  style={{
+                                    flex: 1,
+                                    padding: '6px 8px',
+                                    borderRadius: 6,
+                                    background: 'rgba(0,0,0,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    color: '#fff',
+                                    fontSize: 11,
+                                    outline: 'none',
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: 12, color: '#fff', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                                {t.attendee_email || 'No email on record'}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Resend Status Notification */}
+                          {resendStatus && (
+                            <div
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: 6,
+                                fontSize: 11,
+                                marginBottom: 10,
+                                background: resendStatus.success ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                border: `1px solid ${resendStatus.success ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                                color: resendStatus.success ? '#86efac' : '#fca5a5',
+                              }}
+                            >
+                              {resendStatus.message}
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleResendPassEmail(t.ticket_number)}
+                              disabled={isResending}
+                              className="crx-btn gold"
+                              style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '8px 12px' }}
+                            >
+                              {isResending ? (
+                                <>
+                                  <RefreshCw size={11} className="spin" /> SENDING...
+                                </>
+                              ) : (
+                                <>
+                                  <Mail size={12} /> RESEND PASS EMAIL
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={downloadQr}
+                              className="crx-btn"
+                              style={{ padding: '8px 10px', fontSize: 11 }}
+                              title="Download QR Image"
+                            >
+                              <Download size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* NOT FOUND VIEW (Fraud detection / Missing pass issue) */
+                <div
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(24, 7, 13, 0.95) 0%, rgba(12, 4, 7, 0.98) 100%)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    borderRadius: 20,
+                    padding: 28,
+                    textAlign: 'center',
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      border: '2px solid #ef4444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 16px',
+                      color: '#ef4444',
+                    }}
+                  >
+                    <ShieldAlert size={30} />
+                  </div>
+
+                  <h3 className="crx-display" style={{ fontSize: 20, color: '#fca5a5', margin: '0 0 8px' }}>
+                    NO TICKET OR PAYMENT FOUND FOR: &quot;{searchResult.query}&quot;
+                  </h3>
+                  <p style={{ fontSize: 13, color: 'var(--cream)', maxWidth: 640, margin: '0 auto 20px', lineHeight: 1.6 }}>
+                    This reference ID or email does not exist in the Cerebrexia ticket database. Do not issue a pass without verifying
+                    payment proof.
+                  </p>
+
+                  <div
+                    style={{
+                      background: 'rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 12,
+                      padding: 16,
+                      maxWidth: 600,
+                      margin: '0 auto 24px',
+                      textAlign: 'left',
+                      fontSize: 12,
+                    }}
+                  >
+                    <strong style={{ color: 'var(--crx-gold, #D4AF37)', display: 'block', marginBottom: 6 }}>
+                      HOW TO PROCEED:
+                    </strong>
+                    <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
+                      <li>
+                        <strong>Ask for the Razorpay Payment ID:</strong> Tell the attendee: &quot;Please share the Razorpay Payment ID starting with <code style={{ color: '#fcd34d' }}>pay_...</code> from your bank / UPI payment receipt.&quot;
+                      </li>
+                      <li>
+                        <strong>Check your Razorpay Dashboard:</strong> Search the <code style={{ color: '#fcd34d' }}>pay_...</code> ID in <em>Razorpay Dashboard &rarr; Transactions &rarr; Payments</em>.
+                      </li>
+                      <li>
+                        If status is <strong>NOT &apos;Captured&apos;</strong>: The claim is invalid or fake. <strong>Do NOT issue passes.</strong>
+                      </li>
+                      <li>
+                        If status <strong>IS &apos;Captured&apos;</strong>: The payment went through, but their browser disconnected before ticket issuance. Click the button below to issue their pass instantly.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMissingForm({
+                        razorpay_payment_id: searchQuery.startsWith('pay_') ? searchQuery : '',
+                        attendee_name: '',
+                        attendee_email: searchQuery.includes('@') ? searchQuery : '',
+                        attendee_phone: '',
+                        attendee_college: '',
+                        promo_code: '',
+                        amount_paid: 2000,
+                      });
+                      setShowMissingModal(true);
+                    }}
+                    className="crx-btn gold"
+                    style={{ padding: '12px 28px', fontSize: 13, fontWeight: 700 }}
+                  >
+                    + ISSUE MISSING PASS FOR VERIFIED PAYMENT
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Modal: Issue Missing Pass */}
+          {showMissingModal && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999,
+                padding: 20,
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: 520,
+                  width: '100%',
+                  background: 'linear-gradient(145deg, rgba(24, 7, 13, 0.98) 0%, rgba(12, 4, 7, 1) 100%)',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  borderRadius: 20,
+                  padding: 28,
+                  boxShadow: '0 25px 70px rgba(0,0,0,0.9)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <h3 className="crx-display" style={{ fontSize: 18, color: '#fff', margin: 0 }}>
+                    ISSUE MISSING BR PASS
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowMissingModal(false)}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 18, cursor: 'pointer' }}
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <p style={{ fontSize: 12, color: 'var(--cream)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                  Only use this if you have <strong>confirmed in Razorpay Dashboard</strong> that this payment is{' '}
+                  <strong style={{ color: '#86efac' }}>CAPTURED</strong>. An official BR ticket and QR entry pass will be generated and emailed
+                  immediately.
+                </p>
+
+                <form onSubmit={handleIssueMissingPass} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                      Razorpay Payment ID * (e.g. pay_QXXXXXXXXXXXXX)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="pay_..."
+                      value={missingForm.razorpay_payment_id}
+                      onChange={(e) => setMissingForm({ ...missingForm, razorpay_payment_id: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: 8,
+                        background: 'rgba(0,0,0,0.6)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: '#fff',
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                        Attendee Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full Name"
+                        value={missingForm.attendee_name}
+                        onChange={(e) => setMissingForm({ ...missingForm, attendee_name: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '9px 12px',
+                          borderRadius: 8,
+                          background: 'rgba(0,0,0,0.6)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          fontSize: 12,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                        Attendee Phone
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="10-digit Phone"
+                        value={missingForm.attendee_phone}
+                        onChange={(e) => setMissingForm({ ...missingForm, attendee_phone: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '9px 12px',
+                          borderRadius: 8,
+                          background: 'rgba(0,0,0,0.6)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          fontSize: 12,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                      Attendee Email * (QR pass will be delivered here)
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="attendee@gmail.com"
+                      value={missingForm.attendee_email}
+                      onChange={(e) => setMissingForm({ ...missingForm, attendee_email: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: 8,
+                        background: 'rgba(0,0,0,0.6)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: '#fff',
+                        fontSize: 12,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                        College Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="College Name"
+                        value={missingForm.attendee_college}
+                        onChange={(e) => setMissingForm({ ...missingForm, attendee_college: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '9px 12px',
+                          borderRadius: 8,
+                          background: 'rgba(0,0,0,0.6)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          fontSize: 12,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--cream)', display: 'block', marginBottom: 4 }}>
+                        Promo Code (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. FEST20"
+                        value={missingForm.promo_code}
+                        onChange={(e) => setMissingForm({ ...missingForm, promo_code: e.target.value.toUpperCase() })}
+                        style={{
+                          width: '100%',
+                          padding: '9px 12px',
+                          borderRadius: 8,
+                          background: 'rgba(0,0,0,0.6)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {missingError && (
+                    <div style={{ color: '#fca5a5', fontSize: 12, background: 'rgba(239, 68, 68, 0.15)', padding: '8px 12px', borderRadius: 6 }}>
+                      {missingError}
+                    </div>
+                  )}
+
+                  {missingMessage && (
+                    <div style={{ color: '#86efac', fontSize: 12, background: 'rgba(34, 197, 94, 0.15)', padding: '8px 12px', borderRadius: 6 }}>
+                      {missingMessage}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowMissingModal(false)}
+                      className="crx-btn"
+                      style={{ flex: 1, justifyContent: 'center', fontSize: 12 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={missingLoading}
+                      className="crx-btn gold"
+                      style={{ flex: 2, justifyContent: 'center', fontSize: 12, fontWeight: 700 }}
+                    >
+                      {missingLoading ? 'ISSUING PASS...' : 'GENERATE & EMAIL PASS &rarr;'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </div>

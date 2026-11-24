@@ -176,7 +176,39 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
     savedTickets = ticketsToInsert.map(t => ({ ...t, id: 'local_' + Date.now() }));
   }
 
-  // 2. Dispatch email for each ticket and await delivery confirmation before finishing
+  // 2. Automatically sync to payment_reconciliations table for instant fraud & payment verification
+  const payId = paymentDetails.razorpay_payment_id || basicReg.razorpay_payment_id;
+  if (payId) {
+    try {
+      const leadEmail = (basicReg.user_email || basicReg.email || fallbackEmail || '').trim().toLowerCase();
+      supabase
+        .from('payment_reconciliations')
+        .upsert(
+          {
+            razorpay_payment_id: payId,
+            razorpay_order_id: paymentDetails.razorpay_order_id || basicReg.razorpay_order_id || null,
+            lead_name: fallbackName,
+            lead_email: leadEmail,
+            lead_phone: fallbackPhone,
+            lead_college: fallbackCollege,
+            ticket_count: savedTickets.length,
+            ticket_numbers: savedTickets.map((t) => t.ticket_number),
+            attendee_names: savedTickets.map((t) => t.attendee_name),
+            attendee_emails: savedTickets.map((t) => t.attendee_email),
+            amount_paid: savedTickets.length * 2000,
+            promo_code: paymentDetails.promo_code || basicReg.promo_code || null,
+            payment_status: 'PAID',
+            source: 'WEB_CHECKOUT',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'razorpay_payment_id' }
+        )
+        .then(() => {})
+        .catch(() => {});
+    } catch (_) {}
+  }
+
+  // 3. Dispatch email for each ticket and await delivery confirmation before finishing
   await Promise.allSettled(
     savedTickets.map(async (ticket) => {
       if (ticket.attendee_email) {
