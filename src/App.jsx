@@ -15,11 +15,12 @@ import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
 import GateScannerPage from './pages/GateScannerPage';
 import AdminPage from './pages/AdminPage';
+import BookingPortalPage from './pages/BookingPortalPage';
 import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
-const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin'];
+const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin', 'booking-portal', 'booking'];
 
 export default function App() {
   const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
@@ -91,14 +92,14 @@ export default function App() {
   }
 
   const isPolicyPage = POLICY_ROUTES.includes(page);
-  const isBypassIntro = isPolicyPage || page === 'admin';
+  const isBypassIntro = isPolicyPage || page === 'admin' || page === 'booking-portal' || page === 'booking';
 
   return (
     <AuthProvider>
       <div className="crx-root">
         <GlobalStyle />
 
-        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation or admin) */}
+        {/* Cinematic Intro Animation Overlay (Bypassed if directly viewing legal policy documentation, admin, or booking portal) */}
         {!introComplete && !isBypassIntro && (
           <IntroAnimation
             onComplete={handleIntroComplete}
@@ -125,6 +126,7 @@ export default function App() {
           {page === 'contact' && <ContactPage />}
           {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
           {page === 'admin' && <AdminPage setPage={navigateTo} />}
+          {(page === 'booking-portal' || page === 'booking') && <BookingPortalPage setPage={navigateTo} />}
           {isPolicyPage && (
             <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
           )}
