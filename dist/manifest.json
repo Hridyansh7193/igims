@@ -1,6 +1,7 @@
 {
-  "short_name": "Gate Scanner",
-  "name": "Cerebrexia '26 Gate Scanner",
+  "short_name": "Cerebrexia '26",
+  "name": "Cerebrexia '26 | IGIMS Patna",
+  "description": "Annual Inter-College Fest of Indira Gandhi Institute of Medical Sciences, Patna",
   "icons": [
     {
       "src": "/logo.jpg",
@@ -8,7 +9,7 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "/#scanner",
+  "start_url": "/",
   "background_color": "#070204",
   "theme_color": "#B3123A",
   "display": "standalone",
