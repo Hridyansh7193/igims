@@ -43,6 +43,7 @@ def test_page(p, path, viewport, is_mobile=False):
             poster: v.getAttribute('poster'),
         })),
         imgCount: document.querySelectorAll('img').length,
+        hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
     })""")
 
     browser.close()
@@ -58,29 +59,33 @@ def test_page(p, path, viewport, is_mobile=False):
         "total_requests": len(reqs),
         "http_errors": http_errors,
         "console_errors": errors,
+        "has_overflow": state.get("hasHorizontalOverflow", False),
         "state": state,
     }
 
 results = {}
 try:
     with sync_playwright() as p:
-        print("1. Testing Desktop Home (1365x768)...", flush=True)
-        results["desktop_home"] = test_page(p, "/", {"width": 1365, "height": 768}, False)
+        routes_to_test = [
+            ("desktop_home", "/", {"width": 1365, "height": 768}, False),
+            ("mobile_home", "/", {"width": 390, "height": 844}, True),
+            ("desktop_events", "/#events", {"width": 1365, "height": 768}, False),
+            ("mobile_events", "/#events", {"width": 390, "height": 844}, True),
+            ("desktop_pronites", "/#pronites", {"width": 1365, "height": 768}, False),
+            ("desktop_about", "/#about", {"width": 1365, "height": 768}, False),
+            ("desktop_contact", "/#contact", {"width": 1365, "height": 768}, False),
+            ("desktop_accommodation", "/#accommodation", {"width": 1365, "height": 768}, False),
+            ("desktop_terms", "/#terms", {"width": 1365, "height": 768}, False),
+            ("desktop_privacy", "/#privacy", {"width": 1365, "height": 768}, False),
+            ("desktop_refund", "/#refund", {"width": 1365, "height": 768}, False),
+            ("desktop_admin", "/#admin", {"width": 1365, "height": 768}, False),
+            ("desktop_portal", "/#booking-portal", {"width": 1365, "height": 768}, False),
+            ("desktop_dashboard", "/#dashboard", {"width": 1365, "height": 768}, False),
+        ]
 
-        print("2. Testing Mobile Home (390x844)...", flush=True)
-        results["mobile_home"] = test_page(p, "/", {"width": 390, "height": 844}, True)
-
-        print("3. Testing Desktop Events Page (/#events)...", flush=True)
-        results["desktop_events"] = test_page(p, "/#events", {"width": 1365, "height": 768}, False)
-
-        print("4. Testing Desktop Policy Page (/#terms)...", flush=True)
-        results["desktop_terms"] = test_page(p, "/#terms", {"width": 1365, "height": 768}, False)
-
-        print("5. Testing Admin Portal (/#admin)...", flush=True)
-        results["desktop_admin"] = test_page(p, "/#admin", {"width": 1365, "height": 768}, False)
-
-        print("6. Testing Booking Portal (/#booking-portal)...", flush=True)
-        results["desktop_portal"] = test_page(p, "/#booking-portal", {"width": 1365, "height": 768}, False)
+        for name, path, vp, is_mob in routes_to_test:
+            print(f"Testing {name} ({path})...", flush=True)
+            results[name] = test_page(p, path, vp, is_mob)
 finally:
     server.shutdown()
 
