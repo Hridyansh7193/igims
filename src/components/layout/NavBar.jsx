@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
-import { LOGO_SRC } from '../../constants/logo';
+import { LOGO_SM_SRC } from '../../constants/logo';
 import { NAV, NAV_MORE } from '../../constants/navigation';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 import { useAuth } from '../../context/AuthContext';
@@ -80,8 +80,11 @@ export default function NavBar({ page, setPage }) {
             }}
           >
             <img
-              src={LOGO_SRC}
+              src={LOGO_SM_SRC}
               alt="Cerebrexia"
+              width={50}
+              height={50}
+              decoding="async"
               style={{
                 width: '100%',
                 height: '100%',

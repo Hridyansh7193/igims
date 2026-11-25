@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import {
   LogOut, ShieldCheck, Clock, CheckCircle2, User, AlertTriangle, RefreshCw,
   Calendar, ArrowRight, Edit3, PlusCircle, X, Copy, Check, CreditCard,
@@ -7,8 +7,9 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import AuthForm from '../components/auth/AuthForm';
-import RegistrationModal from '../components/common/RegistrationModal';
-import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
+
+const RegistrationModal = lazy(() => import('../components/common/RegistrationModal'));
+const BasicRegistrationModal = lazy(() => import('../components/common/BasicRegistrationModal'));
 import {
   fetchParticipantProfile, getRegisteredEvents, normalizeProfile,
   fetchCategorizedRegistrations, markBasicRegistrationPaid
@@ -340,19 +341,23 @@ export default function DashboardPage({ setPage }) {
   return (
     <>
       {showEditModal && (
-        <RegistrationModal
-          initialProfile={participant}
-          onClose={() => setShowEditModal(false)}
-          onSuccess={handleEditSuccess}
-        />
+        <Suspense fallback={null}>
+          <RegistrationModal
+            initialProfile={participant}
+            onClose={() => setShowEditModal(false)}
+            onSuccess={handleEditSuccess}
+          />
+        </Suspense>
       )}
 
       {showBRModal && (
-        <BasicRegistrationModal
-          initialProfile={participant}
-          onClose={() => setShowBRModal(false)}
-          onSuccess={handleBRSuccess}
-        />
+        <Suspense fallback={null}>
+          <BasicRegistrationModal
+            initialProfile={participant}
+            onClose={() => setShowBRModal(false)}
+            onSuccess={handleBRSuccess}
+          />
+        </Suspense>
       )}
 
       {showPaymentModal && (

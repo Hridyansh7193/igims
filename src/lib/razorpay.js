@@ -14,31 +14,59 @@ export const RAZORPAY_PAYMENT_PAGE_URL =
   import.meta.env.VITE_RAZORPAY_PAYMENT_PAGE_URL ||
   'https://razorpay.me/@igimscerebrexia2026';
 
+let razorpayLoadPromise = null;
+
 /**
  * Loads the Razorpay checkout.js script asynchronously if not already loaded.
+ * Safe against concurrent calls and retries cleanly after transient network failures.
  */
 export function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (typeof window === 'undefined') return resolve(false);
-    if (window.Razorpay) return resolve(true);
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  if (razorpayLoadPromise) return razorpayLoadPromise;
 
+  razorpayLoadPromise = new Promise((resolve) => {
     const existing = document.querySelector(`script[src="${RAZORPAY_SCRIPT_URL}"]`);
     if (existing) {
-      existing.addEventListener('load', () => resolve(true));
-      existing.addEventListener('error', () => resolve(false));
-      return;
+      if (existing.dataset.loaded === 'true' && window.Razorpay) {
+        razorpayLoadPromise = null;
+        return resolve(true);
+      }
+      if (existing.dataset.error === 'true') {
+        existing.remove();
+      } else {
+        existing.addEventListener('load', () => {
+          razorpayLoadPromise = null;
+          resolve(Boolean(window.Razorpay));
+        }, { once: true });
+        existing.addEventListener('error', () => {
+          razorpayLoadPromise = null;
+          existing.remove();
+          resolve(false);
+        }, { once: true });
+        return;
+      }
     }
 
     const script = document.createElement('script');
     script.src = RAZORPAY_SCRIPT_URL;
     script.async = true;
-    script.onload = () => resolve(true);
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      razorpayLoadPromise = null;
+      resolve(Boolean(window.Razorpay));
+    };
     script.onerror = () => {
+      script.dataset.error = 'true';
+      script.remove();
+      razorpayLoadPromise = null;
       console.warn('[Razorpay] Failed to load official checkout script from CDN.');
       resolve(false);
     };
     document.body.appendChild(script);
   });
+
+  return razorpayLoadPromise;
 }
 
 /**

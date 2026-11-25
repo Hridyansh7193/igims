@@ -34,7 +34,7 @@ export async function fetchUserAccommodation(userId) {
   try {
     const { data, error } = await supabase
       .from('accommodation_bookings')
-      .select('*')
+      .select('id, booking_id, user_id, full_name, email, phone, college, gender, selected_dates, num_days, price_per_day, amount_inr, razorpay_order_id, razorpay_payment_id, payment_status, status, created_at')
       .eq('user_id', userId)
       .eq('status', 'CONFIRMED')
       .order('created_at', { ascending: false })

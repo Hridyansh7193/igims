@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
 import GlitchText from '../common/GlitchText';
 import Sticker from '../common/Sticker';
+import { useAdaptiveVideo } from '../../hooks/useAdaptiveVideo';
 
 // Persists across Hero remounts (e.g. switching tabs and back to Home) so the
 // glitch reveal only ever plays once, instead of re-triggering (and sometimes
 // failing to resolve) every time the Home page mounts again.
 let heroTitleRevealedOnce = false;
 
-export default function Hero({ setPage, revealTitle = true }) {
+export default function Hero({ setPage, revealTitle = true, canLoadMedia = false }) {
   const [titleSettled, setTitleSettled] = useState(heroTitleRevealedOnce);
+  const {
+    containerRef,
+    videoRef,
+    isMobile,
+    shouldLoadVideo,
+    videoReady,
+    prefersReducedMotion,
+    handlePlaying,
+    handleError,
+  } = useAdaptiveVideo({ enabled: canLoadMedia, threshold: 0.05 });
+
+  const heroVideoSrc = isMobile ? '/events-bg-mobile.mp4' : '/events-bg.mp4';
+
   return (
     <>
       <section
+        ref={containerRef}
         style={{
           minHeight: '100vh',
           width: '100%',
@@ -52,12 +67,14 @@ export default function Hero({ setPage, revealTitle = true }) {
             zIndex: 0,
           }}
         >
-          {/* Full-screen video background */}
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
+          {/* Lightweight poster rendered immediately behind overlays & while video buffers */}
+          <img
+            src="/events-bg-poster.webp"
+            alt=""
+            width={1280}
+            height={720}
+            decoding="async"
+            fetchPriority="high"
             style={{
               position: 'absolute',
               inset: 0,
@@ -66,12 +83,39 @@ export default function Hero({ setPage, revealTitle = true }) {
               objectFit: 'cover',
               opacity: 0.95,
               filter: 'contrast(1.05) saturate(1.15)',
-              animation: 'kenburns 25s ease-in-out infinite alternate',
+              animation: prefersReducedMotion ? 'none' : 'kenburns 25s ease-in-out infinite alternate',
               zIndex: 0,
             }}
-          >
-            <source src="/events-bg.mp4" type="video/mp4" />
-          </video>
+          />
+
+          {/* Video source attached only after intro overlay dismissal + visible viewport */}
+          {shouldLoadVideo && (
+            <video
+              key={heroVideoSrc}
+              ref={videoRef}
+              src={heroVideoSrc}
+              poster="/events-bg-poster.webp"
+              preload="none"
+              autoPlay
+              muted
+              loop
+              playsInline
+              onPlaying={handlePlaying}
+              onError={handleError}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: videoReady ? 0.95 : 0,
+                transition: 'opacity 0.5s ease',
+                filter: 'contrast(1.05) saturate(1.15)',
+                animation: 'kenburns 25s ease-in-out infinite alternate',
+                zIndex: 0,
+              }}
+            />
+          )}
 
           {/* Authentic Pronite Atmosphere Vignette (Clean edge transitions, no artificial scanlines) */}
           <div

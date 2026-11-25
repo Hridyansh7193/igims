@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import DynamicBackground from './DynamicBackground';
+import { LOGO_SRC } from '../../constants/logo';
+import logoBlueImg from '../../assets/logo-blue.webp';
 
 /**
  * Preloader — Cinematic Organic Morph:
@@ -205,8 +207,12 @@ export default function Preloader({ onDone }) {
 
               {/* Blue Logo: Zooms in and blurs, then gently dissolves during delayed transition */}
               <img
-                src="/new-logo-blue.png"
+                src={logoBlueImg}
                 alt="Cerebrexia Blue Logo"
+                width={210}
+                height={210}
+                decoding="async"
+                fetchPriority="high"
                 style={{
                   position: 'absolute',
                   left: '50%',
@@ -246,8 +252,12 @@ export default function Preloader({ onDone }) {
 
             {/* Red Logo: Fades in blurred at 4.8x, then shrinks down to 1.0x & unblurs */}
             <img
-              src="/new-logo.jpg"
+              src={LOGO_SRC}
               alt="Cerebrexia Logo"
+              width={210}
+              height={210}
+              decoding="async"
+              fetchPriority="high"
               style={{
                 position: 'absolute',
                 left: '50%',

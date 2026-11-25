@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import Reveal from '../components/common/Reveal';
 import Sticker from '../components/common/Sticker';
-import RegistrationModal from '../components/common/RegistrationModal';
-import QuickRegisterModal from '../components/common/QuickRegisterModal';
-import BasicRegistrationModal from '../components/common/BasicRegistrationModal';
-import GuidelinesModal from '../components/common/GuidelinesModal';
-import EventFormModal from '../components/common/EventFormModal';
-import { hasEventForm } from '../constants/eventForms';
 import { CATEGORIES, TOTAL_EVENTS } from '../constants/eventsData';
-import { getEventGuidelines } from '../constants/eventGuidelines';
 import { getEventImage } from '../constants/eventImages';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 import { useAuth } from '../context/AuthContext';
 import { fetchParticipantProfile, getRegisteredEvents, addRegisteredEvent } from '../lib/eventsService';
 import { CheckCircle2, Check, ArrowRight, Sparkles, Ticket, ScrollText } from 'lucide-react';
+
+const RegistrationModal = lazy(() => import('../components/common/RegistrationModal'));
+const QuickRegisterModal = lazy(() => import('../components/common/QuickRegisterModal'));
+const BasicRegistrationModal = lazy(() => import('../components/common/BasicRegistrationModal'));
+const GuidelinesModal = lazy(() => import('../components/common/GuidelinesModal'));
+const EventFormModal = lazy(() => import('../components/common/EventFormModal'));
 
 export default function EventsPage({ setPage }) {
   const [activeCat, setActiveCat] = useState('all');
@@ -79,7 +78,7 @@ export default function EventsPage({ setPage }) {
     return () => window.removeEventListener('crx_events_updated', handleEventsUpdated);
   }, []);
 
-  const handleCardClick = (ev) => {
+  const handleCardClick = async (ev) => {
     if (!user) {
       if (setPage) setPage('dashboard');
       return;
@@ -98,10 +97,15 @@ export default function EventsPage({ setPage }) {
     setSelectedEvent(ev);
 
     // Events that have their own registration form (questions from the college's forms)
-    // The form itself collects name / college / contact, so no separate profile screen first.
-    if (hasEventForm(ev.name)) {
-      setShowFormModal(true);
-      return;
+    // Lazy-loaded on demand so initial page loads avoid the 103 KB eventForms.json payload.
+    try {
+      const { hasEventForm } = await import('../constants/eventForms');
+      if (hasEventForm(ev.name)) {
+        setShowFormModal(true);
+        return;
+      }
+    } catch (err) {
+      console.warn('[EventsPage] eventForms load notice:', err);
     }
 
     // If candidate has already entered their details once, use the 1-click Quick Register modal
@@ -175,81 +179,90 @@ export default function EventsPage({ setPage }) {
     <>
       {/* 1-Click Quick Register Modal (Uses saved profile details) */}
       {showQuickModal && selectedEvent && (
-        <QuickRegisterModal
-          eventName={selectedEvent.name}
-          eventCat={selectedEvent.cat}
-          participant={profile}
-          onConfirm={handleQuickRegisterConfirm}
-          onEditProfile={() => {
-            setShowQuickModal(false);
-            setShowFullModal(true);
-          }}
-          onClose={() => {
-            setShowQuickModal(false);
-            setSelectedEvent(null);
-          }}
-        />
+        <Suspense fallback={null}>
+          <QuickRegisterModal
+            eventName={selectedEvent.name}
+            eventCat={selectedEvent.cat}
+            participant={profile}
+            onConfirm={handleQuickRegisterConfirm}
+            onEditProfile={() => {
+              setShowQuickModal(false);
+              setShowFullModal(true);
+            }}
+            onClose={() => {
+              setShowQuickModal(false);
+              setSelectedEvent(null);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Full Registration Modal (First time filling details or editing) */}
       {showFullModal && (
-        <RegistrationModal
-          eventName={pendingForm ? undefined : selectedEvent?.name}
-          eventCat={selectedEvent?.cat}
-          initialProfile={profile}
-          onClose={() => {
-            setShowFullModal(false);
-            setPendingForm(false);
-            setSelectedEvent(null);
-          }}
-          onSuccess={handleFullModalSuccess}
-        />
+        <Suspense fallback={null}>
+          <RegistrationModal
+            eventName={pendingForm ? undefined : selectedEvent?.name}
+            eventCat={selectedEvent?.cat}
+            initialProfile={profile}
+            onClose={() => {
+              setShowFullModal(false);
+              setPendingForm(false);
+              setSelectedEvent(null);
+            }}
+            onSuccess={handleFullModalSuccess}
+          />
+        </Suspense>
       )}
 
       {/* Event-specific registration form (answers saved to Supabase) */}
       {showFormModal && selectedEvent && (
-        <EventFormModal
-          eventName={selectedEvent.name}
-          eventKey={selectedEvent.key}
-          profile={profile}
-          onClose={() => {
-            setShowFormModal(false);
-            setSelectedEvent(null);
-          }}
-          onSuccess={(updated, eventName) => {
-            setRegisteredEvents(updated);
-            setShowFormModal(false);
-            setSelectedEvent(null);
-            showToast('Registration Confirmed!', `You are registered for ${eventName}.`, 'success');
-          }}
-        />
+        <Suspense fallback={null}>
+          <EventFormModal
+            eventName={selectedEvent.name}
+            eventKey={selectedEvent.key}
+            profile={profile}
+            onClose={() => {
+              setShowFormModal(false);
+              setSelectedEvent(null);
+            }}
+            onSuccess={(updated, eventName) => {
+              setRegisteredEvents(updated);
+              setShowFormModal(false);
+              setSelectedEvent(null);
+              showToast('Registration Confirmed!', `You are registered for ${eventName}.`, 'success');
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Basic Registration (BR) Modal */}
       {showBRModal && (
-        <BasicRegistrationModal
-          initialProfile={profile}
-          onClose={() => setShowBRModal(false)}
-          onSuccess={(savedProfile) => {
-            setProfile(savedProfile);
-            setShowBRModal(false);
-            showToast(
-              'Basic Registration Confirmed!',
-              'You are registered for Pronites with Basic Registration (BR). Your single candidate ID is active.',
-              'success'
-            );
-          }}
-        />
+        <Suspense fallback={null}>
+          <BasicRegistrationModal
+            initialProfile={profile}
+            onClose={() => setShowBRModal(false)}
+            onSuccess={(savedProfile) => {
+              setProfile(savedProfile);
+              setShowBRModal(false);
+              showToast(
+                'Basic Registration Confirmed!',
+                'You are registered for Pronites with Basic Registration (BR). Your single candidate ID is active.',
+                'success'
+              );
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Event Guidelines Modal */}
       {guidelinesEvent && (
-        <GuidelinesModal
-          eventName={guidelinesEvent.name}
-          eventCat={guidelinesEvent.cat}
-          guidelines={getEventGuidelines(guidelinesEvent.name)}
-          onClose={() => setGuidelinesEvent(null)}
-        />
+        <Suspense fallback={null}>
+          <GuidelinesModal
+            eventName={guidelinesEvent.name}
+            eventCat={guidelinesEvent.cat}
+            onClose={() => setGuidelinesEvent(null)}
+          />
+        </Suspense>
       )}
 
       {/* Toast Notification */}
@@ -435,6 +448,8 @@ export default function EventsPage({ setPage }) {
                       <img
                         src={getEventImage(ev.name).src}
                         alt={ev.name}
+                        width={360}
+                        height={300}
                         loading='lazy'
                         decoding='async'
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: getEventImage(ev.name).pos }}

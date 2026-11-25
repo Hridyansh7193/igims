@@ -5,3 +5,4 @@ scripts/debug.html
 scripts/failed.txt
 .env
 .env.local
+unused_media/

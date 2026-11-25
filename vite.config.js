@@ -36,4 +36,15 @@ function stripScannerOnWebPlugin() {
 export default defineConfig({
   plugins: [stripScannerOnWebPlugin(), react()],
   envPrefix: ['VITE_', 'SUPABASE_', 'RAZORPAY_'],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
 });

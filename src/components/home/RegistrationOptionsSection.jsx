@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import Reveal from '../common/Reveal';
 import Sticker from '../common/Sticker';
-import BasicRegistrationModal from '../common/BasicRegistrationModal';
 import { useAuth } from '../../context/AuthContext';
 import { CheckCircle2, Ticket, Trophy, ArrowRight } from 'lucide-react';
+
+const BasicRegistrationModal = lazy(() => import('../common/BasicRegistrationModal'));
 
 export default function RegistrationOptionsSection({ setPage }) {
   const [showBRModal, setShowBRModal] = useState(false);
@@ -187,10 +188,12 @@ export default function RegistrationOptionsSection({ setPage }) {
 
       {/* Basic Registration Modal */}
       {showBRModal && (
-        <BasicRegistrationModal
-          onClose={() => setShowBRModal(false)}
-          onSuccess={handleBRSuccess}
-        />
+        <Suspense fallback={null}>
+          <BasicRegistrationModal
+            onClose={() => setShowBRModal(false)}
+            onSuccess={handleBRSuccess}
+          />
+        </Suspense>
       )}
 
       {/* Toast Notification */}
