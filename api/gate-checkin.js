@@ -22,26 +22,29 @@ const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 const FALLBACK_ANON_KEY = 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
 
 const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY || 'crx26_volunteer_gate_secret';
-const GATE_USERNAME = (process.env.GATE_SCANNER_USERNAME || 'gate_scanner').trim().toLowerCase();
 const GATE_PASSWORD = process.env.GATE_SCANNER_PASSWORD || process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
 const GATE_JWT_SECRET = process.env.GATE_SCANNER_JWT_SECRET || `${GATE_PASSWORD}_gate_scanner_salt_2026`;
+
+const GATE_ACCOUNTS = [
+  {
+    id: (process.env.GATE_SCANNER_USERNAME_1 || process.env.GATE_SCANNER_USERNAME || 'gate1').trim().toLowerCase(),
+    password: process.env.GATE_SCANNER_PASSWORD_1 || GATE_PASSWORD,
+  },
+  {
+    id: (process.env.GATE_SCANNER_USERNAME_2 || 'gate2').trim().toLowerCase(),
+    password: process.env.GATE_SCANNER_PASSWORD_2 || GATE_PASSWORD,
+  },
+];
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Verifies Gate Scanner volunteer ID and password using timing-safe comparison
+ * Verifies Gate Scanner volunteer ID and password using timing-safe comparison (strictly 2 accounts)
  */
 function verifyGateCredentials(user, pass) {
   if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
   const normUser = user.trim().toLowerCase();
-  const validUsers = Array.from(
-    new Set([GATE_USERNAME, 'gate_scanner', 'gate1', 'gate2', 'gate3', 'gate4', 'gate_admin', 'admin', 'cerebrexia'])
-  );
-
-  const isUserValid = validUsers.some((u) => timingSafeMatch(normUser, u));
-  const isPassValid = timingSafeMatch(pass, GATE_PASSWORD) || timingSafeMatch(pass, 'Yadavdivyansh@2611');
-
-  return isUserValid && isPassValid;
+  return GATE_ACCOUNTS.some((acc) => timingSafeMatch(normUser, acc.id) && timingSafeMatch(pass, acc.password));
 }
 
 /**
