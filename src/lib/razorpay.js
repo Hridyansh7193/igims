@@ -7,12 +7,12 @@ const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
 export const RAZORPAY_KEY_ID =
   import.meta.env.VITE_RAZORPAY_KEY_ID ||
   import.meta.env.RAZORPAY_KEY_ID ||
-  'rzp_live_TyVhU8uhXCiEMj';
+  '';
 export const RAZORPAY_PAYMENT_PAGE_URL =
   import.meta.env.VITE_RAZORPAY_PAYMENT_LINK ||
   import.meta.env.RAZORPAY_PAYMENT_LINK ||
   import.meta.env.VITE_RAZORPAY_PAYMENT_PAGE_URL ||
-  'https://razorpay.me/@igimscerebrexia2026';
+  '';
 
 let razorpayLoadPromise = null;
 
@@ -129,6 +129,22 @@ export async function openRazorpayCheckout({
     }
   } catch (err) {
     console.warn('[Razorpay] Server order creation notice:', err);
+  }
+
+  // Security guard: fail closed if live keys are present on a Preview or local deployment
+  const isPreviewHost = typeof window !== 'undefined' && (
+    (window.location.hostname.endsWith('.vercel.app') && !window.location.hostname.includes('cerebrexiaigims')) ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+  if (isPreviewHost && keyId && keyId.startsWith('rzp_live_')) {
+    alert('Security Alert: Live Razorpay credentials detected on a non-production deployment. Transactions are blocked for your protection.');
+    return;
+  }
+
+  if (!keyId) {
+    alert('Payment gateway key is not configured. Please contact festival administration.');
+    return;
   }
 
   // If live key is present and script loaded, launch official Razorpay

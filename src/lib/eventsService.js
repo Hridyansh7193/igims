@@ -14,13 +14,10 @@ export async function triggerGoogleSheetsSync(type, data) {
       ? 'https://www.cerebrexiaigims.com/api/sync-google-sheets'
       : '/api/sync-google-sheets';
 
-    const localWebhook = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('crx_sheets_webhook_url') : undefined;
-    const defaultWebhook = 'https://script.google.com/macros/s/AKfycbzAlhq0qIZSd_QJOHsiLi9QLsUKGmIXnLfjCBHZvyb1Iln02pb2bqC7yAykEpBchSg4mA/exec';
-
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'SYNC_RECORD', type, data, webhookUrl: localWebhook || defaultWebhook }),
+      body: JSON.stringify({ action: 'SYNC_RECORD', type, data }),
       keepalive: true,
     }).catch(() => {});
   } catch (_) {}

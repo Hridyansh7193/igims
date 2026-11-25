@@ -10,35 +10,35 @@ import {
   setSecureCorsHeaders,
   getCleanSupabaseKey,
   getCleanServiceRoleKey,
+  assertSafeDatabaseMutation,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY;
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
 const PORTAL_USERNAME = (process.env.BOOKING_PORTAL_USERNAME || 'booking_desk').trim().toLowerCase();
-const PORTAL_PASSWORD = process.env.BOOKING_PORTAL_PASSWORD || 'Yadavdivyansh@2611';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
-const PORTAL_JWT_SECRET = process.env.BOOKING_PORTAL_JWT_SECRET || `${PORTAL_PASSWORD}_booking_portal_salt_2026`;
+const PORTAL_PASSWORD = process.env.BOOKING_PORTAL_PASSWORD;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const PORTAL_JWT_SECRET = process.env.BOOKING_PORTAL_JWT_SECRET || (PORTAL_PASSWORD ? `${PORTAL_PASSWORD}_booking_portal_salt_2026` : null);
 
 function verifyPortalCredentials(user, pass) {
   if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
+  if (!PORTAL_PASSWORD && !ADMIN_PASSWORD) return false;
   const normUser = user.trim().toLowerCase();
   const validUsers = [PORTAL_USERNAME, 'booking_desk', 'crx_booking', 'desk_admin', 'admin', 'cerebrexia'];
   const isUserValid = validUsers.some((u) => timingSafeMatch(normUser, u));
   const isPassValid =
-    timingSafeMatch(pass, PORTAL_PASSWORD) ||
-    timingSafeMatch(pass, ADMIN_PASSWORD) ||
-    timingSafeMatch(pass, 'Yadavdivyansh@2611') ||
-    timingSafeMatch(pass, 'cerebrexia2026');
+    (PORTAL_PASSWORD && timingSafeMatch(pass, PORTAL_PASSWORD)) ||
+    (ADMIN_PASSWORD && timingSafeMatch(pass, ADMIN_PASSWORD));
 
-  return isUserValid && isPassValid;
+  return isUserValid && Boolean(isPassValid);
 }
 
 function createSecureToken() {
@@ -59,6 +59,9 @@ export default async function handler(req, res) {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(500).json({ error: 'Database service is not configured on the server.' });
+  }
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // 1. ACTION: LOGIN
@@ -101,6 +104,15 @@ export default async function handler(req, res) {
   }
 
   const operatorName = decodedSession?.user || req.body?.portal_username || 'booking_desk';
+
+  // Enforce environment isolation on database mutations
+  if (['create-booking', 'issue-missing-pass', 'sync-all-reconciliations'].includes(req.body?.action)) {
+    try {
+      assertSafeDatabaseMutation(SUPABASE_URL);
+    } catch (isolationErr) {
+      return res.status(isolationErr.statusCode || 403).json({ error: isolationErr.message });
+    }
+  }
 
   // 3. ACTION: CREATE BOOKING (Multiple candidates, same email supported, zero conflicts)
   if (req.method === 'POST' && req.body?.action === 'create-booking') {

@@ -4,11 +4,13 @@ import {
   sanitizeHeader,
   checkRateLimit,
   setSecureCorsHeaders,
+  isEmailEnabled,
+  isPreviewDeployment,
 } from './_security.js';
 
-const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj';
-const TARGET_INBOX = 'cerebrexia26igims@gmail.com';
+const GMAIL_USER = process.env.GMAIL_USER || process.env.SMTP_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+const TARGET_INBOX = process.env.CONTACT_INBOX_EMAIL || 'cerebrexia26igims@gmail.com';
 
 export default async function handler(req, res) {
   setSecureCorsHeaders(req, res);
@@ -25,6 +27,20 @@ export default async function handler(req, res) {
   const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
   if (!checkRateLimit(`contact_query_${clientIp}`, 10, 60 * 1000)) {
     return res.status(429).json({ error: 'Too many queries submitted. Please wait a minute and try again.' });
+  }
+
+  // Environment isolation: suppress email dispatch in Preview unless explicitly enabled
+  if (!isEmailEnabled()) {
+    console.log('[send-contact-query] Outgoing contact query email suppressed in Preview environment (EMAIL_ENABLED is not true).');
+    return res.status(200).json({
+      success: true,
+      suppressed: true,
+      message: 'Email dispatch is safely disabled on Preview deployments.',
+    });
+  }
+
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    return res.status(500).json({ error: 'Email service credentials are not configured on the server.' });
   }
 
   try {

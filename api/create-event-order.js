@@ -6,15 +6,16 @@ import {
   getCleanServiceRoleKey,
   getCleanSupabaseKey,
   getCleanRazorpayKeys,
+  isPaymentsEnabled,
 } from './_security.js';
 import { computeFee } from './_eventFees.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = getCleanServiceRoleKey(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
 );
 const SUPABASE_ANON = getCleanSupabaseKey(
-  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 );
 
 /**
@@ -38,9 +39,21 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a minute.' });
   }
 
+  if (!isPaymentsEnabled()) {
+    return res.status(403).json({ error: 'Payments are disabled on this deployment (PAYMENTS_ENABLED=false).' });
+  }
+
+  const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
+  if (keyError || !keyId || !keySecret) {
+    return res.status(500).json({ error: keyError || 'Payment gateway is not configured on the server.' });
+  }
+
   // 1. Authenticate the user
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ error: 'Please sign in first.' });
+  if (!SUPABASE_URL || !SUPABASE_ANON) {
+    return res.status(500).json({ error: 'Database service is not configured on the server.' });
+  }
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
   const { data: userData, error: authErr } = await supabase.auth.getUser(token);
   const user = userData?.user;
@@ -51,10 +64,6 @@ export default async function handler(req, res) {
   const safeSlug = sanitizeAlphaNumDash(String(slug || ''));
   const fee = computeFee(safeSlug, selection || {});
   if (fee.error) return res.status(400).json({ error: fee.error });
-
-  const { keyId: initialKeyId, keySecret: initialKeySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
-  let keyId = initialKeyId;
-  let keySecret = initialKeySecret;
 
   // Sanitize notes strictly to printable ASCII (32-126) so Razorpay API never throws UTF-8 / emoji error
   const toAscii = (str, maxLen = 100) =>
@@ -77,7 +86,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    let rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
@@ -85,24 +94,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(orderPayload),
     });
-    let data = await rzpRes.json();
-
-    // If order creation fails with custom env keys (e.g. invalid secret or test key mismatch),
-    // automatically retry with known working live keys
-    if (!rzpRes.ok && (keyId !== DEFAULT_KEY_ID || keySecret !== DEFAULT_KEY_SECRET)) {
-      console.warn('[create-event-order] Custom Razorpay keys failed. Retrying with production fallback keys...');
-      keyId = DEFAULT_KEY_ID;
-      keySecret = DEFAULT_KEY_SECRET;
-      rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${DEFAULT_KEY_ID}:${DEFAULT_KEY_SECRET}`).toString('base64')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderPayload),
-      });
-      data = await rzpRes.json();
-    }
+    const data = await rzpRes.json();
 
     if (!rzpRes.ok) {
       console.error('[create-event-order] Razorpay error:', data);

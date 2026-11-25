@@ -193,35 +193,9 @@ export default function BookingPortalPage({ setPage }) {
         setSession(sess);
         return;
       } else {
-        // Fallback for direct sandbox / local client execution
-        const validUsers = ['booking_desk', 'crx_booking', 'desk_admin', 'admin', 'cerebrexia'];
-        const validPasses = ['Yadavdivyansh@2611', 'cerebrexia2026'];
-        if (validUsers.includes(normUser) && validPasses.includes(enteredPass)) {
-          const sess = {
-            token: `local_${Date.now()}`,
-            username: normUser,
-            time: Date.now(),
-          };
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(sess));
-          setSession(sess);
-          return;
-        }
         setLoginError(data.message || 'Invalid Portal ID or Password.');
       }
     } catch (err) {
-      // Local fallback check
-      const validUsers = ['booking_desk', 'crx_booking', 'desk_admin', 'admin', 'cerebrexia'];
-      const validPasses = ['Yadavdivyansh@2611', 'cerebrexia2026'];
-      if (validUsers.includes(normUser) && validPasses.includes(enteredPass)) {
-        const sess = {
-          token: `local_${Date.now()}`,
-          username: normUser,
-          time: Date.now(),
-        };
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(sess));
-        setSession(sess);
-        return;
-      }
       setLoginError('Failed to connect to authentication service. Try again.');
     } finally {
       setLoginLoading(false);

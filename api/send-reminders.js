@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { isEmailEnabled } from './_security.js';
 
 // ── Environment ──────────────────────────────────────────────────────────────
 const CRON_SECRET          = process.env.CRON_SECRET;
-const SUPABASE_URL         = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL         = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
 const RESEND_API_KEY       = process.env.RESEND_API_KEY;
 const FROM_ADDRESS         = process.env.REMINDER_FROM || 'Cerebrexia <noreply@cerebrexia.in>';
@@ -51,6 +52,12 @@ export default async function handler(req, res) {
   const auth = req.headers['authorization'];
   if (!isAuthorized(auth, CRON_SECRET)) {
     return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Environment isolation: suppress reminders in Preview unless explicitly enabled
+  if (!isEmailEnabled()) {
+    console.log('[send-reminders] Reminders suppressed in Preview deployment (EMAIL_ENABLED is not true).');
+    return res.status(200).json({ success: true, suppressed: true, message: 'Reminders suppressed in Preview deployment.' });
   }
 
   // 3. Validate runtime environment

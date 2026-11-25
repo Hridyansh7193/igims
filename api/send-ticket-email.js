@@ -6,15 +6,16 @@ import {
   sanitizeHeader,
   checkRateLimit,
   setSecureCorsHeaders,
+  isEmailEnabled,
 } from './_security.js';
 
-const GMAIL_USER = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj';
+const GMAIL_USER = process.env.GMAIL_USER || process.env.SMTP_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
 
-const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
-const ARCHIVE_EMAIL = 'thecerebrexia17@gmail.com';
+const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL;
+const ARCHIVE_EMAIL = process.env.GMAIL_ARCHIVE_EMAIL;
 
 /**
  * Generates high-resolution QR code image as PNG Buffer (for inline attachment)
@@ -216,6 +217,20 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many email requests. Please wait a minute.' });
   }
 
+  // Environment isolation: suppress ticket emails in Preview unless explicitly enabled
+  if (!isEmailEnabled()) {
+    console.log('[send-ticket-email] Ticket email dispatch suppressed in Preview environment (EMAIL_ENABLED is not true).');
+    return res.status(200).json({
+      success: true,
+      suppressed: true,
+      message: 'Ticket email dispatch is safely suppressed on Preview deployments.',
+    });
+  }
+
+  if (!RESEND_API_KEY && (!GMAIL_USER || !GMAIL_APP_PASSWORD)) {
+    return res.status(500).json({ error: 'Email service credentials are not configured on the server.' });
+  }
+
   const { ticket, group_size } = req.body || {};
 
   if (!ticket || !ticket.attendee_email || !ticket.qr_token) {
@@ -290,12 +305,12 @@ export default async function handler(req, res) {
     'Official Festival Portal: www.cerebrexiaigims.com',
   ].join('\n');
 
-  const gmailUser = process.env.GMAIL_USER || 'thecerebrexia17@gmail.com';
-  const gmailPass = (process.env.GMAIL_APP_PASSWORD || 'wvtxpnvgatuxsxaj').replace(/\s+/g, '');
-  const resendKey = process.env.RESEND_API_KEY || '';
-  const resendFrom = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
-  const copyEmail = process.env.GMAIL_COPY_EMAIL || 'cerebrexia01@gmail.com';
-  const archiveEmail = 'thecerebrexia17@gmail.com';
+  const gmailUser = GMAIL_USER || '';
+  const gmailPass = (GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  const resendKey = RESEND_API_KEY || '';
+  const resendFrom = RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
+  const copyEmail = COPY_EMAIL || '';
+  const archiveEmail = ARCHIVE_EMAIL || '';
 
   const bccRecipients = Array.from(new Set([copyEmail, archiveEmail])).filter(Boolean);
   let lastError = null;

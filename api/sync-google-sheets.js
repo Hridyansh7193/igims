@@ -6,24 +6,23 @@ import {
   checkRateLimit,
   setSecureCorsHeaders,
   getCleanSupabaseKey,
+  isSheetsSyncEnabled,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY;
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || `${ADMIN_PASSWORD}_secure_crx26_salt`;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || (ADMIN_PASSWORD ? `${ADMIN_PASSWORD}_secure_crx26_salt` : null);
 
-// Default configured webhook URL from Google Apps Script deployment
-const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzAlhq0qIZSd_QJOHsiLi9QLsUKGmIXnLfjCBHZvyb1Iln02pb2bqC7yAykEpBchSg4mA/exec';
-let configuredWebhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
+let configuredWebhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || null;
 
 export default async function handler(req, res) {
   setSecureCorsHeaders(req, res, 'GET, POST, OPTIONS');
@@ -33,7 +32,6 @@ export default async function handler(req, res) {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Rate limit: 60 requests per minute
   const rate = checkRateLimit(clientIp, 'sheets_sync', 60, 60000);
@@ -44,10 +42,12 @@ export default async function handler(req, res) {
   // GET: Return current webhook status
   if (req.method === 'GET') {
     const activeUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || configuredWebhookUrl;
+    const syncEnabled = isSheetsSyncEnabled() && Boolean(activeUrl);
     return res.status(200).json({
       configured: Boolean(activeUrl),
       hasEnvUrl: Boolean(process.env.GOOGLE_SHEETS_WEBHOOK_URL),
-      webhookUrl: activeUrl ? activeUrl.slice(0, 35) + '...' : null,
+      syncEnabled,
+      webhookUrl: activeUrl ? activeUrl.slice(0, 30) + '...' : null,
     });
   }
 
@@ -55,13 +55,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Safety check: block synchronization if disabled in current environment (default disabled in Preview)
+  if (!isSheetsSyncEnabled()) {
+    return res.status(403).json({
+      success: false,
+      error: 'Google Sheets synchronization is disabled on this deployment (GOOGLE_SHEETS_SYNC_ENABLED is not enabled).',
+    });
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(500).json({ success: false, error: 'Database service is not configured on the server.' });
+  }
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
   const { action, webhookUrl, type, data } = req.body || {};
   let targetUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || webhookUrl || configuredWebhookUrl;
 
   // ACTION 1: Set / Update Webhook URL (Admin only)
   if (action === 'SET_WEBHOOK_URL') {
     const token = req.headers['x-admin-token'] || req.body?.token;
-    const isAuthed = verifyToken(token, ADMIN_JWT_SECRET) || timingSafeMatch(req.body?.admin_password, ADMIN_PASSWORD) || (typeof token === 'string' && token.startsWith('local_'));
+    const isAuthed = verifyToken(token, ADMIN_JWT_SECRET) || (ADMIN_PASSWORD && timingSafeMatch(req.body?.admin_password, ADMIN_PASSWORD));
     if (!isAuthed) {
       return res.status(401).json({ error: 'Admin authorization required.' });
     }
