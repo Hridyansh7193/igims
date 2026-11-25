@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Capacitor } from '@capacitor/core';
 import GlobalStyle from './styles/GlobalStyle';
 import DynamicBackground from './components/common/DynamicBackground';
@@ -13,11 +13,13 @@ import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import DashboardPage from './pages/DashboardPage';
 import PolicyPage from './pages/PolicyPage';
-import GateScannerPage from './pages/GateScannerPage';
 import AdminPage from './pages/AdminPage';
 import BookingPortalPage from './pages/BookingPortalPage';
 import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
+
+// Lazy-loaded ONLY inside native Android APK so website bundle never loads or exposes scanner UI
+const GateScannerPage = lazy(() => import('./pages/GateScannerPage'));
 
 const POLICY_ROUTES = ['terms', 'privacy', 'refunds', 'pricing', 'policies'];
 const ALL_ROUTES = [...POLICY_ROUTES, 'home', 'events', 'pronites', 'accommodation', 'about', 'contact', 'dashboard', 'admin', 'booking-portal', 'booking'];
@@ -85,7 +87,9 @@ export default function App() {
       <AuthProvider>
         <div className="crx-root">
           <GlobalStyle />
-          <GateScannerPage />
+          <Suspense fallback={<div style={{ minHeight: '100vh', background: '#070204' }} />}>
+            <GateScannerPage />
+          </Suspense>
         </div>
       </AuthProvider>
     );

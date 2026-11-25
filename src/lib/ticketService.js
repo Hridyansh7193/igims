@@ -86,11 +86,9 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
   const ticketsToInsert = [];
 
   if (registrationType === 'GROUP') {
-    // Strictly cap the ticket count to basicReg.group_size (e.g., exactly 2 tickets for a group of 2)
     const targetSize = Math.max(1, Number(basicReg.group_size) || (rawGroupMembers.length > 0 ? rawGroupMembers.length : 2));
     const groupMembers = rawGroupMembers.slice(0, targetSize);
 
-    // If rawGroupMembers had fewer items than targetSize, fill up to targetSize
     while (groupMembers.length < targetSize) {
       groupMembers.push({
         first_name: '',
@@ -101,7 +99,6 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
       });
     }
 
-    // Generate individual ticket for each member in the group (exactly targetSize tickets)
     groupMembers.forEach((member, index) => {
       const isLead = index === 0 || member.role === 'LEAD';
       const ticketNum = `${baseTicketNum}-${String(index + 1).padStart(2, '0')}`;
@@ -133,7 +130,6 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
       });
     });
   } else {
-    // Single Registration: 1 Ticket
     const fullName = `${basicReg.first_name || ''} ${basicReg.surname || ''}`.trim() || fallbackName;
     ticketsToInsert.push({
       ticket_number: baseTicketNum,
@@ -166,7 +162,6 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
 
     if (error) {
       console.warn('[ticketService] Insert tickets db warning:', error);
-      // Fallback: save locally
       savedTickets = ticketsToInsert.map(t => ({ ...t, id: 'local_' + Date.now() }));
     } else {
       savedTickets = data || [];
@@ -230,7 +225,6 @@ export async function issueTicketsForBasicRegistration(userId, basicReg, payment
  * Only Basic Registration (BR) passes are generated and emailed to attendees.
  */
 export async function issueTicketForEventRegistration(userId, eventName, categoryKey = 'Cultural', additionalData = {}) {
-  // No-op: Only Basic Registration (BR) issues QR passes and emails
   return null;
 }
 
@@ -289,40 +283,5 @@ export async function fetchUserTickets(userId, userEmail = '') {
   } catch (err) {
     console.error('[ticketService] fetchUserTickets exception:', err);
     return [];
-  }
-}
-
-/**
- * Scans / Checks in a ticket against the gate API
- */
-export async function checkinTicketAtGate(qrToken, gateVolunteer = 'Gate Volunteer', dayOverride = null) {
-  try {
-    const isCustomOrVercel = typeof window !== 'undefined' && (
-      window.location.origin.includes('cerebrexiaigims.com') ||
-      window.location.origin.includes('vercel.app')
-    );
-    const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
-      ? 'https://www.cerebrexiaigims.com/api/gate-checkin'
-      : '/api/gate-checkin';
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-gate-api-key': 'crx26_volunteer_gate_secret',
-      },
-      body: JSON.stringify({
-        qr_token: qrToken,
-        gate_volunteer: gateVolunteer,
-        day_override: dayOverride,
-      }),
-    });
-    return await res.json();
-  } catch (err) {
-    console.error('[ticketService] Gate checkin network error:', err);
-    return {
-      status: 'ERROR',
-      message: 'Network error connecting to gate validation server.',
-    };
   }
 }

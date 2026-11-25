@@ -120,7 +120,7 @@ export function checkRateLimit(ip, key, limit = 10, windowMs = 60000) {
 /**
  * Periodically purge stale entries from rate limit map to avoid memory leak
  */
-setInterval(() => {
+const rateLimitPurgeTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, val] of rateLimitMap.entries()) {
     if (now > val.resetTime) {
@@ -128,6 +128,7 @@ setInterval(() => {
     }
   }
 }, 300000); // every 5 minutes
+if (rateLimitPurgeTimer.unref) rateLimitPurgeTimer.unref();
 
 /**
  * Returns safe CORS headers based on origin
@@ -154,7 +155,7 @@ export function setSecureCorsHeaders(req, res, allowedMethods = 'GET, POST, OPTI
   }
 
   res.setHeader('Access-Control-Allow-Methods', allowedMethods);
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-token, x-gate-api-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-token, x-portal-token, x-gate-api-key, x-gate-token, x-gate-client');
   res.setHeader('Access-Control-Max-Age', '86400');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 }
