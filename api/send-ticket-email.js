@@ -1,6 +1,4 @@
-import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
-import { Resend } from 'resend';
 import {
   escapeHtml,
   sanitizeHeader,
@@ -8,11 +6,7 @@ import {
   setSecureCorsHeaders,
   isEmailEnabled,
 } from './_security.js';
-
-const GMAIL_USER = process.env.GMAIL_USER || process.env.SMTP_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
+import { getGmailConfig, createGmailTransporter } from './_email.js';
 
 const COPY_EMAIL = process.env.GMAIL_COPY_EMAIL;
 const ARCHIVE_EMAIL = process.env.GMAIL_ARCHIVE_EMAIL;
@@ -33,26 +27,6 @@ async function generateQRBuffer(token) {
     });
   } catch (err) {
     console.error('[QR] Buffer generation error:', err);
-    return null;
-  }
-}
-
-/**
- * Generates high-resolution QR code image as base64 Data URL (fallback)
- */
-async function generateQRDataURL(token) {
-  try {
-    return await QRCode.toDataURL(token, {
-      errorCorrectionLevel: 'H',
-      margin: 2,
-      width: 450,
-      color: {
-        dark: '#000000',
-        light: '#ffffff',
-      },
-    });
-  } catch (err) {
-    console.error('[QR] Data URL generation error:', err);
     return null;
   }
 }
@@ -227,8 +201,9 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!RESEND_API_KEY && (!GMAIL_USER || !GMAIL_APP_PASSWORD)) {
-    return res.status(500).json({ error: 'Email service credentials are not configured on the server.' });
+  const gmail = getGmailConfig();
+  if (!gmail.configured) {
+    return res.status(500).json({ error: 'Gmail SMTP credentials (GMAIL_USER, GMAIL_APP_PASSWORD) are not configured on the server.' });
   }
 
   const { ticket, group_size } = req.body || {};
@@ -249,9 +224,8 @@ export default async function handler(req, res) {
   const category = ticket.metadata?.category || '';
 
   const qrBuffer = await generateQRBuffer(ticket.qr_token);
-  const qrDataUrl = await generateQRDataURL(ticket.qr_token);
 
-  if (!qrBuffer && !qrDataUrl) {
+  if (!qrBuffer) {
     return res.status(500).json({ error: 'Failed to generate QR Code' });
   }
 
@@ -260,18 +234,6 @@ export default async function handler(req, res) {
     attendee_college: ticket.attendee_college,
     ticket_number: ticket.ticket_number,
     qr_src: 'cid:gate_pass_qr',
-    role: ticket.role,
-    group_size: group_size || 1,
-    pass_type: ticket.pass_type,
-    event_name: eventName,
-    category: category,
-  });
-
-  const emailHtmlDataUrl = buildTicketEmailHTML({
-    attendee_name: ticket.attendee_name,
-    attendee_college: ticket.attendee_college,
-    ticket_number: ticket.ticket_number,
-    qr_src: qrDataUrl,
     role: ticket.role,
     group_size: group_size || 1,
     pass_type: ticket.pass_type,
@@ -305,85 +267,39 @@ export default async function handler(req, res) {
     'Official Festival Portal: www.cerebrexiaigims.com',
   ].join('\n');
 
-  const gmailUser = GMAIL_USER || '';
-  const gmailPass = (GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-  const resendKey = RESEND_API_KEY || '';
-  const resendFrom = RESEND_FROM_EMAIL || "Cerebrexia '26 <onboarding@resend.dev>";
   const copyEmail = COPY_EMAIL || '';
   const archiveEmail = ARCHIVE_EMAIL || '';
-
   const bccRecipients = Array.from(new Set([copyEmail, archiveEmail])).filter(Boolean);
-  let lastError = null;
 
-  // Method 1: Gmail SMTP (Direct port 465 SSL)
-  if (gmailPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: gmailUser,
-          pass: gmailPass,
+  // Dispatch via Gmail SMTP (Direct port 465 SSL)
+  try {
+    const transporter = createGmailTransporter();
+
+    const mailOptions = {
+      from: `"Cerebrexia '26 IGIMS" <${gmail.user}>`,
+      to: cleanEmail,
+      bcc: bccRecipients,
+      subject: emailSubject,
+      text: plainText,
+      html: emailHtmlCid,
+      attachments: [
+        {
+          filename: `Pass-${sanitizeHeader(ticket.ticket_number)}.png`,
+          content: qrBuffer,
+          cid: 'gate_pass_qr',
         },
-      });
+      ],
+    };
 
-      const mailOptions = {
-        from: `"Cerebrexia '26 IGIMS" <${gmailUser}>`,
-        to: cleanEmail,
-        bcc: bccRecipients,
-        subject: emailSubject,
-        text: plainText,
-        html: emailHtmlCid,
-        attachments: qrBuffer ? [
-          {
-            filename: `Pass-${sanitizeHeader(ticket.ticket_number)}.png`,
-            content: qrBuffer,
-            cid: 'gate_pass_qr',
-          },
-        ] : [],
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      console.log('[send-ticket-email] Sent via Gmail SMTP to', cleanEmail, 'MessageId:', info.messageId);
-      return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
-    } catch (smtpErr) {
-      console.error('[send-ticket-email] Gmail SMTP error:', smtpErr.message);
-      lastError = smtpErr.message;
-    }
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[send-ticket-email] Sent via Gmail SMTP to', cleanEmail, 'MessageId:', info.messageId);
+    return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
+  } catch (smtpErr) {
+    console.error('[send-ticket-email] Gmail SMTP error:', smtpErr.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to dispatch ticket email via Gmail SMTP',
+      details: smtpErr.message || 'Email delivery service unavailable',
+    });
   }
-
-  // Method 2: Resend
-  if (resendKey) {
-    try {
-      const resend = new Resend(resendKey);
-      const resendPayload = {
-        from: resendFrom,
-        to: [cleanEmail],
-        bcc: bccRecipients,
-        reply_to: gmailUser,
-        subject: emailSubject,
-        text: plainText,
-        html: emailHtmlDataUrl,
-        attachments: qrBuffer ? [
-          {
-            filename: `Pass-${sanitizeHeader(ticket.ticket_number)}.png`,
-            content: qrBuffer.toString('base64'),
-          },
-        ] : [],
-      };
-
-      const resendRes = await resend.emails.send(resendPayload);
-      return res.status(200).json({ success: true, provider: 'resend', data: resendRes });
-    } catch (resendErr) {
-      console.error('[send-ticket-email] Resend error:', resendErr.message);
-      lastError = resendErr.message;
-    }
-  }
-
-  return res.status(500).json({
-    success: false,
-    error: 'Failed to dispatch ticket email via mail server',
-    details: lastError || 'Email delivery service unavailable',
-  });
 }

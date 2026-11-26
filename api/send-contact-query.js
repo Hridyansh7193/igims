@@ -1,15 +1,12 @@
-import nodemailer from 'nodemailer';
 import {
   escapeHtml,
   sanitizeHeader,
   checkRateLimit,
   setSecureCorsHeaders,
   isEmailEnabled,
-  isPreviewDeployment,
 } from './_security.js';
+import { getGmailConfig, createGmailTransporter } from './_email.js';
 
-const GMAIL_USER = process.env.GMAIL_USER || process.env.SMTP_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
 const TARGET_INBOX = process.env.CONTACT_INBOX_EMAIL || 'cerebrexia26igims@gmail.com';
 
 export default async function handler(req, res) {
@@ -39,8 +36,9 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-    return res.status(500).json({ error: 'Email service credentials are not configured on the server.' });
+  const gmail = getGmailConfig();
+  if (!gmail.configured) {
+    return res.status(500).json({ error: 'Gmail SMTP credentials (GMAIL_USER, GMAIL_APP_PASSWORD) are not configured on the server.' });
   }
 
   try {
@@ -60,15 +58,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid email address provided.' });
     }
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: GMAIL_USER,
-        pass: GMAIL_APP_PASSWORD,
-      },
-    });
+    const transporter = createGmailTransporter();
 
     const subject = sanitizeHeader(`[Cerebrexia '26 Query] from ${cleanName}`);
 
@@ -122,7 +112,7 @@ export default async function handler(req, res) {
     const plainText = `Cerebrexia '26 Query\n\nFrom: ${cleanName} (${cleanEmail})\n\nMessage:\n${cleanMessage}\n`;
 
     const mailOptions = {
-      from: `"Cerebrexia '26 Portal" <${GMAIL_USER}>`,
+      from: `"Cerebrexia '26 Portal" <${gmail.user}>`,
       to: TARGET_INBOX,
       replyTo: cleanEmail,
       subject: subject,
@@ -133,7 +123,7 @@ export default async function handler(req, res) {
     const info = await transporter.sendMail(mailOptions);
     console.log('[send-contact-query] Sent query to', TARGET_INBOX, 'from', cleanEmail, 'MessageId:', info.messageId);
 
-    return res.status(200).json({ success: true, messageId: info.messageId });
+    return res.status(200).json({ success: true, provider: 'gmail_smtp', messageId: info.messageId });
   } catch (error) {
     console.error('[send-contact-query] Error sending contact email:', error);
     return res.status(500).json({ error: 'Failed to send query email. Please try mailto link.' });
