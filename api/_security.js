@@ -265,6 +265,25 @@ export function getCleanServiceRoleKey(key) {
 }
 
 /**
+ * Resolves the first valid Supabase API key across server/anon env vars,
+ * skipping malformed or placeholder values instead of failing early.
+ */
+export function resolveSupabaseServerKey() {
+  const candidates = [
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.SUPABASE_SERVICE_KEY,
+    process.env.SERVICE_ROLE_KEY,
+    process.env.SUPABASE_ANON_KEY,
+    process.env.VITE_SUPABASE_ANON_KEY,
+  ];
+  for (const candidate of candidates) {
+    const valid = getCleanSupabaseKey(candidate);
+    if (valid) return valid;
+  }
+  return null;
+}
+
+/**
  * Validates, cleans, and returns active Razorpay Key ID and Secret.
  * Enforces strict environment isolation:
  * - In Preview: rejects live keys (rzp_live_*), requires test keys (rzp_test_*), or fails closed.

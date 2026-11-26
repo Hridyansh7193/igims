@@ -7,19 +7,12 @@ import {
   verifyToken,
   checkRateLimit,
   setSecureCorsHeaders,
-  getCleanSupabaseKey,
+  resolveSupabaseServerKey,
   assertSafeDatabaseMutation,
 } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const rawKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
+const SUPABASE_KEY = resolveSupabaseServerKey();
 
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'cerebrexiaadmin').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -48,12 +41,43 @@ export default async function handler(req, res) {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+
+  // 1. ADMIN LOGIN (Does not require Supabase connection)
+  if (req.method === 'POST' && req.body?.action === 'login') {
+    const rate = checkRateLimit(clientIp, 'admin_login', 10, 300000);
+    if (!rate.allowed) {
+      return res.status(429).json({ success: false, message: 'Too many login attempts. Please wait 5 minutes.' });
+    }
+
+    const { username, password } = req.body;
+    if (verifyCredentials(username, password)) {
+      const token = signToken(
+        {
+          user: String(username).trim().toLowerCase(),
+          role: 'ADMIN',
+          iat: Date.now(),
+          exp: Date.now() + 24 * 60 * 60 * 1000,
+        },
+        ADMIN_JWT_SECRET
+      );
+
+      return res.status(200).json({
+        success: true,
+        token,
+        username: String(username).trim().toLowerCase(),
+        message: 'Admin authentication successful',
+      });
+    }
+
+    return res.status(401).json({ success: false, message: 'Invalid admin username or password' });
+  }
+
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Database service is not configured on the server.' });
   }
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 1. PUBLIC VALIDATION (Used by attendees at checkout)
+  // 2. PUBLIC VALIDATION (Used by attendees at checkout)
   if (req.method === 'POST' && req.body?.action === 'validate') {
     // Rate limit: max 30 validations per minute per IP to prevent code enumeration
     const rate = checkRateLimit(clientIp, 'promo_validate', 30, 60000);
@@ -102,38 +126,6 @@ export default async function handler(req, res) {
       console.error('[admin-promo-codes] Validation exception:', err);
       return res.status(500).json({ valid: false, message: 'Server error verifying coupon.' });
     }
-  }
-
-  // 2. ADMIN LOGIN
-  if (req.method === 'POST' && req.body?.action === 'login') {
-    // Rate limit: max 10 failed login attempts per 5 minutes per IP to prevent brute-force attacks
-    const rate = checkRateLimit(clientIp, 'admin_login', 10, 300000);
-    if (!rate.allowed) {
-      return res.status(429).json({ success: false, message: 'Too many login attempts. Please wait 5 minutes.' });
-    }
-
-    const { username, password } = req.body;
-    if (verifyCredentials(username, password)) {
-      // 24-hour token expiry with HMAC-SHA256 signature
-      const token = signToken(
-        {
-          user: String(username).trim().toLowerCase(),
-          role: 'ADMIN',
-          iat: Date.now(),
-          exp: Date.now() + 24 * 60 * 60 * 1000,
-        },
-        ADMIN_JWT_SECRET
-      );
-
-      return res.status(200).json({
-        success: true,
-        token,
-        username: String(username).trim().toLowerCase(),
-        message: 'Admin authentication successful',
-      });
-    }
-
-    return res.status(401).json({ success: false, message: 'Invalid admin username or password' });
   }
 
   // 3. AUTHENTICATION GUARD FOR ADMIN OPERATIONS

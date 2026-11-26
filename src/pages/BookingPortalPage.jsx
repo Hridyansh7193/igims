@@ -193,7 +193,7 @@ export default function BookingPortalPage({ setPage }) {
         setSession(sess);
         return;
       } else {
-        setLoginError(data.message || 'Invalid Portal ID or Password.');
+        setLoginError(data.message || data.error || 'Invalid Portal ID or Password.');
       }
     } catch (err) {
       setLoginError('Failed to connect to authentication service. Try again.');
@@ -841,7 +841,7 @@ export default function BookingPortalPage({ setPage }) {
                 marginTop: 8,
               }}
             >
-              {loginLoading ? 'AUTHENTICATING...' : 'ACCESS BOOKING DESK &rarr;'}
+              {loginLoading ? 'AUTHENTICATING...' : 'ACCESS BOOKING DESK →'}
             </button>
           </form>
 

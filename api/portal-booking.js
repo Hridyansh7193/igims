@@ -8,20 +8,13 @@ import {
   verifyToken,
   checkRateLimit,
   setSecureCorsHeaders,
-  getCleanSupabaseKey,
+  resolveSupabaseServerKey,
   getCleanServiceRoleKey,
   assertSafeDatabaseMutation,
 } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const rawKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
+const SUPABASE_KEY = resolveSupabaseServerKey();
 
 const PORTAL_USERNAME = (process.env.BOOKING_PORTAL_USERNAME || 'cerebrexiaadmin').trim().toLowerCase();
 const PORTAL_PASSWORD = process.env.BOOKING_PORTAL_PASSWORD;
@@ -60,12 +53,8 @@ export default async function handler(req, res) {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return res.status(500).json({ error: 'Database service is not configured on the server.' });
-  }
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 1. ACTION: LOGIN
+  // 1. ACTION: LOGIN (Does not require Supabase connection)
   if (req.method === 'POST' && req.body?.action === 'login') {
     const rate = checkRateLimit(clientIp, 'portal_login', 15, 300000);
     if (!rate.allowed) {
@@ -103,6 +92,11 @@ export default async function handler(req, res) {
   if (!decodedSession && !isDirectAuthed) {
     return res.status(401).json({ error: 'Unauthorized: Booking Portal credentials or session required.' });
   }
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(500).json({ error: 'Database service is not configured on the server.' });
+  }
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const operatorName = decodedSession?.user || req.body?.portal_username || 'booking_desk';
 

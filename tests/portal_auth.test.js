@@ -113,5 +113,39 @@ await runAsyncTest('gate-checkin.js accepts CerebrexiaAdmin from APK using ADMIN
   assert.equal(bad.res.statusCode, 401);
 });
 
+await runAsyncTest('gate-checkin.js uses GATE_SCANNER_PASSWORD override when set without changing ADMIN_PASSWORD', async (i) => {
+  resetEnv({
+    SUPABASE_URL: 'https://example.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_mock_key',
+    ADMIN_PASSWORD: 'TestSharedPassword@123',
+    GATE_SCANNER_PASSWORD: 'GateScanner@26',
+  });
+  const { default: handler } = await loadFresh('../api/gate-checkin.js', i);
+
+  const okGate = createMockReqRes({
+    headers: { 'x-gate-client': 'cerebrexia-android-apk' },
+    body: { action: 'login', username: 'CerebrexiaAdmin', password: 'GateScanner@26' },
+  });
+  await handler(okGate.req, okGate.res);
+  assert.equal(okGate.res.statusCode, 200);
+  assert.equal(okGate.res.payload?.success, true);
+
+  const oldPassOnGate = createMockReqRes({
+    headers: { 'x-gate-client': 'cerebrexia-android-apk' },
+    body: { action: 'login', username: 'CerebrexiaAdmin', password: 'TestSharedPassword@123' },
+  });
+  await handler(oldPassOnGate.req, oldPassOnGate.res);
+  assert.equal(oldPassOnGate.res.statusCode, 401);
+});
+
+await runAsyncTest('resolveSupabaseServerKey skips malformed service key and falls back to valid VITE_SUPABASE_ANON_KEY', async (i) => {
+  resetEnv({
+    SUPABASE_SERVICE_ROLE_KEY: 'your_placeholder_or_corrupted_key',
+    VITE_SUPABASE_ANON_KEY: 'sb_publishable_valid_anon_key_123',
+  });
+  const { resolveSupabaseServerKey } = await loadFresh('../api/_security.js', i);
+  assert.equal(resolveSupabaseServerKey(), 'sb_publishable_valid_anon_key_123');
+});
+
 Object.assign(process.env, origEnv);
 console.log('\n=== ALL PORTAL AUTH TESTS COMPLETED ===');

@@ -45,7 +45,7 @@ export async function adminLogin(username, password) {
       sessionStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
       return { success: true, session };
     }
-    return { success: false, message: data.message || 'Invalid admin username or password.' };
+    return { success: false, message: data.message || data.error || 'Invalid admin username or password.' };
   } catch (err) {
     console.warn('[promoService] API login error:', err);
     return { success: false, message: 'Could not connect to authentication service. Check network.' };
