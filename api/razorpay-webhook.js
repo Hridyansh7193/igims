@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { timingSafeMatch } from './_security.js';
+import { timingSafeMatch, isPaymentsEnabled, getCleanRazorpayKeys, getCleanServiceRoleKey } from './_security.js';
 import { finalizeEventPayment } from './_finalizeEventPayment.js';
 
 // Razorpay signs the RAW body, so Vercel's body parser must be off.
@@ -28,13 +28,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  if (!isPaymentsEnabled()) {
+    return res.status(200).json({ ignored: true, reason: 'Payments disabled on this deployment.' });
+  }
+
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET;
-  const keyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
-  if (!webhookSecret || !keyId || !keySecret || !serviceKey || !SUPABASE_URL) {
-    console.error('[razorpay-webhook] missing required environment variables');
-    return res.status(500).json({ error: 'Webhook service is not configured' });
+  const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
+  const serviceKey = getCleanServiceRoleKey(
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
+  );
+  if (keyError || !webhookSecret || !keyId || !keySecret || !serviceKey || !SUPABASE_URL) {
+    console.error('[razorpay-webhook] missing or isolated environment variables', keyError || '');
+    return res.status(500).json({ error: keyError || 'Webhook service is not configured' });
   }
 
   const raw = await readRaw(req);

@@ -86,7 +86,7 @@ runTest('getCleanRazorpayKeys accepts test keys on Preview deployments', () => {
   assert.equal(res.keySecret, 'staging_secret_123456');
 });
 
-// 6. Razorpay key validation in Production: Test key rejected
+// 6. Razorpay key validation in Production: Test key rejected, Live key accepted
 runTest('getCleanRazorpayKeys rejects test keys on Production deployments', () => {
   process.env.VERCEL_ENV = 'production';
   process.env.RAZORPAY_KEY_ID = 'rzp_test_StagingKey123';
@@ -95,6 +95,17 @@ runTest('getCleanRazorpayKeys rejects test keys on Production deployments', () =
   const res = getCleanRazorpayKeys();
   assert.equal(res.keyId, null);
   assert.match(res.error, /Configuration Error: Test Razorpay key.*detected in Production/);
+});
+
+runTest('getCleanRazorpayKeys accepts live keys on Production deployments', () => {
+  process.env.VERCEL_ENV = 'production';
+  process.env.RAZORPAY_KEY_ID = 'rzp_live_SyntheticProdKey123';
+  process.env.RAZORPAY_KEY_SECRET = 'synthetic_prod_secret_123456';
+
+  const res = getCleanRazorpayKeys();
+  assert.equal(res.error, null);
+  assert.equal(res.keyId, 'rzp_live_SyntheticProdKey123');
+  assert.equal(res.keySecret, 'synthetic_prod_secret_123456');
 });
 
 // 7. Razorpay keys missing: returns error, no fallback to hardcoded keys

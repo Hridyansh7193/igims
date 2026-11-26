@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 const GATE_SESSION_KEY = 'crx_gate_scanner_session';
 const GATE_SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const GATE_API_ENDPOINT = 'https://www.cerebrexiaigims.com/api/gate-checkin';
+const GATE_API_KEY = import.meta.env.VITE_GATE_API_KEY || '';
 
 function assertNativeApk() {
   return typeof window !== 'undefined' && Capacitor.isNativePlatform();
@@ -48,13 +49,15 @@ export async function loginGateScanner(username, password) {
   }
 
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-gate-client': 'cerebrexia-android-apk',
+    };
+    if (GATE_API_KEY) headers['x-gate-api-key'] = GATE_API_KEY;
+
     const res = await fetch(GATE_API_ENDPOINT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-gate-api-key': 'crx26_volunteer_gate_secret',
-        'x-gate-client': 'cerebrexia-android-apk',
-      },
+      headers,
       body: JSON.stringify({
         action: 'login',
         username: String(username || '').trim(),
@@ -88,14 +91,16 @@ async function postGateCheckin(payload, gateToken) {
 
   try {
     const token = gateToken || getGateScannerSession()?.token || '';
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-gate-client': 'cerebrexia-android-apk',
+      'x-gate-token': token,
+    };
+    if (GATE_API_KEY) headers['x-gate-api-key'] = GATE_API_KEY;
+
     const res = await fetch(GATE_API_ENDPOINT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-gate-api-key': 'crx26_volunteer_gate_secret',
-        'x-gate-client': 'cerebrexia-android-apk',
-        'x-gate-token': token,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 

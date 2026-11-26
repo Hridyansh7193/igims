@@ -24,8 +24,8 @@ export default async function handler(req, res) {
   }
 
   // Rate limiting by client IP
-  const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-  if (!checkRateLimit(`contact_query_${clientIp}`, 10, 60 * 1000)) {
+  const clientIp = String(req.headers['x-forwarded-for'] || '').split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIp, 'contact_query', 10, 60 * 1000).allowed) {
     return res.status(429).json({ error: 'Too many queries submitted. Please wait a minute and try again.' });
   }
 

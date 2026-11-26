@@ -87,8 +87,13 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'Google Sheets webhook URL updated successfully.' });
   }
 
-  // ACTION 2: Test Connection
+  // ACTION 2: Test Connection (Admin only)
   if (action === 'TEST_CONNECTION') {
+    const token = req.headers['x-admin-token'] || req.body?.token;
+    const isAuthed = verifyToken(token, ADMIN_JWT_SECRET) || (ADMIN_PASSWORD && timingSafeMatch(req.body?.admin_password, ADMIN_PASSWORD));
+    if (!isAuthed) {
+      return res.status(401).json({ error: 'Admin authorization required.' });
+    }
     if (!targetUrl) {
       return res.status(400).json({ success: false, error: 'No Google Sheets webhook URL configured yet.' });
     }
@@ -108,7 +113,7 @@ export default async function handler(req, res) {
   // ACTION 3: Batch Sync / Export All (Admin only)
   if (action === 'SYNC_ALL' || action === 'EXPORT_ALL') {
     const token = req.headers['x-admin-token'] || req.body?.token;
-    const isAuthed = verifyToken(token, ADMIN_JWT_SECRET) || timingSafeMatch(req.body?.admin_password, ADMIN_PASSWORD) || (typeof token === 'string' && token.startsWith('local_'));
+    const isAuthed = verifyToken(token, ADMIN_JWT_SECRET) || (ADMIN_PASSWORD && timingSafeMatch(req.body?.admin_password, ADMIN_PASSWORD));
     if (!isAuthed) {
       return res.status(401).json({ error: 'Admin authorization required.' });
     }

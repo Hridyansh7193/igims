@@ -326,9 +326,9 @@ export default async function handler(req, res) {
     return res.status(429).json({ status: 'ERROR', message: 'Rate limit exceeded. Please wait a moment.' });
   }
 
-  // Optional terminal API key guard
+  // Optional terminal API key guard (enforced only if GATE_SECRET_KEY is explicitly configured)
   const providedGateKey = req.headers['x-gate-api-key'];
-  if (providedGateKey && !timingSafeMatch(providedGateKey, GATE_SECRET_KEY)) {
+  if (GATE_SECRET_KEY && (!providedGateKey || !timingSafeMatch(providedGateKey, GATE_SECRET_KEY))) {
     return res.status(401).json({ status: 'UNAUTHORIZED', message: 'Unauthorized gate scanner terminal.' });
   }
 

@@ -235,6 +235,7 @@ export async function dispatchTicketEmail(ticket, groupSize = 1) {
   try {
     const isCustomOrVercel = typeof window !== 'undefined' && (
       window.location.origin.includes('cerebrexiaigims.com') ||
+      window.location.origin.includes('cerebrexia.in') ||
       window.location.origin.includes('vercel.app')
     );
     const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
