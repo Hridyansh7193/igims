@@ -5,19 +5,12 @@ import {
   verifyToken,
   checkRateLimit,
   setSecureCorsHeaders,
-  getCleanSupabaseKey,
+  resolveSupabaseServerKey,
   isSheetsSyncEnabled,
 } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const rawKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
+const SUPABASE_KEY = resolveSupabaseServerKey();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || (ADMIN_PASSWORD ? `${ADMIN_PASSWORD}_secure_crx26_salt` : null);

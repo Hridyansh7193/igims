@@ -7,19 +7,12 @@ import {
   verifyToken,
   checkRateLimit,
   setSecureCorsHeaders,
-  getCleanSupabaseKey,
+  resolveSupabaseServerKey,
   assertSafeDatabaseMutation,
 } from './_security.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const rawKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
-
-const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
+const SUPABASE_KEY = resolveSupabaseServerKey();
 
 const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY;
 const GATE_PASSWORD = process.env.GATE_SCANNER_PASSWORD || process.env.ADMIN_PASSWORD;
