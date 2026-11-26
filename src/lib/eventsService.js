@@ -14,13 +14,10 @@ export async function triggerGoogleSheetsSync(type, data) {
       ? 'https://www.cerebrexiaigims.com/api/sync-google-sheets'
       : '/api/sync-google-sheets';
 
-    const localWebhook = typeof window !== 'undefined' && window.localStorage ? localStorage.getItem('crx_sheets_webhook_url') : undefined;
-    const defaultWebhook = 'https://script.google.com/macros/s/AKfycbzAlhq0qIZSd_QJOHsiLi9QLsUKGmIXnLfjCBHZvyb1Iln02pb2bqC7yAykEpBchSg4mA/exec';
-
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'SYNC_RECORD', type, data, webhookUrl: localWebhook || defaultWebhook }),
+      body: JSON.stringify({ action: 'SYNC_RECORD', type, data }),
       keepalive: true,
     }).catch(() => {});
   } catch (_) {}
@@ -497,9 +494,9 @@ export async function fetchCategorizedRegistrations(userId) {
   if (!userId) return { sports: [], cultural: [], basic: null };
 
   const [sportsRes, culturalRes, basicRes] = await Promise.allSettled([
-    supabase.from('sports_registrations').select('*').eq('user_id', userId),
-    supabase.from('cultural_registrations').select('*').eq('user_id', userId),
-    supabase.from('basic_registrations').select('*').eq('user_id', userId).maybeSingle(),
+    supabase.from('sports_registrations').select('id, event_name, category, created_at').eq('user_id', userId),
+    supabase.from('cultural_registrations').select('id, event_name, category, created_at').eq('user_id', userId),
+    supabase.from('basic_registrations').select('id, user_id, participant_id, pass_type, fee_amount, registration_type, group_size, group_members, promo_code, discount_amount, final_amount, payment_status, razorpay_order_id, razorpay_payment_id, created_at, updated_at').eq('user_id', userId).maybeSingle(),
   ]);
 
   const sports = sportsRes.status === 'fulfilled' && !sportsRes.value.error ? sportsRes.value.data || [] : [];

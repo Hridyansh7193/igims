@@ -1,5 +1,5 @@
 import React from 'react';
-import directorPhoto from '../../assets/director_photo.jpg';
+import directorPhoto from '../../assets/director_photo.webp';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
 
 export default function DirectorMessage() {
@@ -50,6 +50,10 @@ export default function DirectorMessage() {
             <img
               src={directorPhoto}
               alt="Prof. (Dr.) Bindey Kumar, Director, IGIMS Patna"
+              width={561}
+              height={640}
+              loading="lazy"
+              decoding="async"
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
             />
           </div>

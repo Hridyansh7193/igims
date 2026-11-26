@@ -1,0 +1,1 @@
+function s(l=1,t=2e3){const a=Math.max(1,Number(l)||1),o=Math.floor(a/10),e=Math.max(1,a-o),n=a*t,u=o*t,c=e*t;return{totalMembers:a,freeMembers:o,payableMembers:e,free:o,payable:e,baseTotal:n,groupDiscount:u,discountAmount:u,groupPayable:c,payableTotal:c,pricePerPerson:t}}export{s as c};

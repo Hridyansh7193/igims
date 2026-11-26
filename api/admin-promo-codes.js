@@ -8,31 +8,34 @@ import {
   checkRateLimit,
   setSecureCorsHeaders,
   getCleanSupabaseKey,
+  assertSafeDatabaseMutation,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY;
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
-const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'admin').trim().toLowerCase();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || `${ADMIN_PASSWORD}_secure_crx26_salt`;
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'cerebrexiaadmin').trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || (ADMIN_PASSWORD ? `${ADMIN_PASSWORD}_secure_crx26_salt` : null);
 
 function verifyCredentials(user, pass) {
   if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
+  if (!ADMIN_PASSWORD) return false;
   const normalizedUser = user.trim().toLowerCase();
 
-  const isUserValid = timingSafeMatch(normalizedUser, ADMIN_USERNAME) || timingSafeMatch(normalizedUser, 'cerebrexia');
-  const isPassValid =
-    timingSafeMatch(pass, ADMIN_PASSWORD) ||
-    timingSafeMatch(pass, 'Yadavdivyansh@2611') ||
-    timingSafeMatch(pass, 'cerebrexia2026');
+  const isUserValid =
+    timingSafeMatch(normalizedUser, ADMIN_USERNAME) ||
+    timingSafeMatch(normalizedUser, 'cerebrexiaadmin') ||
+    timingSafeMatch(normalizedUser, 'admin') ||
+    timingSafeMatch(normalizedUser, 'cerebrexia');
+  const isPassValid = timingSafeMatch(pass, ADMIN_PASSWORD);
 
   return isUserValid && isPassValid;
 }
@@ -45,6 +48,9 @@ export default async function handler(req, res) {
   }
 
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(500).json({ error: 'Database service is not configured on the server.' });
+  }
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // 1. PUBLIC VALIDATION (Used by attendees at checkout)
@@ -160,6 +166,12 @@ export default async function handler(req, res) {
 
   // 5. POST: Admin mutations
   if (req.method === 'POST') {
+    try {
+      assertSafeDatabaseMutation(SUPABASE_URL);
+    } catch (isolationErr) {
+      return res.status(isolationErr.statusCode || 403).json({ error: isolationErr.message });
+    }
+
     const { action } = req.body || {};
 
     // CREATE PROMO CODE

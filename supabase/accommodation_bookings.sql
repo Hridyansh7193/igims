@@ -1,7 +1,6 @@
 -- ==============================================================================
 -- Cerebrexia '26 — Accommodation Bookings Table
 -- Run once in Supabase SQL Editor:
--- https://supabase.com/dashboard/project/dgkubrwfrwcfpkgjoxmu/sql
 -- ==============================================================================
 
 create table if not exists public.accommodation_bookings (

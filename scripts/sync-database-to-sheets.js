@@ -14,11 +14,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('\n❌ ERROR: SUPABASE_URL and SUPABASE_KEY environment variables are required.');
+  process.exit(1);
+}
 
 const webhookUrl = process.argv[2] || process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 

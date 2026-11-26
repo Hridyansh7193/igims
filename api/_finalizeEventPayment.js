@@ -1,5 +1,6 @@
 // Shared by api/verify-event-payment.js (browser path) and api/razorpay-webhook.js
 // (works even if the user closed the tab). Fully idempotent.
+import { assertSafeDatabaseMutation } from './_security.js';
 
 const SPORT_WORDS = ['cricket', 'football', 'volleyball', 'badminton', 'kabaddi', 'tug of war', 'chess',
   'table tennis', 'carrom', 'athletics', 'kho kho', 'bgmi', 'rubik'];
@@ -11,6 +12,8 @@ const SPORT_WORDS = ['cricket', 'football', 'volleyball', 'badminton', 'kabaddi'
  * @returns { recorded, registered }
  */
 export async function finalizeEventPayment(db, order, paymentId) {
+  assertSafeDatabaseMutation(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
+
   const notes = order.notes || {};
   const userId = notes.user_id;
   const eventName = notes.event_name || null;

@@ -25,17 +25,7 @@ export function saveLocalPromoCodes(list) {
 }
 
 /**
- * Validates admin credentials locally as a fail-safe fallback if the serverless API is offline
- */
-function localCredentialCheck(username, password) {
-  const normUser = String(username || '').trim().toLowerCase();
-  const validUsers = ['admin', 'cerebrexia', 'igims_admin'];
-  const validPass = ['Yadavdivyansh@2611', 'cerebrexia2026', 'crx@admin2026'];
-  return validUsers.includes(normUser) && validPass.includes(String(password));
-}
-
-/**
- * Log into Admin Portal
+ * Log into Admin Portal (server-authenticated only)
  */
 export async function adminLogin(username, password) {
   try {
@@ -45,34 +35,21 @@ export async function adminLogin(username, password) {
       body: JSON.stringify({ action: 'login', username, password }),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.token) {
-        const session = {
-          token: data.token,
-          username: data.username || username,
-          timestamp: Date.now(),
-        };
-        sessionStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
-        return { success: true, session };
-      }
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success && data.token) {
+      const session = {
+        token: data.token,
+        username: data.username || username,
+        timestamp: Date.now(),
+      };
+      sessionStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
+      return { success: true, session };
     }
+    return { success: false, message: data.message || 'Invalid admin username or password.' };
   } catch (err) {
-    console.warn('[promoService] API login failed, checking fallback:', err);
+    console.warn('[promoService] API login error:', err);
+    return { success: false, message: 'Could not connect to authentication service. Check network.' };
   }
-
-  // Fallback for local sandbox or direct client execution
-  if (localCredentialCheck(username, password)) {
-    const session = {
-      token: `local_${Date.now()}`,
-      username: String(username).trim().toLowerCase(),
-      timestamp: Date.now(),
-    };
-    sessionStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
-    return { success: true, session };
-  }
-
-  return { success: false, message: 'Invalid admin username or password.' };
 }
 
 /**

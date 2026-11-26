@@ -235,6 +235,7 @@ export async function dispatchTicketEmail(ticket, groupSize = 1) {
   try {
     const isCustomOrVercel = typeof window !== 'undefined' && (
       window.location.origin.includes('cerebrexiaigims.com') ||
+      window.location.origin.includes('cerebrexia.in') ||
       window.location.origin.includes('vercel.app')
     );
     const endpoint = typeof window !== 'undefined' && !isCustomOrVercel
@@ -262,7 +263,7 @@ export async function fetchUserTickets(userId, userEmail = '') {
   try {
     let query = supabase
       .from('tickets')
-      .select('*')
+      .select('id, ticket_number, basic_registration_id, user_id, attendee_name, attendee_email, attendee_phone, attendee_college, role, qr_token, pass_type, payment_status, created_at')
       .eq('pass_type', 'BASIC_REGISTRATION_PRONITES');
 
     if (userId && userEmail) {

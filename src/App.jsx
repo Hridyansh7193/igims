@@ -5,18 +5,19 @@ import DynamicBackground from './components/common/DynamicBackground';
 import IntroAnimation from './components/common/IntroAnimation';
 import NavBar from './components/layout/NavBar';
 import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage';
-import EventsPage from './pages/EventsPage';
-import PronitesPage from './pages/PronitesPage';
-import AccommodationPage from './pages/AccommodationPage';
-import ContactPage from './pages/ContactPage';
-import AboutPage from './pages/AboutPage';
-import DashboardPage from './pages/DashboardPage';
-import PolicyPage from './pages/PolicyPage';
-import AdminPage from './pages/AdminPage';
-import BookingPortalPage from './pages/BookingPortalPage';
-import TitleSponsorModal from './components/common/TitleSponsorModal';
 import { AuthProvider } from './context/AuthContext';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const PronitesPage = lazy(() => import('./pages/PronitesPage'));
+const AccommodationPage = lazy(() => import('./pages/AccommodationPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const PolicyPage = lazy(() => import('./pages/PolicyPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const BookingPortalPage = lazy(() => import('./pages/BookingPortalPage'));
+const TitleSponsorModal = lazy(() => import('./components/common/TitleSponsorModal'));
 
 // Lazy-loaded ONLY inside native Android APK so website bundle never loads or exposes scanner UI
 const GateScannerPage = lazy(() => import('./pages/GateScannerPage'));
@@ -114,26 +115,30 @@ export default function App() {
 
         {/* Title Sponsor Pop-up (Pops up right after starting animation ends and website loads) */}
         {showTitleSponsor && !isBypassIntro && (
-          <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
+          <Suspense fallback={null}>
+            <TitleSponsorModal onClose={() => setShowTitleSponsor(false)} />
+          </Suspense>
         )}
 
-        <DynamicBackground />
+        {(revealHeroTitle || introComplete || isBypassIntro) && <DynamicBackground />}
         <div className="crx-dots" />
         <div className="crx-vignette" />
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
           <NavBar page={page} setPage={navigateTo} />
-          {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} />}
-          {page === 'events' && <EventsPage setPage={navigateTo} />}
-          {page === 'pronites' && <PronitesPage />}
-          {page === 'accommodation' && <AccommodationPage />}
-          {page === 'about' && <AboutPage />}
-          {page === 'contact' && <ContactPage />}
-          {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
-          {page === 'admin' && <AdminPage setPage={navigateTo} />}
-          {(page === 'booking-portal' || page === 'booking') && <BookingPortalPage setPage={navigateTo} />}
-          {isPolicyPage && (
-            <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
-          )}
+          <Suspense fallback={<div style={{ minHeight: '70vh' }} />}>
+            {page === 'home' && <HomePage setPage={navigateTo} revealHeroTitle={revealHeroTitle} canLoadMedia={introComplete} />}
+            {page === 'events' && <EventsPage setPage={navigateTo} />}
+            {page === 'pronites' && <PronitesPage />}
+            {page === 'accommodation' && <AccommodationPage />}
+            {page === 'about' && <AboutPage />}
+            {page === 'contact' && <ContactPage />}
+            {page === 'dashboard' && <DashboardPage setPage={navigateTo} />}
+            {page === 'admin' && <AdminPage setPage={navigateTo} />}
+            {(page === 'booking-portal' || page === 'booking') && <BookingPortalPage setPage={navigateTo} />}
+            {isPolicyPage && (
+              <PolicyPage initialTab={page === 'policies' ? 'terms' : page} setPage={navigateTo} />
+            )}
+          </Suspense>
           <Footer setPage={navigateTo} />
         </div>
       </div>

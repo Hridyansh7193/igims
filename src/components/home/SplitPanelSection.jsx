@@ -3,10 +3,20 @@ import { ArrowRight } from 'lucide-react';
 import Reveal from '../common/Reveal';
 import Sticker from '../common/Sticker';
 import GhostText from '../common/GhostText';
+import { useAdaptiveVideo } from '../../hooks/useAdaptiveVideo';
 
-export default function SplitPanelSection({ setPage }) {
+export default function SplitPanelSection({ setPage, canLoadMedia = false }) {
+  const {
+    containerRef,
+    videoRef,
+    shouldLoadVideo,
+    videoReady,
+    handlePlaying,
+    handleError,
+  } = useAdaptiveVideo({ enabled: canLoadMedia, rootMargin: '250px 0px', threshold: 0.05 });
+
   return (
-    <section style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
+    <section ref={containerRef} style={{ padding: '30px 24px 90px', position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '100vw', contain: 'paint' }}>
       <GhostText>CHOOSE</GhostText>
       <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <Reveal>
@@ -46,11 +56,13 @@ export default function SplitPanelSection({ setPage }) {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
+              <img
+                src="/events-section-poster.webp"
+                alt=""
+                width={1280}
+                height={720}
+                loading="lazy"
+                decoding="async"
                 style={{
                   position: 'absolute',
                   inset: 0,
@@ -60,9 +72,31 @@ export default function SplitPanelSection({ setPage }) {
                   opacity: 0.85,
                   zIndex: 0,
                 }}
-              >
-                <source src="/events-section.mp4" type="video/mp4" />
-              </video>
+              />
+              {shouldLoadVideo && (
+                <video
+                  ref={videoRef}
+                  src="/events-section.mp4"
+                  poster="/events-section-poster.webp"
+                  preload="none"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  onPlaying={handlePlaying}
+                  onError={handleError}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    opacity: videoReady ? 0.85 : 0,
+                    transition: 'opacity 0.5s ease',
+                    zIndex: 0,
+                  }}
+                />
+              )}
               <div
                 style={{
                   position: 'absolute',

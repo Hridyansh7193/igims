@@ -10,11 +10,11 @@ import RegistrationOptionsSection from '../components/home/RegistrationOptionsSe
 import FAQ from '../components/home/FAQ';
 import ClosingHero from '../components/home/ClosingHero';
 
-export default function HomePage({ setPage, revealHeroTitle }) {
+export default function HomePage({ setPage, revealHeroTitle, canLoadMedia = false }) {
   return (
     <>
       {/* Original Sections */}
-      <Hero setPage={setPage} revealTitle={revealHeroTitle} />
+      <Hero setPage={setPage} revealTitle={revealHeroTitle} canLoadMedia={canLoadMedia} />
       <LoreSection />
       <MascotSection />
 
@@ -24,7 +24,7 @@ export default function HomePage({ setPage, revealHeroTitle }) {
       <StatsSection />
       
       {/* Continuing original sections */}
-      <SplitPanelSection setPage={setPage} />
+      <SplitPanelSection setPage={setPage} canLoadMedia={canLoadMedia} />
       <GallerySection />
       <PowerSponsorSection />
 

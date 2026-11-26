@@ -7,38 +7,66 @@ const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
 export const RAZORPAY_KEY_ID =
   import.meta.env.VITE_RAZORPAY_KEY_ID ||
   import.meta.env.RAZORPAY_KEY_ID ||
-  'rzp_live_TyVhU8uhXCiEMj';
+  '';
 export const RAZORPAY_PAYMENT_PAGE_URL =
   import.meta.env.VITE_RAZORPAY_PAYMENT_LINK ||
   import.meta.env.RAZORPAY_PAYMENT_LINK ||
   import.meta.env.VITE_RAZORPAY_PAYMENT_PAGE_URL ||
-  'https://razorpay.me/@igimscerebrexia2026';
+  '';
+
+let razorpayLoadPromise = null;
 
 /**
  * Loads the Razorpay checkout.js script asynchronously if not already loaded.
+ * Safe against concurrent calls and retries cleanly after transient network failures.
  */
 export function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (typeof window === 'undefined') return resolve(false);
-    if (window.Razorpay) return resolve(true);
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  if (razorpayLoadPromise) return razorpayLoadPromise;
 
+  razorpayLoadPromise = new Promise((resolve) => {
     const existing = document.querySelector(`script[src="${RAZORPAY_SCRIPT_URL}"]`);
     if (existing) {
-      existing.addEventListener('load', () => resolve(true));
-      existing.addEventListener('error', () => resolve(false));
-      return;
+      if (existing.dataset.loaded === 'true' && window.Razorpay) {
+        razorpayLoadPromise = null;
+        return resolve(true);
+      }
+      if (existing.dataset.error === 'true') {
+        existing.remove();
+      } else {
+        existing.addEventListener('load', () => {
+          razorpayLoadPromise = null;
+          resolve(Boolean(window.Razorpay));
+        }, { once: true });
+        existing.addEventListener('error', () => {
+          razorpayLoadPromise = null;
+          existing.remove();
+          resolve(false);
+        }, { once: true });
+        return;
+      }
     }
 
     const script = document.createElement('script');
     script.src = RAZORPAY_SCRIPT_URL;
     script.async = true;
-    script.onload = () => resolve(true);
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      razorpayLoadPromise = null;
+      resolve(Boolean(window.Razorpay));
+    };
     script.onerror = () => {
+      script.dataset.error = 'true';
+      script.remove();
+      razorpayLoadPromise = null;
       console.warn('[Razorpay] Failed to load official checkout script from CDN.');
       resolve(false);
     };
     document.body.appendChild(script);
   });
+
+  return razorpayLoadPromise;
 }
 
 /**
@@ -101,6 +129,22 @@ export async function openRazorpayCheckout({
     }
   } catch (err) {
     console.warn('[Razorpay] Server order creation notice:', err);
+  }
+
+  // Security guard: fail closed if live keys are present on a Preview or local deployment
+  const isPreviewHost = typeof window !== 'undefined' && (
+    (window.location.hostname.endsWith('.vercel.app') && !window.location.hostname.includes('cerebrexiaigims')) ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+  if (isPreviewHost && keyId && keyId.startsWith('rzp_live_')) {
+    alert('Security Alert: Live Razorpay credentials detected on a non-production deployment. Transactions are blocked for your protection.');
+    return;
+  }
+
+  if (!keyId) {
+    alert('Payment gateway key is not configured. Please contact festival administration.');
+    return;
   }
 
   // If live key is present and script loaded, launch official Razorpay

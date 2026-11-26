@@ -55,10 +55,79 @@ export function timingSafeMatch(a, b) {
 }
 
 /**
+ * Environment isolation detection
+ */
+export function isPreviewDeployment() {
+  return process.env.VERCEL_ENV === 'preview';
+}
+
+export function isProductionDeployment() {
+  return process.env.VERCEL_ENV === 'production';
+}
+
+/**
+ * Checks if the configured Supabase URL matches the known production project.
+ */
+export function isProductionSupabaseUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return url.toLowerCase().includes('dgkubrwfrwcfpkgjoxmu');
+}
+
+/**
+ * Asserts that a database mutation is safe to perform in the current deployment environment.
+ * If running in a Preview deployment against the production Supabase database, fails closed.
+ */
+export function assertSafeDatabaseMutation(supabaseUrl) {
+  if (isPreviewDeployment() && isProductionSupabaseUrl(supabaseUrl)) {
+    const err = new Error(
+      'Security Isolation Violation: Database mutation blocked on Preview deployment targeting production database (dgkubrwfrwcfpkgjoxmu). Please configure a separate staging Supabase project for Preview.'
+    );
+    err.statusCode = 403;
+    throw err;
+  }
+}
+
+/**
+ * Checks if email sending is permitted in the current deployment.
+ * Preview requires explicit EMAIL_ENABLED=true.
+ */
+export function isEmailEnabled() {
+  if (isPreviewDeployment()) {
+    return process.env.EMAIL_ENABLED === 'true';
+  }
+  return process.env.EMAIL_ENABLED !== 'false';
+}
+
+/**
+ * Checks if Google Sheets synchronization is permitted in the current deployment.
+ * Preview requires explicit GOOGLE_SHEETS_SYNC_ENABLED=true.
+ */
+export function isSheetsSyncEnabled() {
+  if (isPreviewDeployment()) {
+    return process.env.GOOGLE_SHEETS_SYNC_ENABLED === 'true';
+  }
+  return process.env.GOOGLE_SHEETS_SYNC_ENABLED !== 'false';
+}
+
+/**
+ * Checks if payment processing is permitted in the current deployment.
+ * Preview requires explicit PAYMENTS_ENABLED=true.
+ */
+export function isPaymentsEnabled() {
+  if (isPreviewDeployment()) {
+    return process.env.PAYMENTS_ENABLED === 'true';
+  }
+  return process.env.PAYMENTS_ENABLED !== 'false';
+}
+
+/**
  * Generates an HMAC-SHA256 signature for payload
  */
 export function signToken(payload, secret) {
-  const secretKey = secret || process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PASSWORD || 'crx_prod_sec_2026_igims';
+  const secretKey = secret || process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PASSWORD;
+  if (!secretKey) {
+    throw new Error('Authentication signing failed: ADMIN_JWT_SECRET or ADMIN_PASSWORD must be configured in environment');
+  }
   const data = typeof payload === 'object' ? JSON.stringify(payload) : String(payload);
   const dataB64 = Buffer.from(data).toString('base64url');
   const hmac = crypto.createHmac('sha256', secretKey).update(dataB64).digest('base64url');
@@ -74,7 +143,8 @@ export function verifyToken(token, secret) {
   if (parts.length !== 2) return null;
 
   const [dataB64, providedHmac] = parts;
-  const secretKey = secret || process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PASSWORD || 'crx_prod_sec_2026_igims';
+  const secretKey = secret || process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PASSWORD;
+  if (!secretKey) return null;
 
   const expectedHmac = crypto.createHmac('sha256', secretKey).update(dataB64).digest('base64url');
   if (!timingSafeMatch(providedHmac, expectedHmac)) {
@@ -84,7 +154,6 @@ export function verifyToken(token, secret) {
   try {
     const raw = Buffer.from(dataB64, 'base64url').toString('utf8');
     const parsed = JSON.parse(raw);
-    // Check expiry if timestamp provided (default 24h)
     if (parsed.exp && Date.now() > parsed.exp) {
       return null;
     }
@@ -161,7 +230,8 @@ export function setSecureCorsHeaders(req, res, allowedMethods = 'GET, POST, OPTI
 }
 
 /**
- * Validates and cleans a Supabase API key, falling back to public anon key if placeholder/invalid
+ * Validates and cleans a Supabase API key.
+ * Never falls back to hardcoded production keys.
  */
 export function getCleanSupabaseKey(preferredKey) {
   const clean = (k) => (typeof k === 'string' ? k.trim().replace(/^["']|["']$/g, '') : '');
@@ -174,7 +244,7 @@ export function getCleanSupabaseKey(preferredKey) {
   ) {
     return p;
   }
-  return 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
+  return null;
 }
 
 /**
@@ -195,23 +265,34 @@ export function getCleanServiceRoleKey(key) {
 }
 
 /**
- * Validates, cleans, and returns active Razorpay Key ID and Secret with safe defaults
+ * Validates, cleans, and returns active Razorpay Key ID and Secret.
+ * Enforces strict environment isolation:
+ * - In Preview: rejects live keys (rzp_live_*), requires test keys (rzp_test_*), or fails closed.
+ * - In Production: rejects test keys (rzp_test_*).
+ * - Never returns hardcoded fallback keys.
  */
 export function getCleanRazorpayKeys() {
-  const DEFAULT_KEY_ID = 'rzp_live_TyVhU8uhXCiEMj';
-  const DEFAULT_KEY_SECRET = 'ToAZvgHo0GlOkbdkfV4WcU51';
-
   const clean = (k) => (typeof k === 'string' ? k.trim().replace(/^["']|["']$/g, '') : '');
 
-  let keyId = clean(process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || DEFAULT_KEY_ID);
-  let keySecret = clean(process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || DEFAULT_KEY_SECRET);
+  const keyId = clean(process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID);
+  const keySecret = clean(process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET);
 
-  if (!keyId || keyId.toLowerCase().includes('your_') || keyId.toLowerCase().includes('placeholder') || keyId.length < 8) {
-    keyId = DEFAULT_KEY_ID;
-  }
-  if (!keySecret || keySecret.toLowerCase().includes('your_') || keySecret.toLowerCase().includes('placeholder') || keySecret.length < 8) {
-    keySecret = DEFAULT_KEY_SECRET;
+  const isPreview = isPreviewDeployment();
+  const isProd = isProductionDeployment();
+
+  let error = null;
+
+  if (!keyId || !keySecret) {
+    error = 'Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) are not configured in environment.';
+  } else if (isPreview && !keyId.startsWith('rzp_test_')) {
+    error = 'Security Isolation Violation: Preview deployment accepts only Razorpay test keys (rzp_test_*). Live or non-test key detected.';
+  } else if (isProd && keyId.startsWith('rzp_test_')) {
+    error = 'Configuration Error: Test Razorpay key (rzp_test_*) detected in Production deployment. Production requires live keys (rzp_live_*).';
   }
 
-  return { keyId, keySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET };
+  return {
+    keyId: error ? null : keyId,
+    keySecret: error ? null : keySecret,
+    error,
+  };
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import Reveal from '../common/Reveal';
 import { useIsNarrow } from '../../hooks/useIsNarrow';
-import campusBlueprintImg from '../../assets/campus_blueprint.png';
+import campusBlueprintImg from '../../assets/campus_blueprint.webp';
 
 // Isometric line-art illustration of the IGIMS campus building (uploaded asset).
 function CampusBlueprint() {
@@ -10,6 +10,10 @@ function CampusBlueprint() {
       <img
         src={campusBlueprintImg}
         alt="Indira Gandhi Institute of Medical Sciences campus illustration"
+        width={998}
+        height={430}
+        loading="lazy"
+        decoding="async"
         style={{
           position: 'absolute',
           inset: 0,

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ScrollText } from 'lucide-react';
+import { getEventGuidelines } from '../../constants/eventGuidelines';
 
 function Block({ block }) {
   switch (block.type) {
@@ -58,6 +59,7 @@ function Block({ block }) {
 }
 
 export default function GuidelinesModal({ eventName, eventCat, guidelines, onClose }) {
+  const resolvedGuidelines = guidelines ?? getEventGuidelines(eventName);
   // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -163,8 +165,8 @@ export default function GuidelinesModal({ eventName, eventCat, guidelines, onClo
           className="crx-scrollbar"
           style={{ padding: '0 28px 8px', overflowY: 'auto', flex: 1, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}
         >
-          {guidelines ? (
-            guidelines.blocks.map((b, i) => <Block key={i} block={b} />)
+          {resolvedGuidelines ? (
+            resolvedGuidelines.blocks.map((b, i) => <Block key={i} block={b} />)
           ) : (
             <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
               Guidelines for this event will be announced soon. Stay tuned!

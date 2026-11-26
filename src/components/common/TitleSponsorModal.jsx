@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import titleSponsorImg from '../../assets/title_sponsor.jpeg';
+import titleSponsorImg from '../../assets/title_sponsor.webp';
 
 export default function TitleSponsorModal({ onClose }) {
   const [visible, setVisible] = useState(false);
@@ -144,6 +144,9 @@ export default function TitleSponsorModal({ onClose }) {
           <img
             src={titleSponsorImg}
             alt="Cerebrexia '26 Official Title Sponsor"
+            width={800}
+            height={800}
+            decoding="async"
             style={{
               width: '100%',
               height: '100%',

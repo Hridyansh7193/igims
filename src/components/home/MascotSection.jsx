@@ -98,6 +98,10 @@ export default function MascotSection() {
             <img
               src={LOGO_SRC}
               alt="The Crowned Intellect"
+              width={460}
+              height={460}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: '100%',
                 height: '100%',

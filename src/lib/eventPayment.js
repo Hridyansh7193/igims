@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { loadRazorpayScript } from './razorpay';
+import { loadRazorpayScript, RAZORPAY_KEY_ID } from './razorpay';
 
 /**
  * Opens Razorpay Checkout for an event fee and resolves only after the server
@@ -27,9 +27,21 @@ export async function payForEvent({ slug, eventName, selection, form, prefill = 
   const loaded = await loadRazorpayScript();
   if (!loaded || !window.Razorpay) throw new Error('Could not load the payment gateway. Check your internet and try again.');
 
+  const keyToUse = order.key_id || RAZORPAY_KEY_ID;
+  if (!keyToUse) throw new Error('Payment gateway is not configured.');
+
+  const isPreviewHost = typeof window !== 'undefined' && (
+    (window.location.hostname.endsWith('.vercel.app') && !window.location.hostname.includes('cerebrexiaigims')) ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+  if (isPreviewHost && keyToUse.startsWith('rzp_live_')) {
+    throw new Error('Security Alert: Live payments are blocked on Preview deployments.');
+  }
+
   const response = await new Promise((resolve, reject) => {
     const rzp = new window.Razorpay({
-      key: order.key_id || 'rzp_live_TyVhU8uhXCiEMj',
+      key: keyToUse,
       order_id: order.order_id,
       amount: order.amount,
       currency: order.currency || 'INR',

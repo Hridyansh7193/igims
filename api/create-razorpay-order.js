@@ -3,6 +3,7 @@ import {
   checkRateLimit,
   setSecureCorsHeaders,
   getCleanRazorpayKeys,
+  isPaymentsEnabled,
 } from './_security.js';
 
 export default async function handler(req, res) {
@@ -57,13 +58,18 @@ export default async function handler(req, res) {
     }
   }
 
-  const { keyId: initialKeyId, keySecret: initialKeySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
-  let keyId = initialKeyId;
-  let keySecret = initialKeySecret;
+  if (!isPaymentsEnabled()) {
+    return res.status(403).json({ error: 'Payments are disabled on this deployment (PAYMENTS_ENABLED=false).' });
+  }
+
+  const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
+  if (keyError || !keyId || !keySecret) {
+    return res.status(500).json({ error: keyError || 'Razorpay payment gateway is not configured on the server.' });
+  }
 
   try {
-    let auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-    let rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -77,30 +83,7 @@ export default async function handler(req, res) {
       }),
     });
 
-    let data = await rzpRes.json();
-
-    // If custom env keys failed with auth or bad request error, retry once with known live keys
-    if (!rzpRes.ok && (rzpRes.status === 401 || rzpRes.status === 400) && keyId !== DEFAULT_KEY_ID) {
-      console.warn('[create-razorpay-order] Initial key rejected (' + rzpRes.status + '), retrying with known live keys');
-      keyId = DEFAULT_KEY_ID;
-      keySecret = DEFAULT_KEY_SECRET;
-      auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-
-      rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: Math.round(numAmount * 100),
-          currency: 'INR',
-          receipt: safeReceipt,
-          ...(safeNotes ? { notes: safeNotes } : {}),
-        }),
-      });
-      data = await rzpRes.json();
-    }
+    const data = await rzpRes.json();
 
     if (!rzpRes.ok) {
       console.error('[create-razorpay-order] Razorpay API error:', data);

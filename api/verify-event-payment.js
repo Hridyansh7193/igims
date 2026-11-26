@@ -8,11 +8,13 @@ import {
   getCleanServiceRoleKey,
   getCleanSupabaseKey,
   getCleanRazorpayKeys,
+  isPaymentsEnabled,
+  assertSafeDatabaseMutation,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON = getCleanSupabaseKey(
-  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 );
 const SERVICE_KEY = getCleanServiceRoleKey(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY
@@ -42,6 +44,9 @@ export default async function handler(req, res) {
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ error: 'Please sign in first.' });
+  if (!SUPABASE_URL || !SUPABASE_ANON) {
+    return res.status(500).json({ error: 'Database service is not configured on the server.' });
+  }
   const authClient = createClient(SUPABASE_URL, SUPABASE_ANON);
   const { data: userData, error: authErr } = await authClient.auth.getUser(token);
   const user = userData?.user;
@@ -52,48 +57,38 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing payment details.' });
   }
 
-  const { keyId, keySecret, DEFAULT_KEY_ID, DEFAULT_KEY_SECRET } = getCleanRazorpayKeys();
-
-  // 1. Signature verification (supports active key or default live key)
-  const secretsToTest = Array.from(new Set([keySecret, DEFAULT_KEY_SECRET].filter(Boolean)));
-  let signatureValid = false;
-  let activeSecretUsed = keySecret;
-
-  for (const s of secretsToTest) {
-    const expected = crypto
-      .createHmac('sha256', s)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-    if (timingSafeMatch(expected, razorpay_signature)) {
-      signatureValid = true;
-      activeSecretUsed = s;
-      break;
-    }
+  if (!isPaymentsEnabled()) {
+    return res.status(403).json({ error: 'Payments are disabled on this deployment (PAYMENTS_ENABLED=false).' });
   }
 
-  if (!signatureValid) {
+  assertSafeDatabaseMutation(SUPABASE_URL);
+
+  const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
+  if (keyError || !keyId || !keySecret) {
+    return res.status(500).json({ error: keyError || 'Payment gateway credentials not configured on the server.' });
+  }
+
+  // 1. Signature verification using strictly configured secret
+  const expected = crypto
+    .createHmac('sha256', keySecret)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest('hex');
+
+  if (!timingSafeMatch(expected, razorpay_signature)) {
     return res.status(400).json({ verified: false, error: 'Payment signature mismatch.' });
   }
 
-  // 2. Cross-check the order with Razorpay API (with fallback keypairs)
+  // 2. Cross-check the order with Razorpay API (strictly using configured credentials)
   let order = null;
-  const keyPairs = [
-    { id: keyId, secret: activeSecretUsed },
-    { id: DEFAULT_KEY_ID, secret: DEFAULT_KEY_SECRET },
-  ];
-
-  for (const kp of keyPairs) {
-    try {
-      const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
-        headers: { Authorization: `Basic ${Buffer.from(`${kp.id}:${kp.secret}`).toString('base64')}` },
-      });
-      if (r.ok) {
-        order = await r.json();
-        break;
-      }
-    } catch (err) {
-      // try next key pair
+  try {
+    const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
+      headers: { Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}` },
+    });
+    if (r.ok) {
+      order = await r.json();
     }
+  } catch (err) {
+    console.error('[verify-event-payment] fetch order error:', err);
   }
 
   if (!order) {

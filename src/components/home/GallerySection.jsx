@@ -3,33 +3,33 @@ import Reveal from '../common/Reveal';
 import Sticker from '../common/Sticker';
 
 // Gallery images (imported so Vite bundles them correctly)
-import g01 from '../../assets/gallery/g01.jpg';
-import g02 from '../../assets/gallery/g02.jpg';
-import g05 from '../../assets/gallery/g05.jpg';
-import g06 from '../../assets/gallery/g06.jpg';
-import g07 from '../../assets/gallery/g07.jpg';
-import g08 from '../../assets/gallery/g08.jpg';
-import g09 from '../../assets/gallery/g09.jpg';
-import g10 from '../../assets/gallery/g10.jpg';
-import g11 from '../../assets/gallery/g11.jpg';
-import g12 from '../../assets/gallery/g12.jpg';
-import g13 from '../../assets/gallery/g13.jpg';
-import g14 from '../../assets/gallery/g14.jpg';
-import g15 from '../../assets/gallery/g15.jpg';
-import g16 from '../../assets/gallery/g16.jpg';
-import g17 from '../../assets/gallery/g17.jpg';
-import g18 from '../../assets/gallery/g18.jpg';
-import g19 from '../../assets/gallery/g19.jpg';
-import g20 from '../../assets/gallery/g20.jpg';
-import g22 from '../../assets/gallery/g22.jpg';
-import g23 from '../../assets/gallery/g23.jpg';
-import g25 from '../../assets/gallery/g25.jpg';
-import g26 from '../../assets/gallery/g26.jpg';
-import g27 from '../../assets/gallery/g27.jpg';
-import g29 from '../../assets/gallery/g29.jpg';
-import g30 from '../../assets/gallery/g30.jpg';
-import g32 from '../../assets/gallery/g32.jpg';
-import g33 from '../../assets/gallery/g33.jpg';
+import g01 from '../../assets/gallery/g01.webp';
+import g02 from '../../assets/gallery/g02.webp';
+import g05 from '../../assets/gallery/g05.webp';
+import g06 from '../../assets/gallery/g06.webp';
+import g07 from '../../assets/gallery/g07.webp';
+import g08 from '../../assets/gallery/g08.webp';
+import g09 from '../../assets/gallery/g09.webp';
+import g10 from '../../assets/gallery/g10.webp';
+import g11 from '../../assets/gallery/g11.webp';
+import g12 from '../../assets/gallery/g12.webp';
+import g13 from '../../assets/gallery/g13.webp';
+import g14 from '../../assets/gallery/g14.webp';
+import g15 from '../../assets/gallery/g15.webp';
+import g16 from '../../assets/gallery/g16.webp';
+import g17 from '../../assets/gallery/g17.webp';
+import g18 from '../../assets/gallery/g18.webp';
+import g19 from '../../assets/gallery/g19.webp';
+import g20 from '../../assets/gallery/g20.webp';
+import g22 from '../../assets/gallery/g22.webp';
+import g23 from '../../assets/gallery/g23.webp';
+import g25 from '../../assets/gallery/g25.webp';
+import g26 from '../../assets/gallery/g26.webp';
+import g27 from '../../assets/gallery/g27.webp';
+import g29 from '../../assets/gallery/g29.webp';
+import g30 from '../../assets/gallery/g30.webp';
+import g32 from '../../assets/gallery/g32.webp';
+import g33 from '../../assets/gallery/g33.webp';
 
 // Exact display order for each row (left to right)
 const ROW1_IMAGES = [
@@ -71,8 +71,11 @@ function MarqueeRow({ images, reverse, duration }) {
             <img
               src={src}
               alt=""
+              width={340}
+              height={220}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               loading="lazy"
+              decoding="async"
             />
           </div>
         ))}

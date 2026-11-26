@@ -2,7 +2,7 @@ import React from 'react';
 import Reveal from '../common/Reveal';
 import Sticker from '../common/Sticker';
 import { Zap } from 'lucide-react';
-import powerSponsorImg from '../../assets/power_sponsor.jpeg';
+import powerSponsorImg from '../../assets/power_sponsor.webp';
 
 export default function PowerSponsorSection() {
   return (
@@ -116,6 +116,10 @@ export default function PowerSponsorSection() {
               <img
                 src={powerSponsorImg}
                 alt="Cerebrexia '26 Official Power Sponsor"
+                width={800}
+                height={800}
+                loading="lazy"
+                decoding="async"
                 style={{
                   width: '100%',
                   height: '100%',

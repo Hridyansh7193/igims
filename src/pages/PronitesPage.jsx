@@ -5,9 +5,9 @@ import Sticker from '../components/common/Sticker';
 import { NIGHTS, DAY_LINEUP } from '../constants/pronitesData';
 import { useIsNarrow } from '../hooks/useIsNarrow';
 
-import bandsImg from '../assets/events/bands.jpg';
-import concertImg from '../assets/events/concert.jpg';
-import danceImg from '../assets/events/dance.jpg';
+import bandsImg from '../assets/events/bands.webp';
+import concertImg from '../assets/events/concert.webp';
+import danceImg from '../assets/events/dance.webp';
 
 const IMG_MAP = { bands: bandsImg, pronite: concertImg, dance: danceImg };
 const NIGHT_ICONS = { opening: Music, star: Mic2, pro: Disc3 };
@@ -108,12 +108,27 @@ function ArtistSpotlight({ a, i, narrow }) {
           style={{
             order: narrow ? 0 : reverse ? 2 : 1,
             minHeight: 260,
-            backgroundImage: `url(${IMG_MAP[a.img]})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          <img
+            src={IMG_MAP[a.img]}
+            alt={a.name}
+            width={1100}
+            height={614}
+            loading="lazy"
+            decoding="async"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              display: 'block',
+            }}
+          />
           <div
             style={{
               position: 'absolute',

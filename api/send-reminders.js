@@ -1,25 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
 import crypto from 'crypto';
+import {
+  escapeHtml,
+  isEmailEnabled,
+  assertSafeDatabaseMutation,
+} from './_security.js';
+import { getGmailConfig, createGmailTransporter } from './_email.js';
 
 // ── Environment ──────────────────────────────────────────────────────────────
 const CRON_SECRET          = process.env.CRON_SECRET;
-const SUPABASE_URL         = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL         = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
-const RESEND_API_KEY       = process.env.RESEND_API_KEY;
-const FROM_ADDRESS         = process.env.REMINDER_FROM || 'Cerebrexia <noreply@cerebrexia.in>';
 const APP_URL              = (process.env.APP_URL || 'https://www.cerebrexiaigims.com').replace(/\/$/, '');
-
-// HTML entity escaper to eliminate HTML/email injection vulnerabilities
-function escapeHtml(str) {
-  if (!str || typeof str !== 'string') return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 // Timing-safe bearer token verification to mitigate timing attacks
 function isAuthorized(authHeader, secret) {
@@ -53,18 +45,35 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  // Environment isolation: suppress reminders in Preview unless explicitly enabled
+  if (!isEmailEnabled()) {
+    console.log('[send-reminders] Reminders suppressed in Preview deployment (EMAIL_ENABLED is not true).');
+    return res.status(200).json({ success: true, suppressed: true, message: 'Reminders suppressed in Preview deployment.' });
+  }
+
   // 3. Validate runtime environment
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     return res.status(500).json({ error: 'Missing Supabase environment variables' });
   }
-  if (!RESEND_API_KEY) {
-    return res.status(500).json({ error: 'Missing RESEND_API_KEY environment variable' });
+
+  try {
+    assertSafeDatabaseMutation(SUPABASE_URL);
+  } catch (isolationErr) {
+    return res.status(isolationErr.statusCode || 403).json({ error: isolationErr.message });
   }
 
+  const gmail = getGmailConfig();
+  if (!gmail.configured) {
+    return res.status(500).json({ error: 'Missing Gmail SMTP credentials (GMAIL_USER, GMAIL_APP_PASSWORD)' });
+  }
+
+  const fromAddress = process.env.REMINDER_FROM || `"Cerebrexia '26" <${gmail.user}>`;
+
+  let transporter = null;
   try {
     // 4. Init clients — service role bypasses RLS
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const resend   = new Resend(RESEND_API_KEY);
+    transporter = createGmailTransporter({ pool: true });
 
     // 5. Fetch unpaid participants: includes both NULL and < 3 reminder counts
     const { data: users, error: fetchErr } = await supabase
@@ -83,14 +92,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No pending users to remind', sent: 0 });
     }
 
-    // 6. Build batch email payload with strict HTML escaping
-    const emails = users
-      .filter((u) => u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email))
-      .map((u) => {
-        const safeName = escapeHtml(u.first_name) || 'Participant';
-        return {
-          from:    FROM_ADDRESS,
-          to:      [u.email.trim().toLowerCase()],
+    // 6. Build email payloads with strict HTML escaping
+    const validUsers = users.filter((u) => u.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email));
+    if (validUsers.length === 0) {
+      return res.status(200).json({ message: 'No valid recipient email addresses found', sent: 0 });
+    }
+
+    const emailJobs = validUsers.map((u) => {
+      const safeName = escapeHtml(u.first_name) || 'Participant';
+      return {
+        user: u,
+        mailOptions: {
+          from:    fromAddress,
+          replyTo: gmail.user,
+          to:      u.email.trim().toLowerCase(),
           subject: `⏰ Cerebrexia '26 — Complete Your Registration, ${safeName}!`,
           html: `
             <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:0 auto;background:#0A0505;color:#f5f0e8;border:1px solid rgba(220,38,38,0.3);border-radius:16px;padding:32px;text-align:center;">
@@ -111,23 +126,29 @@ export default async function handler(req, res) {
               </p>
             </div>
           `,
-        };
-      });
+        },
+      };
+    });
 
-    if (emails.length === 0) {
-      return res.status(200).json({ message: 'No valid recipient email addresses found', sent: 0 });
+    // 7. Send via pooled Gmail SMTP transporter
+    const succeededUsers = [];
+    const failedSends = [];
+    for (const job of emailJobs) {
+      try {
+        await transporter.sendMail(job.mailOptions);
+        succeededUsers.push(job.user);
+      } catch (sendErr) {
+        console.error('[send-reminders] Gmail SMTP send error for user', job.user.id, sendErr.message);
+        failedSends.push({ id: job.user.id, error: sendErr.message });
+      }
     }
 
-    // 7. Send via Resend batch API (single HTTP call for up to 100 emails)
-    const { data: batchResult, error: sendErr } = await resend.batch.send(emails);
-
-    if (sendErr) {
-      console.error('[send-reminders] Resend batch error:', sendErr);
-      return res.status(500).json({ error: 'Email dispatch failed', details: sendErr.message });
+    if (succeededUsers.length === 0 && failedSends.length > 0) {
+      return res.status(500).json({ error: 'Email dispatch failed', details: failedSends[0].error });
     }
 
-    // 8. Increment reminder_sent_count for each notified user
-    const updatePromises = users.map((u) =>
+    // 8. Increment reminder_sent_count only for users who were actually emailed
+    const updatePromises = succeededUsers.map((u) =>
       supabase
         .from('participants')
         .update({ reminder_sent_count: (u.reminder_sent_count || 0) + 1 })
@@ -135,19 +156,24 @@ export default async function handler(req, res) {
     );
     const updateResults = await Promise.allSettled(updatePromises);
 
-    const failedUpdates = updateResults.filter((r) => r.status === 'rejected').length;
+    const failedUpdates = updateResults.filter((r) => r.status === 'rejected' || r.value?.error).length;
     if (failedUpdates > 0) {
-      console.warn(`[send-reminders] ${failedUpdates}/${users.length} counter updates failed`);
+      console.warn(`[send-reminders] ${failedUpdates}/${succeededUsers.length} counter updates failed`);
     }
 
     return res.status(200).json({
       message: 'Reminders sent successfully',
-      sent: emails.length,
-      batchId: batchResult?.data?.[0]?.id || null,
+      provider: 'gmail_smtp',
+      sent: succeededUsers.length,
+      failed: failedSends.length,
       counterUpdateFailures: failedUpdates,
     });
   } catch (err) {
     console.error('[send-reminders] Unexpected error:', err);
     return res.status(500).json({ error: 'Internal server error', details: err.message });
+  } finally {
+    if (transporter && typeof transporter.close === 'function') {
+      transporter.close();
+    }
   }
 }

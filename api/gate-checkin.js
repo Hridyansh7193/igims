@@ -8,22 +8,22 @@ import {
   checkRateLimit,
   setSecureCorsHeaders,
   getCleanSupabaseKey,
+  assertSafeDatabaseMutation,
 } from './_security.js';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dgkubrwfrwcfpkgjoxmu.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const rawKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY;
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
-const FALLBACK_ANON_KEY = 'sb_publishable_v_CcCDqlYXXvx1emJ9U7Cw_2KCpskhS';
 
-const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY || 'crx26_volunteer_gate_secret';
-const GATE_PASSWORD = process.env.GATE_SCANNER_PASSWORD || process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || 'Yadavdivyansh@2611';
-const GATE_JWT_SECRET = process.env.GATE_SCANNER_JWT_SECRET || `${GATE_PASSWORD}_gate_scanner_salt_2026`;
+const GATE_SECRET_KEY = process.env.GATE_SECRET_KEY;
+const GATE_PASSWORD = process.env.GATE_SCANNER_PASSWORD || process.env.ADMIN_PASSWORD;
+const GATE_JWT_SECRET = process.env.GATE_SCANNER_JWT_SECRET || (GATE_PASSWORD ? `${GATE_PASSWORD}_gate_scanner_salt_2026` : null);
 
 const GATE_ACCOUNTS = [
   {
@@ -33,6 +33,10 @@ const GATE_ACCOUNTS = [
   {
     id: (process.env.GATE_SCANNER_USERNAME_2 || 'gate2').trim().toLowerCase(),
     password: process.env.GATE_SCANNER_PASSWORD_2 || GATE_PASSWORD,
+  },
+  {
+    id: 'cerebrexiaadmin',
+    password: GATE_PASSWORD,
   },
 ];
 
@@ -44,7 +48,7 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 function verifyGateCredentials(user, pass) {
   if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
   const normUser = user.trim().toLowerCase();
-  return GATE_ACCOUNTS.some((acc) => timingSafeMatch(normUser, acc.id) && timingSafeMatch(pass, acc.password));
+  return GATE_ACCOUNTS.some((acc) => acc.password && timingSafeMatch(normUser, acc.id) && timingSafeMatch(pass, acc.password));
 }
 
 /**
@@ -99,22 +103,10 @@ function sanitizeAttendeeOutput(ticket, overrideCode = null) {
 }
 
 /**
- * Runs a Supabase query with automatic anon-key retry if primary client fails
+ * Runs a Supabase query safely
  */
 async function queryWithFallback(primarySb, runFn) {
-  let result = await runFn(primarySb);
-  if (result?.error && SUPABASE_KEY !== FALLBACK_ANON_KEY) {
-    const code = result.error.code;
-    // Do not retry on valid constraint errors like unique violation (23505) or missing column
-    if (code !== '23505' && code !== '42703' && code !== 'PGRST204') {
-      const fallbackSb = createClient(SUPABASE_URL, FALLBACK_ANON_KEY);
-      const retryRes = await runFn(fallbackSb);
-      if (!retryRes.error || retryRes.error.code === '23505') {
-        return retryRes;
-      }
-    }
-  }
-  return result;
+  return runFn(primarySb);
 }
 
 function isMissingColumnError(err) {
@@ -178,6 +170,7 @@ async function findConflictingTicket(primarySb, cleanCode, excludeTicketId) {
  * Persists unique 4-digit code onto the ticket row (column + metadata JSONB with pre-migration fallback)
  */
 async function saveTicketUniqueCode(primarySb, ticket, cleanCode, assignedBy) {
+  assertSafeDatabaseMutation(SUPABASE_URL);
   const nowIso = new Date().toISOString();
   const baseMeta = ticket.metadata && typeof ticket.metadata === 'object' ? ticket.metadata : {};
   const nextMetadata = {
@@ -232,6 +225,7 @@ async function saveTicketUniqueCode(primarySb, ticket, cleanCode, assignedBy) {
  * Records a daily entry into ticket_checkins with concurrent-scan idempotency
  */
 async function recordDailyCheckin(primarySb, ticketId, activeDay, volunteerName) {
+  assertSafeDatabaseMutation(SUPABASE_URL);
   const insertRes = await queryWithFallback(primarySb, (sb) =>
     sb
       .from('ticket_checkins')
@@ -336,9 +330,9 @@ export default async function handler(req, res) {
     return res.status(429).json({ status: 'ERROR', message: 'Rate limit exceeded. Please wait a moment.' });
   }
 
-  // Optional terminal API key guard
+  // Optional terminal API key guard (enforced only if GATE_SECRET_KEY is explicitly configured)
   const providedGateKey = req.headers['x-gate-api-key'];
-  if (providedGateKey && !timingSafeMatch(providedGateKey, GATE_SECRET_KEY)) {
+  if (GATE_SECRET_KEY && (!providedGateKey || !timingSafeMatch(providedGateKey, GATE_SECRET_KEY))) {
     return res.status(401).json({ status: 'UNAUTHORIZED', message: 'Unauthorized gate scanner terminal.' });
   }
 

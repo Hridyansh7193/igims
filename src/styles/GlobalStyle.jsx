@@ -3,8 +3,6 @@ import React from 'react';
 export default function GlobalStyle() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@400;500;600&display=swap');
-      
       /* ==========================================================================
          CEREBREXIA '26 - NEW LOGO COLOR PALETTE
          Vermillion Red · Hot Magenta · Sapphire Blue · Royal Gold · Dark Amber
