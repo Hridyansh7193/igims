@@ -526,7 +526,7 @@ export default function GateScannerPage() {
                   type="text"
                   autoCapitalize="none"
                   autoCorrect="off"
-                  placeholder="e.g. gate1 or gate2"
+                  placeholder="e.g. CerebrexiaAdmin or gate1"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                   style={{

@@ -788,7 +788,7 @@ export default function BookingPortalPage({ setPage }) {
               </label>
               <input
                 type="text"
-                placeholder="e.g. booking_desk"
+                placeholder="e.g. CerebrexiaAdmin"
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
                 style={{

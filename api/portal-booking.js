@@ -23,16 +23,17 @@ const rawKey =
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
-const PORTAL_USERNAME = (process.env.BOOKING_PORTAL_USERNAME || 'booking_desk').trim().toLowerCase();
+const PORTAL_USERNAME = (process.env.BOOKING_PORTAL_USERNAME || 'cerebrexiaadmin').trim().toLowerCase();
 const PORTAL_PASSWORD = process.env.BOOKING_PORTAL_PASSWORD;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const PORTAL_JWT_SECRET = process.env.BOOKING_PORTAL_JWT_SECRET || (PORTAL_PASSWORD ? `${PORTAL_PASSWORD}_booking_portal_salt_2026` : null);
+const PORTAL_SECRET_SEED = PORTAL_PASSWORD || ADMIN_PASSWORD;
+const PORTAL_JWT_SECRET = process.env.BOOKING_PORTAL_JWT_SECRET || (PORTAL_SECRET_SEED ? `${PORTAL_SECRET_SEED}_booking_portal_salt_2026` : null);
 
 function verifyPortalCredentials(user, pass) {
   if (!user || !pass || typeof user !== 'string' || typeof pass !== 'string') return false;
   if (!PORTAL_PASSWORD && !ADMIN_PASSWORD) return false;
   const normUser = user.trim().toLowerCase();
-  const validUsers = [PORTAL_USERNAME, 'booking_desk', 'crx_booking', 'desk_admin', 'admin', 'cerebrexia'];
+  const validUsers = [PORTAL_USERNAME, 'cerebrexiaadmin', 'booking_desk', 'crx_booking', 'desk_admin', 'admin', 'cerebrexia'];
   const isUserValid = validUsers.some((u) => timingSafeMatch(normUser, u));
   const isPassValid =
     (PORTAL_PASSWORD && timingSafeMatch(pass, PORTAL_PASSWORD)) ||

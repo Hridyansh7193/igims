@@ -21,7 +21,7 @@ const rawKey =
 
 const SUPABASE_KEY = getCleanSupabaseKey(rawKey);
 
-const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'admin').trim().toLowerCase();
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'cerebrexiaadmin').trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || (ADMIN_PASSWORD ? `${ADMIN_PASSWORD}_secure_crx26_salt` : null);
 
@@ -30,7 +30,11 @@ function verifyCredentials(user, pass) {
   if (!ADMIN_PASSWORD) return false;
   const normalizedUser = user.trim().toLowerCase();
 
-  const isUserValid = timingSafeMatch(normalizedUser, ADMIN_USERNAME) || timingSafeMatch(normalizedUser, 'cerebrexia');
+  const isUserValid =
+    timingSafeMatch(normalizedUser, ADMIN_USERNAME) ||
+    timingSafeMatch(normalizedUser, 'cerebrexiaadmin') ||
+    timingSafeMatch(normalizedUser, 'admin') ||
+    timingSafeMatch(normalizedUser, 'cerebrexia');
   const isPassValid = timingSafeMatch(pass, ADMIN_PASSWORD);
 
   return isUserValid && isPassValid;
