@@ -122,7 +122,9 @@ export default function BookingPortalPage({ setPage }) {
   const [missingMessage, setMissingMessage] = useState(null);
   const [missingError, setMissingError] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [recoverLoading, setRecoverLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState(null);
+  const [syncError, setSyncError] = useState(null);
 
   // Calculate Group Offer and Pricing
   const totalDelegates = regType === 'SINGLE' ? 1 : Math.max(1, Number(groupSize) || 1);
@@ -429,6 +431,7 @@ export default function BookingPortalPage({ setPage }) {
   const handleSyncAllReconciliations = async () => {
     setSyncLoading(true);
     setSyncMessage(null);
+    setSyncError(null);
     try {
       const res = await fetch('/api/portal-booking', {
         method: 'POST',
@@ -438,45 +441,118 @@ export default function BookingPortalPage({ setPage }) {
         },
         body: JSON.stringify({ action: 'sync-all-reconciliations' }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch (_) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
       if (res.ok && data.success) {
         setSyncMessage(data.message || 'All historical payments synced successfully!');
       } else {
-        setSyncMessage(`Notice: ${data.error || 'Failed to sync'}`);
+        setSyncError(data.error || 'Failed to sync');
       }
     } catch (err) {
-      setSyncMessage('Error syncing: ' + err.message);
+      setSyncError('Error syncing: ' + err.message);
     } finally {
       setSyncLoading(false);
     }
   };
 
-  // Recover any captured BR payments from Razorpay missing in database/tickets
+  // Recover missing BR passes & emails from the last 50 Razorpay payments in fast batches
   const handleRecoverFromRazorpay = async () => {
-    setSyncLoading(true);
-    setSyncMessage(null);
+    setRecoverLoading(true);
+    setSyncMessage('Checking last 50 Razorpay transactions...');
+    setSyncError(null);
+
+    const allRecovered = [];
+    const allFailed = [];
+    const excludeIds = [];
+    let checkedTotal = 0;
+
     try {
-      const res = await fetch('/api/portal-booking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-portal-token': session?.token || '',
-        },
-        body: JSON.stringify({ action: 'reconcile-razorpay-captured' }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const listNote = Array.isArray(data.recovered) && data.recovered.length > 0
-          ? ` (${data.recovered.map((r) => `${r.email || r.name}: ${r.ticket_numbers.join(', ')}`).join(' | ')})`
-          : '';
-        setSyncMessage(`${data.message}${listNote}`);
+      let hasMore = true;
+      let batchNum = 0;
+
+      while (hasMore && batchNum < 25) {
+        batchNum += 1;
+        const res = await fetch('/api/portal-booking', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-portal-token': session?.token || '',
+          },
+          body: JSON.stringify({
+            action: 'reconcile-razorpay-captured',
+            scanCount: 50,
+            batchLimit: 4,
+            minAmountInr: 700,
+            excludeIds,
+          }),
+        });
+
+        const rawText = await res.text();
+        let data = null;
+        try {
+          data = JSON.parse(rawText);
+        } catch (_) {
+          throw new Error(`Batch ${batchNum} returned HTTP ${res.status} (server timeout or invalid response).`);
+        }
+
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || `Failed to recover from Razorpay (HTTP ${res.status})`);
+        }
+
+        checkedTotal = data.checked_payments || checkedTotal;
+        if (Array.isArray(data.skipped_ids)) {
+          for (const sid of data.skipped_ids) {
+            if (sid) excludeIds.push(sid);
+          }
+        }
+        if (Array.isArray(data.recovered)) {
+          allRecovered.push(...data.recovered);
+        }
+        if (Array.isArray(data.failed)) {
+          for (const f of data.failed) {
+            allFailed.push(f);
+            if (f.payment_id) excludeIds.push(f.payment_id);
+          }
+        }
+
+        hasMore = Boolean(data.has_more);
+        if (hasMore) {
+          const preview = allRecovered
+            .slice(-6)
+            .map((r) => r.email || r.name)
+            .join(', ');
+          setSyncMessage(
+            `Recovered ${allRecovered.length} pass(es) so far${preview ? ` (${preview})` : ''} — processing next batch (${data.remaining_candidates || 'more'} left to inspect)...`
+          );
+        }
+      }
+
+      if (allRecovered.length > 0) {
+        const listNote = allRecovered
+          .map((r) => `${r.email || r.name}: ${(r.ticket_numbers || []).join(', ')}`)
+          .join(' | ');
+        setSyncMessage(`Recovered ${allRecovered.length} missing BR payment(s) and dispatched QR emails! (${listNote})`);
       } else {
-        setSyncMessage(`Recovery notice: ${data.error || 'Failed to recover from Razorpay'}`);
+        setSyncMessage(`All ${checkedTotal} captured Razorpay BR payments are already recorded in the database.`);
+      }
+
+      if (allFailed.length > 0) {
+        setSyncError(`Failed for ${allFailed.length} payment(s): ${allFailed.map((f) => `${f.payment_id} (${f.error})`).join(', ')}`);
       }
     } catch (err) {
-      setSyncMessage('Error recovering payments: ' + err.message);
+      if (allRecovered.length > 0) {
+        setSyncMessage(
+          `Partially recovered ${allRecovered.length} pass(es) before interruption (${allRecovered.map((r) => r.email || r.name).join(', ')}). Click again to continue.`
+        );
+      } else {
+        setSyncMessage(null);
+      }
+      setSyncError('Error recovering payments: ' + err.message);
     } finally {
-      setSyncLoading(false);
+      setRecoverLoading(false);
     }
   };
 
@@ -1351,7 +1427,7 @@ export default function BookingPortalPage({ setPage }) {
               <button
                 type="button"
                 onClick={handleSyncAllReconciliations}
-                disabled={syncLoading}
+                disabled={syncLoading || recoverLoading}
                 className="crx-btn"
                 style={{ padding: '0 16px', fontSize: 12, minHeight: 44, color: '#86efac', borderColor: 'rgba(34, 197, 94, 0.4)' }}
                 title="Sync all historical tickets into payment reconciliation table"
@@ -1363,13 +1439,13 @@ export default function BookingPortalPage({ setPage }) {
               <button
                 type="button"
                 onClick={handleRecoverFromRazorpay}
-                disabled={syncLoading}
+                disabled={syncLoading || recoverLoading}
                 className="crx-btn"
                 style={{ padding: '0 16px', fontSize: 12, minHeight: 44, color: '#fcd34d', borderColor: 'rgba(251, 191, 36, 0.45)' }}
-                title="Fetch captured Razorpay BR payments missing from database, create passes, and email QR codes"
+                title="Check last 50 captured Razorpay BR payments (>= INR 700), create missing DB/BR passes, and email QR codes"
               >
-                <RefreshCw size={12} className={syncLoading ? 'spin' : ''} />
-                {syncLoading ? 'RECOVERING...' : '⚡ Recover from Razorpay'}
+                <RefreshCw size={12} className={recoverLoading ? 'spin' : ''} />
+                {recoverLoading ? 'RECOVERING...' : '⚡ Recover Last 50 from Razorpay'}
               </button>
             </form>
 
@@ -1386,6 +1462,26 @@ export default function BookingPortalPage({ setPage }) {
                 }}
               >
                 ✓ {syncMessage}
+              </div>
+            )}
+
+            {syncError && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  color: '#fca5a5',
+                  fontSize: 12,
+                  marginTop: 14,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                <span>{syncError}</span>
               </div>
             )}
 

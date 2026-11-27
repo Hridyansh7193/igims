@@ -14,7 +14,8 @@ import {
   assertSafeDatabaseMutation,
 } from './_security.js';
 import { sendTicketEmailDirect } from './_ticketEmail.js';
-import { finalizeBasicRegistration } from './_finalizeBasicRegistration.js';
+import { createGmailTransporter, getGmailConfig } from './_email.js';
+import { finalizeBasicRegistration, buildAuthUserEmailMap } from './_finalizeBasicRegistration.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = resolveSupabaseServerKey();
@@ -525,93 +526,203 @@ export default async function handler(req, res) {
     }
   }
 
-  // 7B. ACTION: RECOVER UNLINKED CAPTURED PAYMENTS DIRECTLY FROM RAZORPAY
+  // 7B. ACTION: CHECK LAST 50 CAPTURED PAYMENTS IN RAZORPAY & RECOVER MISSING BRs + EMAILS (BATCHED TO PREVENT VERCEL TIMEOUT)
   if (req.method === 'POST' && req.body?.action === 'reconcile-razorpay-captured') {
     const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
     if (keyError || !keyId || !keySecret) {
       return res.status(500).json({ error: keyError || 'Razorpay credentials not configured on server.' });
     }
 
+    const rawLimit = Number(req.body?.batchLimit);
+    const batchLimit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 8) : 4;
+    const rawCount = Number(req.body?.scanCount);
+    const scanCount = Number.isFinite(rawCount) ? Math.min(Math.max(Math.trunc(rawCount), 1), 100) : 50;
+    const rawMinAmount = Number(req.body?.minAmountInr);
+    const minAmountInr = Number.isFinite(rawMinAmount) && rawMinAmount >= 0 ? rawMinAmount : 700;
+    const excludeSet = new Set(
+      Array.isArray(req.body?.excludeIds) ? req.body.excludeIds.map((x) => String(x || '').trim()).filter(Boolean) : []
+    );
+
+    let pooledTransporter = null;
     try {
       const authHeader = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`;
-      const payments = [];
-      for (let page = 0; page < 3; page++) {
-        const skip = page * 100;
-        const r = await fetch(`https://api.razorpay.com/v1/payments?count=100&skip=${skip}`, {
+
+      // Fetch the latest `scanCount` (default 50) Razorpay payments & existing Supabase records in parallel
+      const fetchRazorpayPayments = async () => {
+        const r = await fetch(`https://api.razorpay.com/v1/payments?count=${scanCount}&skip=0`, {
           headers: { Authorization: authHeader },
         });
         if (!r.ok) {
           const errText = await r.text();
-          return res.status(502).json({ error: `Razorpay API lookup failed (${r.status}): ${errText.slice(0, 200)}` });
+          throw new Error(`Razorpay API lookup failed (${r.status}): ${errText.slice(0, 200)}`);
         }
         const json = await r.json();
-        const items = Array.isArray(json?.items) ? json.items : [];
-        payments.push(...items);
-        if (items.length < 100) break;
-      }
+        return Array.isArray(json?.items) ? json.items : [];
+      };
 
-      const capturedPayments = payments.filter((p) => p?.status === 'captured' && p?.id);
-
-      // Load all already-recorded payment IDs across tickets, payment_reconciliations, event_payments
-      const [{ data: recRows }, { data: tktRows }, { data: evtRows }, { data: accRows }] = await Promise.all([
-        supabase.from('payment_reconciliations').select('razorpay_payment_id'),
-        supabase.from('tickets').select('metadata'),
+      const [payments, recRes, tktRes, partRes, brRes, evtRes, accRes] = await Promise.all([
+        fetchRazorpayPayments(),
+        supabase.from('payment_reconciliations').select('razorpay_payment_id, ticket_count, payment_status'),
+        supabase.from('tickets').select('metadata, user_id, attendee_email, payment_status'),
+        supabase.from('participants').select('user_id, email, payment_status'),
+        supabase.from('basic_registrations').select('user_id, razorpay_payment_id, payment_status'),
         supabase.from('event_payments').select('razorpay_payment_id'),
         supabase.from('accommodation_bookings').select('razorpay_payment_id'),
       ]);
 
-      const knownIds = new Set();
-      for (const r of recRows || []) if (r.razorpay_payment_id) knownIds.add(r.razorpay_payment_id);
-      for (const t of tktRows || []) if (t.metadata?.razorpay_payment_id) knownIds.add(t.metadata.razorpay_payment_id);
-      for (const e of evtRows || []) if (e.razorpay_payment_id) knownIds.add(e.razorpay_payment_id);
-      for (const a of accRows || []) if (a.razorpay_payment_id) knownIds.add(a.razorpay_payment_id);
+      const capturedPayments = payments.filter((p) => p?.status === 'captured' && p?.id);
 
-      const recovered = [];
-      const failed = [];
+      const nonBrIds = new Set(excludeSet);
+      for (const e of evtRes?.data || []) if (e.razorpay_payment_id) nonBrIds.add(e.razorpay_payment_id);
+      for (const a of accRes?.data || []) if (a.razorpay_payment_id) nonBrIds.add(a.razorpay_payment_id);
+
+      const paidParticipantUserIds = new Set();
+      const paidParticipantEmails = new Set();
+      for (const p of partRes?.data || []) {
+        if (p.payment_status === 'PAID') {
+          if (p.user_id) paidParticipantUserIds.add(p.user_id);
+          if (p.email) paidParticipantEmails.add(String(p.email).trim().toLowerCase());
+        }
+      }
+
+      const paidBrUserIds = new Set();
+      const paidBrPayIds = new Set();
+      for (const b of brRes?.data || []) {
+        if (b.payment_status === 'PAID') {
+          if (b.user_id) paidBrUserIds.add(b.user_id);
+          if (b.razorpay_payment_id) paidBrPayIds.add(b.razorpay_payment_id);
+        }
+      }
+
+      const ticketByPayId = new Map();
+      for (const t of tktRes?.data || []) {
+        const payId = t.metadata?.razorpay_payment_id;
+        if (payId && t.payment_status === 'PAID') {
+          ticketByPayId.set(payId, t);
+        }
+      }
+
+      const validReconciledIds = new Set();
+      for (const r of recRes?.data || []) {
+        if (r.razorpay_payment_id && r.payment_status === 'PAID' && (r.ticket_count || 0) > 0) {
+          validReconciledIds.add(r.razorpay_payment_id);
+        }
+      }
+
+      const isFullyRecordedInDb = (paymentId) => {
+        if (nonBrIds.has(paymentId)) return true;
+        const ticket = ticketByPayId.get(paymentId);
+        if (ticket) {
+          if (ticket.user_id) {
+            return paidParticipantUserIds.has(ticket.user_id) && paidBrUserIds.has(ticket.user_id);
+          }
+          const tEmail = String(ticket.attendee_email || '').trim().toLowerCase();
+          return !tEmail || paidParticipantEmails.has(tEmail);
+        }
+        return validReconciledIds.has(paymentId) && paidBrPayIds.has(paymentId);
+      };
+
+      // Filter down to unknown BR-priced candidates whose payment-level notes aren't event/accommodation
+      const candidates = [];
       let skipped = 0;
-
-      for (const payment of capturedPayments) {
-        if (knownIds.has(payment.id)) {
+      for (const p of capturedPayments) {
+        if (isFullyRecordedInDb(p.id)) {
           skipped += 1;
           continue;
         }
-        const pType = String(payment.notes?.type || '').toLowerCase();
+        const amountInr = Math.round(Number(p.amount || 0) / 100);
+        if (amountInr < minAmountInr) {
+          skipped += 1;
+          continue;
+        }
+        const pType = String(p.notes?.type || '').toLowerCase();
         if (pType === 'event' || pType === 'accommodation') {
           skipped += 1;
           continue;
         }
+        candidates.push(p);
+      }
 
-        let order = null;
-        if (payment.order_id) {
-          try {
-            const ro = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(payment.order_id)}`, {
+      // Inspect order notes in small parallel chunks ONLY until we have `batchLimit` confirmed BR targets
+      const targets = [];
+      const skippedIds = [];
+      let cursor = 0;
+      while (cursor < candidates.length && targets.length < batchLimit) {
+        const chunk = candidates.slice(cursor, cursor + 8);
+        cursor += chunk.length;
+
+        const orderResults = await Promise.allSettled(
+          chunk.map(async (p) => {
+            if (!p.order_id) return null;
+            const ro = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(p.order_id)}`, {
               headers: { Authorization: authHeader },
             });
-            if (ro.ok) order = await ro.json();
+            return ro.ok ? await ro.json() : null;
+          })
+        );
+
+        for (let i = 0; i < chunk.length; i++) {
+          const payment = chunk[i];
+          const order = orderResults[i].status === 'fulfilled' ? orderResults[i].value : null;
+          const oType = String(order?.notes?.type || payment.notes?.type || '').toLowerCase();
+          if (oType === 'event' || oType === 'accommodation') {
+            skipped += 1;
+            skippedIds.push(payment.id);
+            continue;
+          }
+          if (targets.length < batchLimit) {
+            targets.push({ payment, order });
+          } else {
+            // Rewind cursor to re-check overflow item in the next batch
+            cursor -= chunk.length - i;
+            break;
+          }
+        }
+      }
+
+      const remainingCandidates = Math.max(0, candidates.length - cursor);
+      const recovered = [];
+      const failed = [];
+
+      if (targets.length > 0) {
+        const authUserEmailMap = await buildAuthUserEmailMap(supabase);
+        if (getGmailConfig().configured) {
+          try {
+            pooledTransporter = createGmailTransporter({ pool: true });
           } catch (_) {}
         }
 
-        const oType = String(order?.notes?.type || pType || '').toLowerCase();
-        if (oType === 'event' || oType === 'accommodation') {
-          skipped += 1;
-          continue;
-        }
+        const finalizedResults = await Promise.allSettled(
+          targets.map(({ payment, order }) =>
+            finalizeBasicRegistration(supabase, {
+              payment,
+              order,
+              sendEmail: true,
+              authUserEmailMap,
+              transporter: pooledTransporter,
+            })
+          )
+        );
 
-        try {
-          const out = await finalizeBasicRegistration(supabase, {
-            payment,
-            order,
-            sendEmail: true,
-          });
-          recovered.push({
-            payment_id: payment.id,
-            email: out.email,
-            name: out.name,
-            ticket_numbers: (out.tickets || []).map((t) => t.ticket_number),
-            emailsSent: out.emailsSent,
-          });
-        } catch (err) {
-          failed.push({ payment_id: payment.id, email: payment.email || '', error: err.message });
+        for (let i = 0; i < finalizedResults.length; i++) {
+          const { payment } = targets[i];
+          const r = finalizedResults[i];
+          if (r.status === 'fulfilled') {
+            const out = r.value;
+            recovered.push({
+              payment_id: payment.id,
+              email: out.email,
+              name: out.name,
+              ticket_numbers: (out.tickets || []).map((t) => t.ticket_number),
+              emailsSent: out.emailsSent,
+            });
+          } else {
+            failed.push({
+              payment_id: payment.id,
+              email: payment.email || '',
+              error: r.reason?.message || 'Unknown error',
+            });
+          }
         }
       }
 
@@ -620,14 +731,24 @@ export default async function handler(req, res) {
         checked_payments: capturedPayments.length,
         recovered_count: recovered.length,
         skipped_count: skipped,
+        skipped_ids: skippedIds,
+        has_more: remainingCandidates > 0,
+        remaining_candidates: remainingCandidates,
         recovered,
         failed,
         message: recovered.length > 0
           ? `Recovered ${recovered.length} missing BR payment(s) from Razorpay and dispatched QR emails!`
-          : `All ${capturedPayments.length} captured Razorpay BR payments are already recorded in the database.`,
+          : (remainingCandidates > 0
+            ? 'Scanned batch; continuing remaining Razorpay payments...'
+            : `All ${capturedPayments.length} captured Razorpay BR payments are already recorded in the database.`),
       });
     } catch (err) {
-      return res.status(500).json({ error: 'Recovery failed: ' + err.message });
+      const status = String(err.message || '').startsWith('Razorpay API lookup failed') ? 502 : 500;
+      return res.status(status).json({ error: err.message || 'Recovery failed' });
+    } finally {
+      try {
+        pooledTransporter?.close?.();
+      } catch (_) {}
     }
   }
 

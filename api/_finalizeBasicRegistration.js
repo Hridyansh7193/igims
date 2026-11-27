@@ -33,11 +33,38 @@ function splitName(fullName, email) {
 }
 
 /**
+ * Pre-loads Supabase auth user IDs keyed by lowercase email once per batch so
+ * bulk reconciliation doesn't call `auth.admin.listUsers` per attendee.
+ */
+export async function buildAuthUserEmailMap(db) {
+  const emailMap = new Map();
+  if (!db?.auth?.admin?.listUsers) return emailMap;
+  try {
+    let page = 1;
+    while (page <= 5) {
+      const { data, error } = await db.auth.admin.listUsers({ page, perPage: 200 });
+      if (error || !data?.users?.length) break;
+      for (const u of data.users) {
+        const em = String(u?.email || '').trim().toLowerCase();
+        if (em && u?.id) emailMap.set(em, u.id);
+      }
+      if (data.users.length < 200) break;
+      page += 1;
+    }
+  } catch (_) {}
+  return emailMap;
+}
+
+/**
  * Safely finds an existing Supabase auth user_id by email when notes lacked user_id.
  */
-async function lookupAuthUserIdByEmail(db, email) {
-  if (!email || !db?.auth?.admin?.listUsers) return null;
+async function lookupAuthUserIdByEmail(db, email, authUserEmailMap = null) {
+  if (!email) return null;
   const target = email.trim().toLowerCase();
+  if (authUserEmailMap instanceof Map) {
+    return authUserEmailMap.get(target) || null;
+  }
+  if (!db?.auth?.admin?.listUsers) return null;
   try {
     let page = 1;
     while (page <= 5) {
@@ -63,10 +90,12 @@ async function lookupAuthUserIdByEmail(db, email) {
  * @param {string} [opts.userIdHint] - Authenticated user_id if known
  * @param {object} [opts.brPayload] - Optional pending registration payload (group_members, etc.)
  * @param {boolean} [opts.sendEmail=true] - Whether to dispatch QR pass emails for newly created tickets
+ * @param {Map<string, string>} [opts.authUserEmailMap] - Optional preloaded lowercase email -> user_id map
+ * @param {object} [opts.transporter] - Optional shared pooled Nodemailer transporter
  */
 export async function finalizeBasicRegistration(
   db,
-  { payment, order = null, userIdHint = null, brPayload = null, sendEmail = true }
+  { payment, order = null, userIdHint = null, brPayload = null, sendEmail = true, authUserEmailMap = null, transporter = null }
 ) {
   assertSafeDatabaseMutation(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
 
@@ -88,14 +117,38 @@ export async function finalizeBasicRegistration(
       .contains('metadata', { razorpay_payment_id: paymentId });
 
     if (Array.isArray(existingByPay) && existingByPay.length > 0) {
-      // Still ensure participant & basic_registration are marked PAID in case only ticket existed
-      const linkedUid = existingByPay[0].user_id || userIdHint || notes.user_id || null;
+      // Still ensure participant & basic_registration exist and are marked PAID
+      const firstTicket = existingByPay[0];
+      const fallbackEmail = String(firstTicket.attendee_email || notes.email || payment?.email || '').trim().toLowerCase();
+      let linkedUid = firstTicket.user_id || userIdHint || notes.user_id || null;
+      if (!linkedUid && fallbackEmail) {
+        linkedUid = await lookupAuthUserIdByEmail(db, fallbackEmail, authUserEmailMap);
+      }
+
+      const repairIso = new Date().toISOString();
       if (linkedUid) {
         try {
-          await db.from('participants').update({ payment_status: 'PAID', updated_at: new Date().toISOString() }).eq('user_id', linkedUid);
+          await db.from('participants').update({ payment_status: 'PAID', updated_at: repairIso }).eq('user_id', linkedUid);
         } catch (_) {}
         try {
-          await db.from('basic_registrations').update({ payment_status: 'PAID', razorpay_payment_id: paymentId, updated_at: new Date().toISOString() }).eq('user_id', linkedUid);
+          const amountInr = Number.isFinite(Number(payment?.amount)) ? Math.round(Number(payment.amount) / 100) : 2000;
+          await db.from('basic_registrations').upsert(
+            {
+              user_id: linkedUid,
+              pass_type: 'CONCERT_PRONITES',
+              fee_amount: amountInr,
+              final_amount: amountInr,
+              payment_status: 'PAID',
+              razorpay_payment_id: paymentId,
+              ...(orderId ? { razorpay_order_id: orderId } : {}),
+              updated_at: repairIso,
+            },
+            { onConflict: 'user_id' }
+          );
+        } catch (_) {}
+      } else if (fallbackEmail) {
+        try {
+          await db.from('participants').update({ payment_status: 'PAID', updated_at: repairIso }).ilike('email', fallbackEmail);
         } catch (_) {}
       }
       return {
@@ -103,6 +156,8 @@ export async function finalizeBasicRegistration(
         tickets: existingByPay,
         emailsSent: 0,
         userId: linkedUid,
+        email: fallbackEmail,
+        name: firstTicket.attendee_name || '',
       };
     }
   } catch (_) {}
@@ -132,7 +187,7 @@ export async function finalizeBasicRegistration(
     }
   }
   if (!userId && cleanEmail) {
-    userId = await lookupAuthUserIdByEmail(db, cleanEmail);
+    userId = await lookupAuthUserIdByEmail(db, cleanEmail, authUserEmailMap);
     if (userId && !participant) {
       const { data } = await db.from('participants').select('*').eq('user_id', userId).maybeSingle();
       participant = data || null;
@@ -414,7 +469,7 @@ export async function finalizeBasicRegistration(
     const results = await Promise.allSettled(
       savedTickets
         .filter((t) => t.attendee_email && t.attendee_email.includes('@'))
-        .map((t) => sendTicketEmailDirect(t, savedTickets.length))
+        .map((t) => sendTicketEmailDirect(t, savedTickets.length, { transporter }))
     );
     emailsSent = results.filter((r) => r.status === 'fulfilled' && r.value?.success && !r.value?.suppressed).length;
   }

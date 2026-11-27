@@ -162,8 +162,9 @@ export function buildTicketEmailHTML({
 /**
  * Sends an official QR ticket email directly via Gmail SMTP.
  * Reusable across send-ticket-email, finalizeBasicRegistration, and portal-booking.
+ * Optional `options.transporter` allows callers sending batches to reuse one pooled SMTP connection.
  */
-export async function sendTicketEmailDirect(ticket, groupSize = 1) {
+export async function sendTicketEmailDirect(ticket, groupSize = 1, options = {}) {
   if (!isEmailEnabled()) {
     return { success: true, suppressed: true, message: 'Ticket email dispatch suppressed on Preview.' };
   }
@@ -234,7 +235,7 @@ export async function sendTicketEmailDirect(ticket, groupSize = 1) {
   ).filter(Boolean);
 
   try {
-    const transporter = createGmailTransporter();
+    const transporter = options?.transporter || createGmailTransporter();
     const info = await transporter.sendMail({
       from: `"Cerebrexia '26 IGIMS" <${gmail.user}>`,
       to: cleanEmail,

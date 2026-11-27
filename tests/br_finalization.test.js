@@ -267,5 +267,42 @@ await runAsyncTest('Blocks finalization writes on Preview pointing to production
   );
 });
 
+await runAsyncTest('buildAuthUserEmailMap preloads users once and reuses shared transporter in batch mode', async () => {
+  resetEnv();
+  const { buildAuthUserEmailMap, finalizeBasicRegistration } = await import('../api/_finalizeBasicRegistration.js');
+  let listCalls = 0;
+  const mockDb = createMockDb();
+  mockDb.auth = {
+    admin: {
+      listUsers: async () => {
+        listCalls += 1;
+        return { data: { users: [{ id: 'uid_batch_1', email: 'batch@example.com' }] }, error: null };
+      },
+    },
+  };
+  const authMap = await buildAuthUserEmailMap(mockDb);
+  assert.equal(listCalls, 1);
+  assert.equal(authMap.get('batch@example.com'), 'uid_batch_1');
+
+  const sentViaShared = [];
+  const sharedTransporter = {
+    sendMail: async (opts) => {
+      sentViaShared.push(opts.to);
+      return { messageId: '<shared@gmail.com>' };
+    },
+  };
+
+  const res = await finalizeBasicRegistration(mockDb, {
+    payment: { id: 'pay_Batch1', amount: 200000, email: 'batch@example.com', status: 'captured' },
+    authUserEmailMap: authMap,
+    transporter: sharedTransporter,
+    sendEmail: true,
+  });
+
+  assert.equal(listCalls, 1, 'Should use preloaded authUserEmailMap without extra listUsers calls');
+  assert.equal(res.userId, 'uid_batch_1');
+  assert.deepEqual(sentViaShared, ['batch@example.com']);
+});
+
 Object.assign(process.env, origEnv);
 console.log('\n=== ALL BR FINALIZATION TESTS COMPLETED ===');
