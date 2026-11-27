@@ -12,7 +12,7 @@ const RegistrationModal = lazy(() => import('../components/common/RegistrationMo
 const BasicRegistrationModal = lazy(() => import('../components/common/BasicRegistrationModal'));
 import {
   fetchParticipantProfile, getRegisteredEvents, normalizeProfile,
-  fetchCategorizedRegistrations, markBasicRegistrationPaid
+  fetchCategorizedRegistrations, markBasicRegistrationPaid, saveBasicRegistration
 } from '../lib/eventsService';
 import { openRazorpayCheckout, RAZORPAY_PAYMENT_PAGE_URL } from '../lib/razorpay';
 import { fetchUserTickets, dispatchTicketEmail } from '../lib/ticketService';
@@ -45,6 +45,8 @@ export default function DashboardPage({ setPage }) {
   const [validatingPromo, setValidatingPromo] = useState(false);
   const [emailingAll, setEmailingAll] = useState(false);
   const [emailAllMessage, setEmailAllMessage] = useState(null);
+  const [manualVerifyMessage, setManualVerifyMessage] = useState(null);
+  const [manualVerifyError, setManualVerifyError] = useState(null);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -213,6 +215,28 @@ export default function DashboardPage({ setPage }) {
   };
 
   const handlePayNow = async () => {
+    // If participant profile is missing, route to BasicRegistrationModal so name/phone/college are collected
+    if (!participant) {
+      setShowPaymentModal(false);
+      setShowBRModal(true);
+      return;
+    }
+
+    // Ensure a PENDING basic_registrations row exists in DB before launching payment
+    if (!basicReg) {
+      try {
+        const saved = await saveBasicRegistration(user.id, user.email, participant, {
+          registration_type: 'SINGLE',
+          group_size: 1,
+          promo_code: appliedPromo?.code || null,
+          discount_amount: discountAmount,
+          final_amount: finalPayable,
+          payment_status: finalPayable === 0 ? 'PAID' : 'PENDING',
+        });
+        if (saved?.basicRegistration) setBasicReg(saved.basicRegistration);
+      } catch (_) {}
+    }
+
     // If 100% discount, immediately unlock pass without launching payment gateway
     if (finalPayable === 0) {
       setPaying(true);
@@ -235,6 +259,8 @@ export default function DashboardPage({ setPage }) {
       return;
     }
 
+    const leadFullName = participant ? `${participant.first_name || ''} ${participant.surname || ''}`.trim() : '';
+
     setPaying(true);
     openRazorpayCheckout({
       amount: finalPayable,
@@ -242,13 +268,17 @@ export default function DashboardPage({ setPage }) {
         ? `Cerebrexia '26 — Group Basic Registration (BR) (${groupCount} Members)`
         : `Cerebrexia '26 | Basic Registration (BR)${appliedPromo ? ` [${appliedPromo.code}]` : ''}`,
       prefill: {
-        name: participant ? `${participant.first_name || ''} ${participant.surname || ''}`.trim() : '',
+        name: leadFullName,
         email: user?.email || '',
         contact: participant?.phone_number || '',
       },
       notes: {
         type: 'basic_registration',
         user_id: user?.id || '',
+        name: leadFullName,
+        email: (user?.email || '').trim().toLowerCase(),
+        phone: participant?.phone_number || '',
+        college: participant?.college_name || '',
         registration_type: isGroupBR ? 'GROUP' : 'SINGLE',
         group_size: String(groupCount),
         promo_code: appliedPromo?.code || basicReg?.promo_code || '',
@@ -259,6 +289,13 @@ export default function DashboardPage({ setPage }) {
         try {
           await markBasicRegistrationPaid(user.id, {
             ...rzpRes,
+            registration_data: basicReg || {
+              registration_type: isGroupBR ? 'GROUP' : 'SINGLE',
+              group_size: groupCount,
+              promo_code: appliedPromo?.code || null,
+              discount_amount: discountAmount,
+              final_amount: finalPayable,
+            },
             promo_code: appliedPromo?.code || basicReg?.promo_code || null,
             discount_amount: discountAmount,
             final_amount: finalPayable,
@@ -282,21 +319,57 @@ export default function DashboardPage({ setPage }) {
 
   const handleManualPaymentConfirm = async () => {
     if (!user) return;
+    const cleanPayId = dashboardPaymentId.trim();
+    setManualVerifyError(null);
+    setManualVerifyMessage(null);
+
+    if (!/^pay_[A-Za-z0-9]+$/.test(cleanPayId)) {
+      setManualVerifyError('Please enter a valid Razorpay Payment ID starting with pay_ (e.g. pay_QXXXXXXXXXXXXX).');
+      return;
+    }
+
     setPaying(true);
     try {
-      const confirmedId = dashboardPaymentId.trim() || `pay_rzp_${Date.now()}`;
-      await markBasicRegistrationPaid(user.id, {
-        razorpay_payment_id: confirmedId,
-        razorpay_order_id: `order_crx_${Date.now()}`,
-        method: dashboardPaymentId.trim() ? 'RAZORPAY_ME_VERIFIED' : 'RAZORPAY_GATEWAY',
-        promo_code: appliedPromo?.code || basicReg?.promo_code || null,
-        discount_amount: discountAmount,
-        final_amount: finalPayable,
+      const { data: sessData } = await supabase.auth.getSession();
+      const accessToken = sessData?.session?.access_token;
+      if (!accessToken) {
+        setManualVerifyError('Session expired. Please sign in again.');
+        return;
+      }
+
+      const res = await fetch('/api/verify-event-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: 'verify-br-payment-id',
+          razorpay_payment_id: cleanPayId,
+          registration_data: basicReg || {
+            registration_type: isGroupBR ? 'GROUP' : 'SINGLE',
+            group_size: groupCount,
+            promo_code: appliedPromo?.code || null,
+            discount_amount: discountAmount,
+            final_amount: finalPayable,
+          },
+        }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.verified) {
+        setManualVerifyError(data.error || 'Could not verify this Payment ID with Razorpay.');
+        return;
+      }
+
+      setManualVerifyMessage('Payment verified! Your QR pass has been unlocked and sent to your email.');
       await loadData();
-      setShowPaymentModal(false);
+      setTimeout(() => {
+        setShowPaymentModal(false);
+        setManualVerifyMessage(null);
+      }, 1500);
     } catch (err) {
-      console.error('[Dashboard] Payment confirm error:', err);
+      console.error('[Dashboard] Payment verify error:', err);
+      setManualVerifyError('Network error verifying payment. Please try again.');
     } finally {
       setPaying(false);
     }
@@ -331,7 +404,7 @@ export default function DashboardPage({ setPage }) {
     );
   }
 
-  const isPaid      = participant?.payment_status === 'PAID';
+  const isPaid      = participant?.payment_status === 'PAID' || basicReg?.payment_status === 'PAID' || userTickets.length > 0;
   const statusColor = isPaid ? '#22c55e' : '#f59e0b';
   const StatusIcon  = isPaid ? CheckCircle2 : Clock;
   const candidateId = participant?.id
@@ -626,7 +699,7 @@ export default function DashboardPage({ setPage }) {
                 type="text"
                 placeholder="e.g. pay_QXXXXXXXXXXXXX"
                 value={dashboardPaymentId}
-                onChange={(e) => setDashboardPaymentId(e.target.value)}
+                onChange={(e) => { setDashboardPaymentId(e.target.value); setManualVerifyError(null); }}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -640,6 +713,12 @@ export default function DashboardPage({ setPage }) {
                   boxSizing: 'border-box',
                 }}
               />
+              {manualVerifyError && (
+                <p style={{ margin: '0 0 8px', fontSize: 11.5, color: '#f87171' }}>{manualVerifyError}</p>
+              )}
+              {manualVerifyMessage && (
+                <p style={{ margin: '0 0 8px', fontSize: 11.5, color: '#34d399' }}>{manualVerifyMessage}</p>
+              )}
               <button
                 type="button"
                 onClick={handleManualPaymentConfirm}
@@ -656,7 +735,7 @@ export default function DashboardPage({ setPage }) {
                   fontWeight: 700,
                 }}
               >
-                CONFIRM PAYMENT &amp; UNLOCK PASS
+                {paying ? 'VERIFYING...' : 'VERIFY PAYMENT & UNLOCK PASS'}
               </button>
             </div>
 

@@ -162,7 +162,7 @@ export async function saveParticipantProfile(userId, email, formData) {
     } else {
       const { data, error } = await supabase
         .from('participants')
-        .insert(payload)
+        .upsert(payload, { onConflict: 'user_id' })
         .select()
         .maybeSingle();
 
@@ -349,32 +349,93 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
     }
   } catch (_) {}
 
-  // 1. Update basic_registrations table in database
+  // 0. Server-side verification & atomic ticket/email finalization (prevents RLS/mobile drops)
+  let serverFinalized = false;
+  if (paymentId.startsWith('pay_') && paymentDetails.razorpay_order_id && paymentDetails.razorpay_signature) {
+    try {
+      const { data: sessData } = await supabase.auth.getSession();
+      const accessToken = sessData?.session?.access_token;
+      if (accessToken) {
+        let localReg = paymentDetails.registration_data || null;
+        if (!localReg) {
+          try {
+            const cached = localStorage.getItem('crx_basic_reg_' + userId);
+            if (cached) localReg = JSON.parse(cached);
+          } catch (_) {}
+        }
+        const verifyRes = await fetch('/api/verify-event-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            mode: 'basic_registration',
+            razorpay_order_id: paymentDetails.razorpay_order_id,
+            razorpay_payment_id: paymentId,
+            razorpay_signature: paymentDetails.razorpay_signature,
+            registration_data: localReg,
+          }),
+        });
+        const verifyJson = await verifyRes.json().catch(() => ({}));
+        if (verifyRes.ok && verifyJson.verified && Array.isArray(verifyJson.tickets) && verifyJson.tickets.length > 0) {
+          serverFinalized = true;
+        }
+      }
+    } catch (verifyErr) {
+      console.warn('[eventsService] Server BR verification notice, continuing client fallback:', verifyErr);
+    }
+  }
+
+  // 1. Upsert basic_registrations table in database (never silently update 0 rows)
   try {
-    const updatePayload = {
+    let localMeta = paymentDetails.registration_data || null;
+    if (!localMeta) {
+      try {
+        const rawLocal = localStorage.getItem('crx_basic_reg_' + userId);
+        if (rawLocal) localMeta = JSON.parse(rawLocal);
+      } catch (_) {}
+    }
+
+    const { data: partRow } = await supabase
+      .from('participants')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const upsertPayload = {
+      user_id: userId,
+      participant_id: partRow?.id || localMeta?.participant_id || null,
+      pass_type: 'CONCERT_PRONITES',
+      fee_amount: finalAmount ?? localMeta?.final_amount ?? 2000,
+      registration_type: localMeta?.registration_type || 'SINGLE',
+      group_size: localMeta?.group_size || 1,
+      group_members: localMeta?.group_members || [],
       payment_status: 'PAID',
       razorpay_payment_id: paymentId,
       updated_at: new Date().toISOString(),
     };
-    if (orderId) updatePayload.razorpay_order_id = orderId;
-    if (promoCode) updatePayload.promo_code = promoCode;
-    if (discountAmount !== null) updatePayload.discount_amount = discountAmount;
-    if (finalAmount !== null) updatePayload.final_amount = finalAmount;
+    if (orderId) upsertPayload.razorpay_order_id = orderId;
+    if (promoCode || localMeta?.promo_code) upsertPayload.promo_code = promoCode || localMeta?.promo_code;
+    if (discountAmount !== null) upsertPayload.discount_amount = discountAmount;
+    if (finalAmount !== null) upsertPayload.final_amount = finalAmount;
 
-    const { error: updateErr } = await supabase
+    const { error: upsertErr } = await supabase
       .from('basic_registrations')
-      .update(updatePayload)
-      .eq('user_id', userId);
+      .upsert(upsertPayload, { onConflict: 'user_id' });
 
-    if (updateErr) {
-      console.warn('[eventsService] Extended update notice, falling back to core columns:', updateErr.message);
+    if (upsertErr) {
+      console.warn('[eventsService] Extended upsert notice, falling back to core columns:', upsertErr.message);
       await supabase
         .from('basic_registrations')
-        .update({
+        .upsert({
+          user_id: userId,
+          participant_id: partRow?.id || null,
+          pass_type: 'CONCERT_PRONITES',
+          fee_amount: finalAmount ?? 2000,
           payment_status: 'PAID',
           updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+        }, { onConflict: 'user_id' });
     }
   } catch (err) {
     console.warn('[eventsService] markBasicRegistrationPaid db notice:', err);
@@ -462,7 +523,7 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
       }
     }
 
-    if (brRecord) {
+    if (brRecord && !serverFinalized) {
       const enrichedPayment = {
         ...paymentDetails,
         razorpay_payment_id: paymentId,
@@ -470,6 +531,8 @@ export async function markBasicRegistrationPaid(userId, paymentDetails = {}) {
         promo_code: promoCode || brRecord.promo_code,
       };
       await issueTicketsForBasicRegistration(userId, brRecord, enrichedPayment);
+    }
+    if (brRecord) {
       triggerGoogleSheetsSync('BR', {
         ...brRecord,
         payment_status: 'PAID',

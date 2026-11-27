@@ -529,6 +529,10 @@ export default function BasicRegistrationModal({
         notes: {
           type: 'basic_registration',
           user_id: user?.id || '',
+          name: `${leadForm.first_name.trim()} ${leadForm.surname.trim()}`.trim(),
+          email: (user?.email || '').trim().toLowerCase(),
+          phone: leadForm.phone_number.trim(),
+          college: leadForm.college_name.trim(),
           registration_type: regType,
           group_size: String(totalMemberCount),
           promo_code: appliedPromo ? appliedPromo.code : '',
@@ -540,6 +544,7 @@ export default function BasicRegistrationModal({
           try {
             await markBasicRegistrationPaid(user.id, {
               ...rzpRes,
+              registration_data: checkoutMeta,
               promo_code: appliedPromo ? appliedPromo.code : null,
               discount_amount: totalSavings,
               final_amount: finalPayable,

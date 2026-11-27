@@ -451,6 +451,35 @@ export default function BookingPortalPage({ setPage }) {
     }
   };
 
+  // Recover any captured BR payments from Razorpay missing in database/tickets
+  const handleRecoverFromRazorpay = async () => {
+    setSyncLoading(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch('/api/portal-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-token': session?.token || '',
+        },
+        body: JSON.stringify({ action: 'reconcile-razorpay-captured' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const listNote = Array.isArray(data.recovered) && data.recovered.length > 0
+          ? ` (${data.recovered.map((r) => `${r.email || r.name}: ${r.ticket_numbers.join(', ')}`).join(' | ')})`
+          : '';
+        setSyncMessage(`${data.message}${listNote}`);
+      } else {
+        setSyncMessage(`Recovery notice: ${data.error || 'Failed to recover from Razorpay'}`);
+      }
+    } catch (err) {
+      setSyncMessage('Error recovering payments: ' + err.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   // Construct Candidates Array
   const compileCandidates = () => {
     const list = [
@@ -1329,6 +1358,18 @@ export default function BookingPortalPage({ setPage }) {
               >
                 <RefreshCw size={12} className={syncLoading ? 'spin' : ''} />
                 {syncLoading ? 'SYNCING...' : '🔄 Sync Database'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRecoverFromRazorpay}
+                disabled={syncLoading}
+                className="crx-btn"
+                style={{ padding: '0 16px', fontSize: 12, minHeight: 44, color: '#fcd34d', borderColor: 'rgba(251, 191, 36, 0.45)' }}
+                title="Fetch captured Razorpay BR payments missing from database, create passes, and email QR codes"
+              >
+                <RefreshCw size={12} className={syncLoading ? 'spin' : ''} />
+                {syncLoading ? 'RECOVERING...' : '⚡ Recover from Razorpay'}
               </button>
             </form>
 

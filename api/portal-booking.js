@@ -10,8 +10,11 @@ import {
   setSecureCorsHeaders,
   resolveSupabaseServerKey,
   getCleanServiceRoleKey,
+  getCleanRazorpayKeys,
   assertSafeDatabaseMutation,
 } from './_security.js';
+import { sendTicketEmailDirect } from './_ticketEmail.js';
+import { finalizeBasicRegistration } from './_finalizeBasicRegistration.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = resolveSupabaseServerKey();
@@ -101,7 +104,7 @@ export default async function handler(req, res) {
   const operatorName = decodedSession?.user || req.body?.portal_username || 'booking_desk';
 
   // Enforce environment isolation on database mutations
-  if (['create-booking', 'issue-missing-pass', 'sync-all-reconciliations'].includes(req.body?.action)) {
+  if (['create-booking', 'issue-missing-pass', 'sync-all-reconciliations', 'reconcile-razorpay-captured'].includes(req.body?.action)) {
     try {
       assertSafeDatabaseMutation(SUPABASE_URL);
     } catch (isolationErr) {
@@ -453,17 +456,13 @@ export default async function handler(req, res) {
       } catch (_) {}
     }
 
-    const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : 'https://www.cerebrexiaigims.com');
     try {
-      const emailRes = await fetch(`${origin}/api/send-ticket-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket, group_size: 1 }),
-      });
-      const emailJson = await emailRes.json();
+      const emailJson = await sendTicketEmailDirect(ticket, 1);
       return res.status(200).json({
         success: true,
-        message: `Official QR pass re-sent successfully to ${targetEmail}`,
+        message: emailJson.suppressed
+          ? `Email dispatch suppressed on Preview (pass ready for ${targetEmail})`
+          : `Official QR pass re-sent successfully to ${targetEmail}`,
         email_result: emailJson,
       });
     } catch (err) {
@@ -487,93 +486,149 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Payment ID, Attendee Name, and Email are required.' });
     }
 
-    const tktNum = createTicketNumber('BR');
-    const secureToken = createSecureToken();
-
-    // Look up if this attendee already has an authenticated user_id in tickets
-    let validUserId = null;
     try {
-      const cleanEmail = String(attendee_email).trim().toLowerCase();
-      const { data: matchedTkt } = await supabase
-        .from('tickets')
-        .select('user_id')
-        .ilike('attendee_email', cleanEmail)
-        .not('user_id', 'is', null)
-        .limit(1)
-        .maybeSingle();
+      const result = await finalizeBasicRegistration(supabase, {
+        payment: {
+          id: String(razorpay_payment_id).trim(),
+          amount: Math.round((Number(amount_paid) || 2000) * 100),
+          email: String(attendee_email).trim().toLowerCase(),
+          contact: String(attendee_phone).trim(),
+          notes: {
+            name: String(attendee_name).trim(),
+            college: String(attendee_college).trim(),
+            promo_code: promo_code || null,
+          },
+        },
+        brPayload: {
+          first_name: String(attendee_name).trim().split(/\s+/)[0] || '',
+          last_name: String(attendee_name).trim().split(/\s+/).slice(1).join(' ') || '',
+          email: String(attendee_email).trim().toLowerCase(),
+          phone_number: String(attendee_phone).trim(),
+          college_name: String(attendee_college).trim(),
+          promo_code: promo_code || null,
+          final_amount: Number(amount_paid) || 2000,
+        },
+        sendEmail: true,
+      });
 
-      if (matchedTkt?.user_id) {
-        validUserId = matchedTkt.user_id;
-      }
-    } catch (_) {}
+      const primaryTicket = result.tickets?.[0] || null;
+      return res.status(200).json({
+        success: true,
+        ticket: primaryTicket,
+        alreadyRecorded: result.alreadyRecorded,
+        message: result.alreadyRecorded
+          ? `Pass ${primaryTicket?.ticket_number || ''} was already present (database statuses refreshed)!`
+          : `Pass ${primaryTicket?.ticket_number || ''} issued and emailed to ${attendee_email}!`,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: 'Could not issue pass: ' + err.message });
+    }
+  }
 
-    const newTicket = {
-      ticket_number: tktNum,
-      user_id: validUserId, // NULL if no auth user, which satisfies foreign key constraint
-      attendee_name: String(attendee_name).trim(),
-      attendee_email: String(attendee_email).trim().toLowerCase(),
-      attendee_phone: String(attendee_phone).trim(),
-      attendee_college: String(attendee_college).trim(),
-      role: 'SINGLE',
-      qr_token: secureToken,
-      pass_type: 'BASIC_REGISTRATION_PRONITES',
-      payment_status: 'PAID',
-      metadata: {
-        source: 'MANUAL_VERIFIED_RECONCILIATION',
-        verified_by: operatorName,
-        razorpay_payment_id: String(razorpay_payment_id).trim(),
-        promo_code: promo_code || null,
-      },
-    };
-
-    const { data: savedTicket, error: insErr } = await supabase
-      .from('tickets')
-      .insert([newTicket])
-      .select()
-      .maybeSingle();
-
-    if (insErr) {
-      return res.status(500).json({ error: 'Could not create ticket: ' + insErr.message });
+  // 7B. ACTION: RECOVER UNLINKED CAPTURED PAYMENTS DIRECTLY FROM RAZORPAY
+  if (req.method === 'POST' && req.body?.action === 'reconcile-razorpay-captured') {
+    const { keyId, keySecret, error: keyError } = getCleanRazorpayKeys();
+    if (keyError || !keyId || !keySecret) {
+      return res.status(500).json({ error: keyError || 'Razorpay credentials not configured on server.' });
     }
 
-    // Upsert to reconciliation table
     try {
-      await supabase.from('payment_reconciliations').upsert(
-        {
-          razorpay_payment_id: String(razorpay_payment_id).trim(),
-          lead_name: String(attendee_name).trim(),
-          lead_email: String(attendee_email).trim().toLowerCase(),
-          lead_phone: String(attendee_phone).trim(),
-          lead_college: String(attendee_college).trim(),
-          ticket_count: 1,
-          ticket_numbers: [tktNum],
-          attendee_names: [String(attendee_name).trim()],
-          attendee_emails: [String(attendee_email).trim().toLowerCase()],
-          amount_paid: Number(amount_paid) || 2000,
-          promo_code: promo_code || null,
-          payment_status: 'PAID',
-          source: 'MANUAL_VERIFIED_RECONCILIATION',
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'razorpay_payment_id' }
-      );
-    } catch (_) {}
+      const authHeader = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`;
+      const payments = [];
+      for (let page = 0; page < 3; page++) {
+        const skip = page * 100;
+        const r = await fetch(`https://api.razorpay.com/v1/payments?count=100&skip=${skip}`, {
+          headers: { Authorization: authHeader },
+        });
+        if (!r.ok) {
+          const errText = await r.text();
+          return res.status(502).json({ error: `Razorpay API lookup failed (${r.status}): ${errText.slice(0, 200)}` });
+        }
+        const json = await r.json();
+        const items = Array.isArray(json?.items) ? json.items : [];
+        payments.push(...items);
+        if (items.length < 100) break;
+      }
 
-    // Send email
-    const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : 'https://www.cerebrexiaigims.com');
-    try {
-      await fetch(`${origin}/api/send-ticket-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket: savedTicket || newTicket, group_size: 1 }),
+      const capturedPayments = payments.filter((p) => p?.status === 'captured' && p?.id);
+
+      // Load all already-recorded payment IDs across tickets, payment_reconciliations, event_payments
+      const [{ data: recRows }, { data: tktRows }, { data: evtRows }, { data: accRows }] = await Promise.all([
+        supabase.from('payment_reconciliations').select('razorpay_payment_id'),
+        supabase.from('tickets').select('metadata'),
+        supabase.from('event_payments').select('razorpay_payment_id'),
+        supabase.from('accommodation_bookings').select('razorpay_payment_id'),
+      ]);
+
+      const knownIds = new Set();
+      for (const r of recRows || []) if (r.razorpay_payment_id) knownIds.add(r.razorpay_payment_id);
+      for (const t of tktRows || []) if (t.metadata?.razorpay_payment_id) knownIds.add(t.metadata.razorpay_payment_id);
+      for (const e of evtRows || []) if (e.razorpay_payment_id) knownIds.add(e.razorpay_payment_id);
+      for (const a of accRows || []) if (a.razorpay_payment_id) knownIds.add(a.razorpay_payment_id);
+
+      const recovered = [];
+      const failed = [];
+      let skipped = 0;
+
+      for (const payment of capturedPayments) {
+        if (knownIds.has(payment.id)) {
+          skipped += 1;
+          continue;
+        }
+        const pType = String(payment.notes?.type || '').toLowerCase();
+        if (pType === 'event' || pType === 'accommodation') {
+          skipped += 1;
+          continue;
+        }
+
+        let order = null;
+        if (payment.order_id) {
+          try {
+            const ro = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(payment.order_id)}`, {
+              headers: { Authorization: authHeader },
+            });
+            if (ro.ok) order = await ro.json();
+          } catch (_) {}
+        }
+
+        const oType = String(order?.notes?.type || pType || '').toLowerCase();
+        if (oType === 'event' || oType === 'accommodation') {
+          skipped += 1;
+          continue;
+        }
+
+        try {
+          const out = await finalizeBasicRegistration(supabase, {
+            payment,
+            order,
+            sendEmail: true,
+          });
+          recovered.push({
+            payment_id: payment.id,
+            email: out.email,
+            name: out.name,
+            ticket_numbers: (out.tickets || []).map((t) => t.ticket_number),
+            emailsSent: out.emailsSent,
+          });
+        } catch (err) {
+          failed.push({ payment_id: payment.id, email: payment.email || '', error: err.message });
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        checked_payments: capturedPayments.length,
+        recovered_count: recovered.length,
+        skipped_count: skipped,
+        recovered,
+        failed,
+        message: recovered.length > 0
+          ? `Recovered ${recovered.length} missing BR payment(s) from Razorpay and dispatched QR emails!`
+          : `All ${capturedPayments.length} captured Razorpay BR payments are already recorded in the database.`,
       });
-    } catch (_) {}
-
-    return res.status(200).json({
-      success: true,
-      ticket: savedTicket || newTicket,
-      message: `Pass ${tktNum} issued and emailed to ${attendee_email}!`,
-    });
+    } catch (err) {
+      return res.status(500).json({ error: 'Recovery failed: ' + err.message });
+    }
   }
 
   // 8. ACTION: SYNC ALL HISTORICAL RECONCILIATIONS
