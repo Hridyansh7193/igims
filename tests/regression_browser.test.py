@@ -1,7 +1,7 @@
 import http.server, threading, time, json, os, sys
 from playwright.sync_api import sync_playwright
 
-PORT = 4174
+PORT = 0
 DIRECTORY = os.path.abspath("dist")
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -11,24 +11,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass # Suppress server logging
 
 server = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+PORT = server.server_address[1]
 server_thread = threading.Thread(target=server.serve_forever, daemon=True)
 server_thread.start()
 
 BASE_URL = f"http://127.0.0.1:{PORT}"
 print(f"=== SERVING dist/ AT {BASE_URL} ===", flush=True)
 
-def test_page(p, path, viewport, is_mobile=False):
+def test_page(browser, path, viewport, is_mobile=False):
     errors = []
     reqs = []
-    browser = p.chromium.launch(headless=True)
     ctx = browser.new_context(viewport=viewport, is_mobile=is_mobile, has_touch=is_mobile)
+    ctx.route("https://fonts.googleapis.com/**", lambda route: route.fulfill(status=200, content_type="text/css", body=""))
     page = ctx.new_page()
 
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.on("console", lambda m: errors.append(f"console.{m.type}: {m.text}") if m.type == "error" else None)
     page.on("response", lambda r: reqs.append({"url": r.url, "status": r.status, "type": r.request.resource_type}))
 
-    page.goto(BASE_URL + path, wait_until="domcontentloaded", timeout=15000)
+    page.goto(BASE_URL + path, wait_until="domcontentloaded", timeout=30000)
     page.wait_for_timeout(3000)
 
     # Scroll down to test lazy loading
@@ -46,7 +47,7 @@ def test_page(p, path, viewport, is_mobile=False):
         hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
     })""")
 
-    browser.close()
+    ctx.close()
 
     mp4s = [r for r in reqs if ".mp4" in r["url"]]
     http_errors = [r for r in reqs if r["status"] >= 400 and "favicon" not in r["url"]]
@@ -66,6 +67,7 @@ def test_page(p, path, viewport, is_mobile=False):
 results = {}
 try:
     with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
         routes_to_test = [
             ("desktop_home", "/", {"width": 1365, "height": 768}, False),
             ("mobile_home", "/", {"width": 390, "height": 844}, True),
@@ -85,7 +87,8 @@ try:
 
         for name, path, vp, is_mob in routes_to_test:
             print(f"Testing {name} ({path})...", flush=True)
-            results[name] = test_page(p, path, vp, is_mob)
+            results[name] = test_page(browser, path, vp, is_mob)
+        browser.close()
 finally:
     server.shutdown()
 

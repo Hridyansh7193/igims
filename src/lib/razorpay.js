@@ -117,19 +117,27 @@ export async function openRazorpayCheckout({
 
   // Generate verified server-side Razorpay Order ID to prevent gateway rejection
   let orderId = null;
+  let serverKeyId = null;
   try {
     const orderRes = await fetch('/api/create-razorpay-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, notes }),
     });
+    const orderData = await orderRes.json().catch(() => ({}));
     if (orderRes.ok) {
-      const orderData = await orderRes.json();
       orderId = orderData.order_id;
+      serverKeyId = orderData.key_id || null;
+    } else if (orderRes.status === 403 || orderRes.status === 500) {
+      alert(orderData.error || 'Payment gateway is unavailable in this environment.');
+      if (onDismiss) onDismiss();
+      return;
     }
   } catch (err) {
     console.warn('[Razorpay] Server order creation notice:', err);
   }
+
+  const activeKeyId = serverKeyId || keyId;
 
   // Security guard: fail closed if live keys are present on a Preview or local deployment
   const isPreviewHost = typeof window !== 'undefined' && (
@@ -137,21 +145,23 @@ export async function openRazorpayCheckout({
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
   );
-  if (isPreviewHost && keyId && keyId.startsWith('rzp_live_')) {
+  if (isPreviewHost && activeKeyId && activeKeyId.startsWith('rzp_live_')) {
     alert('Security Alert: Live Razorpay credentials detected on a non-production deployment. Transactions are blocked for your protection.');
+    if (onDismiss) onDismiss();
     return;
   }
 
-  if (!keyId) {
+  if (!activeKeyId) {
     alert('Payment gateway key is not configured. Please contact festival administration.');
+    if (onDismiss) onDismiss();
     return;
   }
 
   // If live key is present and script loaded, launch official Razorpay
-  if (isLoaded && keyId && window.Razorpay) {
+  if (isLoaded && activeKeyId && window.Razorpay) {
     try {
       const rzpOptions = {
-        key: keyId,
+        key: activeKeyId,
         amount: Math.round(amount * 100), // amount in paise
         currency: 'INR',
         name: "Cerebrexia '26 | IGIMS Patna",
