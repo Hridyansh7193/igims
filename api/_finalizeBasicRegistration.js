@@ -2,17 +2,18 @@
 // Used by api/verify-event-payment.js (browser checkout & manual verification),
 // api/razorpay-webhook.js (dropped tabs / UPI redirects / payment links),
 // and api/portal-booking.js (one-click Razorpay recovery).
+import crypto from 'crypto';
 import { assertSafeDatabaseMutation } from './_security.js';
 import { sendTicketEmailDirect } from './_ticketEmail.js';
 
 function createSecureToken() {
-  const rand = Math.random().toString(36).substring(2, 10);
+  const rand = crypto.randomBytes(5).toString('hex');
   const time = Date.now().toString(36);
   return `CRX26_${time}_${rand}`.toUpperCase();
 }
 
 function createTicketNumber(prefix = 'BR', suffix = '') {
-  const num = Math.floor(1000 + Math.random() * 9000);
+  const num = crypto.randomInt(100000, 1000000);
   return `CRX26-${prefix}-${num}${suffix ? `-${suffix}` : ''}`;
 }
 
@@ -343,7 +344,8 @@ export async function finalizeBasicRegistration(
     }
   }
 
-  // 5. Check if tickets already exist for this user_id (avoid duplicating already-issued BR passes)
+  // 5. Check if legacy/matching tickets already exist for this user_id + payment
+  //    Never reuse tickets that belong to a DIFFERENT razorpay_payment_id (supports multiple BRs on one account)
   let existingTickets = [];
   if (userId) {
     const { data: uidTickets } = await db
@@ -352,7 +354,13 @@ export async function finalizeBasicRegistration(
       .eq('user_id', userId)
       .eq('pass_type', 'BASIC_REGISTRATION_PRONITES');
     if (Array.isArray(uidTickets) && uidTickets.length > 0) {
-      existingTickets = uidTickets;
+      const matchingOrLegacy = uidTickets.filter((t) => {
+        const tPayId = t?.metadata?.razorpay_payment_id;
+        return !tPayId || tPayId === paymentId;
+      });
+      if (matchingOrLegacy.length > 0) {
+        existingTickets = matchingOrLegacy;
+      }
     }
   }
 

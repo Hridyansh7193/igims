@@ -304,5 +304,51 @@ await runAsyncTest('buildAuthUserEmailMap preloads users once and reuses shared 
   assert.deepEqual(sentViaShared, ['batch@example.com']);
 });
 
+await runAsyncTest('Issues a separate fresh ticket when a second DIFFERENT razorpay_payment_id shares the same user_id', async () => {
+  resetEnv();
+  const emailMod = await import('../api/_email.js');
+  const sentEmails = [];
+  emailMod.setTestTransportFactory(() => ({
+    sendMail: async (opts) => {
+      sentEmails.push(opts.to);
+      return { messageId: `<multi_${sentEmails.length}@gmail.com>` };
+    },
+  }));
+
+  const db = createMockDb({
+    tickets: [
+      {
+        id: 'tkt_first',
+        ticket_number: 'CRX26-BR-6004',
+        user_id: 'uid_shared',
+        attendee_name: 'Saurav Singh',
+        attendee_email: 'saurav@example.com',
+        qr_token: 'CRX26_FIRST',
+        pass_type: 'BASIC_REGISTRATION_PRONITES',
+        metadata: { razorpay_payment_id: 'pay_FirstPayment' },
+      },
+    ],
+  });
+
+  const { finalizeBasicRegistration } = await import('../api/_finalizeBasicRegistration.js');
+  const res = await finalizeBasicRegistration(db, {
+    userIdHint: 'uid_shared',
+    payment: {
+      id: 'pay_SecondPayment',
+      amount: 200000,
+      email: 'lav@example.com',
+      notes: { name: 'Lav Kumar', college: 'PMCH' },
+      status: 'captured',
+    },
+    sendEmail: true,
+  });
+
+  emailMod.setTestTransportFactory(null);
+  assert.equal(res.alreadyRecorded, false);
+  assert.equal(db.store.tickets.length, 2, 'Second payment should create its own ticket row');
+  assert.notEqual(db.store.tickets[1].ticket_number, 'CRX26-BR-6004');
+  assert.deepEqual(sentEmails, ['lav@example.com']);
+});
+
 Object.assign(process.env, origEnv);
 console.log('\n=== ALL BR FINALIZATION TESTS COMPLETED ===');

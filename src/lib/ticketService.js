@@ -13,7 +13,7 @@ function createSecureToken() {
  * Generates human-friendly ticket numbers e.g. CRX26-BR-7842 or CRX26-EV-7842
  */
 function createTicketNumber(prefix = 'BR', suffix = '') {
-  const num = Math.floor(1000 + Math.random() * 9000);
+  const num = Math.floor(100000 + Math.random() * 900000);
   return `CRX26-${prefix}-${num}${suffix ? `-${suffix}` : ''}`;
 }
 

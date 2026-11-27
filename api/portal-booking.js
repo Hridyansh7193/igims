@@ -40,12 +40,12 @@ function verifyPortalCredentials(user, pass) {
 }
 
 function createSecureToken() {
-  const rand = Math.random().toString(36).substring(2, 10);
+  const rand = crypto.randomBytes(5).toString('hex');
   return `CRX26_${Date.now().toString(36)}_${rand}`.toUpperCase();
 }
 
 function createTicketNumber(prefix = 'BR', suffix = '') {
-  const randNum = Math.floor(1000 + Math.random() * 9000);
+  const randNum = crypto.randomInt(100000, 1000000);
   return `CRX26-${prefix}-${randNum}${suffix ? `-${suffix}` : ''}`;
 }
 
@@ -251,7 +251,8 @@ export default async function handler(req, res) {
         .select();
 
       if (tktErr) {
-        console.warn('[portal-booking] tickets table insert notice:', tktErr.message);
+        console.error('[portal-booking] tickets table insert error:', tktErr.message);
+        return res.status(500).json({ error: `Booking recorded, but ticket creation failed: ${tktErr.message}` });
       }
 
       const ticketsList = savedTickets || ticketsToInsert;
@@ -279,7 +280,7 @@ export default async function handler(req, res) {
             },
             { onConflict: 'razorpay_payment_id' }
           );
-        } catch (_) {}
+        } catch (_) { }
       }
 
       // 4. Increment promo_codes usage if applied
@@ -297,7 +298,7 @@ export default async function handler(req, res) {
               .update({ times_used: (promoData.times_used || 0) + 1, updated_at: new Date().toISOString() })
               .eq('id', promoData.id);
           }
-        } catch (_) {}
+        } catch (_) { }
       }
 
       // 5. Asynchronously dispatch ticket emails with QR codes to delegates
@@ -315,7 +316,7 @@ export default async function handler(req, res) {
             console.warn('[portal-booking] email dispatch notice:', mailErr.message);
           }
         })
-      ).catch(() => {});
+      ).catch(() => { });
 
       // 6. Sync to Google Sheets
       try {
@@ -331,7 +332,7 @@ export default async function handler(req, res) {
             },
           }),
         });
-      } catch (_) {}
+      } catch (_) { }
 
       return res.status(200).json({
         success: true,
@@ -384,7 +385,7 @@ export default async function handler(req, res) {
       if (recData && recData.length > 0) {
         reconciliations = recData;
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // 2. Search tickets table directly (matches ticket_number, email, phone, name)
     let tickets = [];
@@ -397,7 +398,7 @@ export default async function handler(req, res) {
       if (tktData && tktData.length > 0) {
         tickets = tktData;
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // 3. If query looks like a payment ID or order ID, also scan tickets metadata
     if (cleanQ.startsWith('pay_') || cleanQ.startsWith('order_')) {
@@ -412,7 +413,7 @@ export default async function handler(req, res) {
             if (!existingIds.has(t.id)) tickets.push(t);
           });
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     return res.status(200).json({
@@ -454,7 +455,7 @@ export default async function handler(req, res) {
           .update({ attendee_email: targetEmail, updated_at: new Date().toISOString() })
           .eq('id', ticket.id);
         ticket.attendee_email = targetEmail;
-      } catch (_) {}
+      } catch (_) { }
     }
 
     try {
@@ -689,7 +690,7 @@ export default async function handler(req, res) {
         if (getGmailConfig().configured) {
           try {
             pooledTransporter = createGmailTransporter({ pool: true });
-          } catch (_) {}
+          } catch (_) { }
         }
 
         const finalizedResults = await Promise.allSettled(
@@ -748,7 +749,7 @@ export default async function handler(req, res) {
     } finally {
       try {
         pooledTransporter?.close?.();
-      } catch (_) {}
+      } catch (_) { }
     }
   }
 
