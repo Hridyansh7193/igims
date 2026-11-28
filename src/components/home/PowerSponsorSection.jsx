@@ -10,7 +10,7 @@ export default function PowerSponsorSection() {
       id="power-sponsor"
       style={{
         position: 'relative',
-        padding: 'clamp(60px, 9vw, 110px) 20px',
+        padding: 'clamp(40px, 6vw, 72px) 20px',
         maxWidth: '1200px',
         margin: '0 auto',
         display: 'flex',
@@ -67,7 +67,7 @@ export default function PowerSponsorSection() {
               fontSize: 'clamp(14px, 2vw, 16px)',
               color: 'var(--muted)',
               maxWidth: '520px',
-              margin: '0 auto 40px',
+              margin: '0 auto 28px',
               lineHeight: 1.6,
             }}
           >
@@ -81,10 +81,10 @@ export default function PowerSponsorSection() {
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: '440px',
+              maxWidth: '280px',
               aspectRatio: '1 / 1',
-              borderRadius: '20px',
-              padding: '12px',
+              borderRadius: '18px',
+              padding: '10px',
               background: 'linear-gradient(145deg, rgba(25, 14, 22, 0.85) 0%, rgba(10, 4, 9, 0.95) 100%)',
               border: '1px solid rgba(212, 175, 55, 0.35)',
               boxShadow: '0 0 45px rgba(212, 175, 55, 0.15), 0 20px 50px rgba(0, 0, 0, 0.8)',
@@ -105,7 +105,7 @@ export default function PowerSponsorSection() {
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: '14px',
+                borderRadius: '12px',
                 overflow: 'hidden',
                 background: '#0B0409',
                 display: 'flex',
